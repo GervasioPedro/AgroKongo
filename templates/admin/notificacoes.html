@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="notif-wrapper animate__animated animate__fadeIn">
+    <div class="container py-5" style="max-width: 900px;">
+
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+            <div>
+                <h2 class="fw-900 text-dark-sharp m-0 h1" style="letter-spacing: -1.5px;">Notificações</h2>
+                <p class="text-slate fw-600 m-0">Acompanhe as atualizações da sua conta e mercado.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge-count">
+                    {{ notificacoes|selectattr('lida', 'equalto', false)|list|length }} Não lidas
+                </span>
+                {% if notificacoes %}
+                <button class="btn-mark-all"><i class="bi bi-check-all"></i> Ler tudo</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="notif-card shadow-sm border-0">
+            <div class="notif-list">
+                {% for n in notificacoes %}
+                <div class="notif-item {% if not n.lida %}unread{% endif %}">
+                    <div class="d-flex gap-4">
+                        <div class="notif-icon-wrapper">
+                            <div class="notif-icon-v2 bg-{{ n.tipo if n.tipo != 'info' else 'primary' }}">
+                                {% if n.tipo == 'success' %}<i class="bi bi-check-lg"></i>
+                                {% elif n.tipo == 'danger' %}<i class="bi bi-exclamation-triangle-fill"></i>
+                                {% elif n.tipo == 'warning' %}<i class="bi bi-lightning-charge-fill"></i>
+                                {% else %}<i class="bi bi-megaphone-fill"></i>{% endif %}
+                            </div>
+                            {% if not n.lida %}
+                                <span class="unread-dot"></span>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="notif-title m-0">{{ n.titulo }}</h6>
+                                <span class="notif-time">{{ n.data_criacao.strftime('%H:%M • %d/%m/%Y') }}</span>
+                            </div>
+                            <p class="notif-msg mb-3">{{ n.mensagem }}</p>
+
+                            {% if n.link %}
+                            <a href="{{ n.link }}" class="btn-notif-action">
+                                Resolver agora <i class="bi bi-arrow-right-short fs-5"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="notif-empty text-center py-5 animate__animated animate__zoomIn">
+                    <div class="empty-icon-box mb-4">
+                        <i class="bi bi-chat-square-dots"></i>
+                    </div>
+                    <h4 class="fw-900 text-dark-sharp">Tudo em dia por aqui!</h4>
+                    <p class="text-slate fw-600 mb-4">Não existem novas notificações para mostrar no momento.</p>
+                    <a href="{{ url_for('perfil.dashboard') }}" class="btn btn-primary rounded-pill px-5 py-3 fw-900 shadow-blue">
+                        Voltar ao Painel
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --notif-bg: #ffffff;
+        --notif-unread: #f0f9ff;
+        --primary: #15803d;
+        --slate: #64748b;
+        --dark: #0f172a;
+    }
+
+    .notif-wrapper { background: #f8fafc; min-height: 100vh; }
+    .text-dark-sharp { color: var(--dark); }
+    .text-slate { color: var(--slate); }
+
+    /* BADGES E BOTÕES */
+    .badge-count { background: var(--dark); color: white; padding: 8px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; }
+    .btn-mark-all { background: white; border: 1px solid #e2e8f0; color: var(--slate); padding: 8px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; transition: 0.3s; }
+    .btn-mark-all:hover { background: var(--dark); color: white; }
+
+    /* CARD PRINCIPAL */
+    .notif-card { background: white; border-radius: 35px; overflow: hidden; }
+    .notif-list { display: flex; flex-direction: column; }
+
+    /* ITEM DE NOTIFICAÇÃO */
+    .notif-item {
+        padding: 30px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item.unread { background-color: var(--notif-unread); }
+    .notif-item:hover { transform: scale(0.99); background-color: #f8fafc; }
+
+    /* ÍCONES */
+    .notif-icon-wrapper { position: relative; }
+    .notif-icon-v2 {
+        width: 52px; height: 52px; border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; color: white; box-shadow: 0 8px 15px -5px rgba(0,0,0,0.1);
+    }
+    .unread-dot {
+        position: absolute; top: -4px; right: -4px;
+        width: 14px; height: 14px; background: #3b82f6;
+        border: 3px solid white; border-radius: 50%;
+        animation: pulse-blue 2s infinite;
+    }
+
+    @keyframes pulse-blue {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+
+    /* TEXTOS */
+    .notif-title { font-weight: 900; color: var(--dark); font-size: 1rem; letter-spacing: -0.5px; }
+    .notif-time { font-size: 0.75rem; font-weight: 700; color: var(--slate); }
+    .notif-msg { color: #475569; line-height: 1.6; font-size: 0.95rem; }
+
+    /* AÇÕES */
+    .btn-notif-action {
+        display: inline-flex; align-items: center; gap: 8px;
+        text-decoration: none; color: var(--primary);
+        font-weight: 900; font-size: 0.85rem; text-transform: uppercase;
+        letter-spacing: 1px; transition: 0.3s;
+    }
+    .btn-notif-action:hover { color: var(--dark); transform: translateX(5px); }
+
+    /* EMPTY STATE */
+    .empty-icon-box {
+        width: 100px; height: 100px; background: #f1f5f9;
+        border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; margin: 0 auto; font-size: 3rem; color: #cbd5e1;
+    }
+    .shadow-blue { box-shadow: 0 10px 20px -5px rgba(21, 128, 61, 0.3); }
+</style>
+{% endblock %}

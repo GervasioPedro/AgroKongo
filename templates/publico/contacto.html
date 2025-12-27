@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Suporte e Contacto — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f0fdf4 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+
+        <div class="row g-5 justify-content-center align-items-start">
+
+            <div class="col-lg-5 col-xl-4 pe-lg-5">
+                <div class="mb-5 text-center text-lg-start">
+                    <div class="d-inline-flex align-items-center gap-2 mb-3">
+                        <span class="badge-status-elite available">CENTRAL DE APOIO</span>
+                        <div class="pulse-dot-green"></div>
+                    </div>
+                    <h1 class="fw-900 display-4 text-dark-sharp mb-3" style="letter-spacing: -3px;">Estamos aqui para si.</h1>
+                    <p class="text-slate-bold fw-600 fs-5">Alguma dúvida sobre o mercado ou problema com a conta? Escolha o seu canal de preferência.</p>
+                </div>
+
+                <div class="d-grid gap-3 mb-5">
+                    <a href="https://wa.me/244900000000" target="_blank" class="contact-card-elite shadow-sm bg-white">
+                        <div class="icon-avatar-payment bg-green-light text-success">
+                            <i class="bi bi-whatsapp"></i>
+                        </div>
+                        <div class="ms-3">
+                            <span class="label-caps-elite opacity-50 d-block mb-1">WhatsApp Business</span>
+                            <span class="fw-900 text-dark-sharp fs-5">+244 9XX XXX XXX</span>
+                        </div>
+                        <div class="ms-auto arrow-icon text-success opacity-25">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </a>
+
+                    <a href="mailto:suporte@agrokongo.ao" class="contact-card-elite shadow-sm bg-white">
+                        <div class="icon-avatar-payment bg-indigo-light text-primary">
+                            <i class="bi bi-envelope-at-fill"></i>
+                        </div>
+                        <div class="ms-3">
+                            <span class="label-caps-elite opacity-50 d-block mb-1">E-mail Institucional</span>
+                            <span class="fw-900 text-dark-sharp fs-5">suporte@agrokongo.ao</span>
+                        </div>
+                        <div class="ms-auto arrow-icon text-primary opacity-25">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="card border-0 rounded-5 bg-white border-light-sharp p-4 shadow-sm position-relative overflow-hidden">
+                    <div class="security-watermark-small opacity-05"><i class="bi bi-clock"></i></div>
+                    <h6 class="fw-900 text-dark-sharp mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar-check text-success"></i> Horário de Atendimento
+                    </h6>
+                    <div class="space-y-3">
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light-sharp rounded-4">
+                            <span class="tiny-elite fw-800 text-slate-bold text-uppercase ls-1">Segunda a Sexta</span>
+                            <span class="fw-900 text-dark-sharp small">08:00 — 18:00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light-sharp rounded-4">
+                            <span class="tiny-elite fw-800 text-slate-bold text-uppercase ls-1">Sábados</span>
+                            <span class="fw-900 text-dark-sharp small">09:00 — 13:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7 col-xl-6">
+                <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white border-light-sharp position-relative">
+
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex justify-content-between align-items-center mb-5">
+                            <div>
+                                <h3 class="fw-900 text-dark-sharp m-0" style="letter-spacing: -1.5px;">Protocolo de Mensagem 📝</h3>
+                                <p class="text-slate-bold small fw-700 m-0">Retorno garantido em até 24 horas úteis.</p>
+                            </div>
+                            <div class="icon-avatar-payment bg-light-sharp text-dark-sharp">
+                                <i class="bi bi-send-check"></i>
+                            </div>
+                        </div>
+
+                        <form action="#" method="POST" class="form-elite">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <div class="floating-group">
+                                        <label class="label-caps-elite opacity-50 mb-2 d-block">Identificação do Remetente</label>
+                                        <div class="input-modern-group border-light-sharp bg-light-sharp">
+                                            <i class="bi bi-person-circle text-success fs-5"></i>
+                                            <input type="text" name="nome" class="form-input-elite" placeholder="Qual é o seu nome completo?" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="floating-group">
+                                        <label class="label-caps-elite opacity-50 mb-2 d-block">Natureza do Pedido</label>
+                                        <div class="input-modern-group border-light-sharp bg-light-sharp">
+                                            <i class="bi bi-layers-fill text-success fs-5"></i>
+                                            <select name="assunto" class="form-input-elite" required style="cursor: pointer;">
+                                                <option value="" disabled selected>Sobre o que deseja falar?</option>
+                                                <option value="login">Dificuldade de Acesso / Login</option>
+                                                <option value="vendas">Dúvidas sobre Vendas e Recebimentos</option>
+                                                <option value="denuncia">Reportar Atividade Suspeita (Denúncia)</option>
+                                                <option value="parceria">Oportunidades de Parceria e Expansão</option>
+                                                <option value="outro">Outros Esclarecimentos</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="floating-group">
+                                        <label class="label-caps-elite opacity-50 mb-2 d-block">Descrição Detalhada</label>
+                                        <textarea name="mensagem" class="form-control-elite border-light-sharp bg-light-sharp"
+                                                  rows="5" placeholder="Explique aqui o motivo do seu contacto. Quanto mais detalhes, mais rápido ajudamos..." required></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mt-5">
+                                    <button type="submit" class="btn btn-dark-sharp w-100 py-3 fs-5 rounded-pill shadow-lg fw-900 transition-all hover-up">
+                                        Enviar Pedido de Apoio <i class="bi bi-arrow-right-short ms-2"></i>
+                                    </button>
+
+                                    <div class="text-center mt-4">
+                                        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-green-light rounded-pill">
+                                            <i class="bi bi-shield-fill-check text-success tiny-elite"></i>
+                                            <span class="tiny-elite fw-900 text-success text-uppercase ls-1">Segurança de Dados Camada 3</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .bg-green-light { background-color: #f0fdf4 !important; }
+    .bg-indigo-light { background-color: #eff6ff !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+    .tiny-elite { font-size: 0.65rem; }
+    .ls-1 { letter-spacing: 1.5px; }
+    .border-light-sharp { border: 1px solid #e2e8f0 !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15); }
+
+    /* CONTACT CARDS */
+    .contact-card-elite {
+        display: flex; align-items: center; padding: 20px 24px; border-radius: 28px;
+        text-decoration: none; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid #f1f5f9;
+    }
+    .contact-card-elite:hover {
+        transform: scale(1.02) translateX(10px);
+        border-color: #15803d;
+        box-shadow: 0 15px 30px rgba(15, 23, 42, 0.05) !important;
+    }
+    .contact-card-elite:hover .arrow-icon { opacity: 1; transform: translateX(5px); }
+    .arrow-icon { transition: 0.3s; }
+
+    .icon-avatar-payment { width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+
+    /* FORM COMPONENTS */
+    .input-modern-group { display: flex; align-items: center; border-radius: 20px; padding: 10px 20px; transition: 0.3s; }
+    .input-modern-group:focus-within { background: white !important; border-color: #15803d !important; box-shadow: 0 0 0 5px rgba(21, 128, 61, 0.05); }
+
+    .form-input-elite { border: none; background: transparent; width: 100%; outline: none; font-weight: 700; padding: 10px 10px; color: #0f172a; font-size: 0.95rem; }
+    .form-input-elite::placeholder { color: #94a3b8; font-weight: 600; }
+
+    .form-control-elite {
+        width: 100%; border-radius: 24px; padding: 24px; outline: none; border: 1px solid transparent;
+        font-weight: 600; color: #0f172a; font-size: 0.95rem; transition: 0.3s;
+    }
+    .form-control-elite:focus { background: white !important; border-color: #15803d !important; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.03); }
+
+    /* UTILS */
+    .pulse-dot-green { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 rgba(34, 197, 94, 0.4); animation: pulse-green 2s infinite; }
+    @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+    .hover-up:hover { transform: translateY(-5px); }
+    .security-watermark-small { position: absolute; bottom: -20px; right: -20px; font-size: 8rem; color: #0f172a; pointer-events: none; z-index: 0; }
+    .opacity-05 { opacity: 0.03; }
+    .space-y-3 > * + * { margin-top: 1rem; }
+</style>
+{% endblock %}

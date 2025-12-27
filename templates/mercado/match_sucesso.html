@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Conexão Realizada! — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate__animated animate__fadeIn">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-xl-5">
+
+            <div class="text-center mb-5 animate__animated animate__zoomIn">
+                <div class="success-icon-animation mb-4 shadow-sm">
+                    <span class="emoji-main">🤝</span>
+                    <div class="pulse-ring"></div>
+                </div>
+                <h1 class="fw-900 text-dark h2 mb-2" style="letter-spacing: -2px;">Negócio à vista!</h1>
+                <p class="text-muted fw-600 fs-5 px-lg-4">O AgroKongo ligou-vos com sucesso. O próximo passo é fechar o acordo diretamente.</p>
+            </div>
+
+            <div class="card border-0 shadow-xl rounded-5 overflow-hidden bg-white animate__animated animate__fadeInUp animate__delay-1s">
+                <div class="card-gradient-top p-5 text-center position-relative">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/leaf.png');"></div>
+
+                    <div class="position-relative">
+                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 fw-800 tiny mb-3 text-uppercase ls-2 border border-white border-opacity-10">
+                            Dados do Parceiro
+                        </span>
+                        <h2 class="text-white fw-900 m-0 display-6">{{ parceiro.nome }}</h2>
+                        <p class="text-white text-opacity-75 fs-6 m-0 fw-600 mt-2">
+                            <i class="bi bi-geo-alt-fill text-success-light me-1"></i> {{ parceiro.provincia }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5 text-center">
+                    <div class="mb-5">
+                        <span class="label-caps d-block mb-3 text-muted">Telemóvel para Negociação</span>
+                        <div class="phone-display bg-light rounded-4 py-3 px-2 position-relative border border-dashed">
+                            <span class="display-5 fw-900 text-dark ls-1 tracking-tighter">
+                                {{ parceiro.telemovel }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <a href="tel:{{ parceiro.telemovel }}" class="btn btn-dark-agrokongo w-100 py-3 rounded-4 shadow-sm fw-900 transition-all hover-up d-flex align-items-center justify-content-center gap-2 border-0">
+                                <i class="bi bi-telephone-fill fs-5"></i> Ligar Agora
+                            </a>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <a href="https://wa.me/244{{ parceiro.telemovel|replace(' ', '') }}" class="btn btn-whatsapp w-100 py-3 rounded-4 shadow-sm fw-900 transition-all hover-up d-flex align-items-center justify-content-center gap-2 border-0" target="_blank">
+                                <i class="bi bi-whatsapp fs-5"></i> WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-light text-center border-top">
+                    <div class="d-inline-flex align-items-center gap-2 bg-white px-3 py-2 rounded-pill shadow-sm border">
+                        <i class="bi bi-shield-lock-fill text-success"></i>
+                        <p class="small text-muted m-0 fw-800">Negócio Protegido AgroKongo</p>
+                    </div>
+                    <p class="tiny text-muted mt-3 mb-0 fw-600 px-4">Lembre-se: nunca faça pagamentos antecipados sem confirmar a mercadoria.</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="{{ url_for('perfil.dashboard') }}" class="text-decoration-none text-muted fw-800 small ls-1 transition-all hover-success-text">
+                    <i class="bi bi-grid-1x2-fill me-2"></i> VOLTAR AO PAINEL PRINCIPAL
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --whatsapp-color: #25D366;
+        --dark-agrokongo: #020617;
+        --green-agrokongo: #15803d;
+    }
+
+    .label-caps { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+    .ls-2 { letter-spacing: 2px; }
+    .text-success-light { color: #4ade80 !important; }
+
+    /* Sucesso e Animações */
+    .success-icon-animation {
+        position: relative; width: 110px; height: 110px; margin: 0 auto;
+        background: #f0fdf4; border-radius: 35px; display: flex;
+        align-items: center; justify-content: center; font-size: 4rem;
+    }
+    .pulse-ring {
+        position: absolute; width: 100%; height: 100%;
+        border: 4px solid var(--green-agrokongo); border-radius: 35px;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    /* Cartão Estilizado */
+    .card-gradient-top {
+        background: linear-gradient(135deg, var(--dark-agrokongo) 0%, var(--green-agrokongo) 100%);
+    }
+
+    .shadow-xl { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.18); }
+
+    .btn-dark-agrokongo { background: var(--dark-agrokongo); color: white; }
+    .btn-dark-agrokongo:hover { background: #1e293b; color: white; }
+
+    .btn-whatsapp { background: var(--whatsapp-color); color: white; }
+    .btn-whatsapp:hover { background: #1eb956; color: white; }
+
+    .phone-display { border-color: #e2e8f0; }
+
+    .hover-up:hover { transform: translateY(-5px); }
+    .hover-success-text:hover { color: var(--green-agrokongo) !important; }
+
+    .tiny { font-size: 0.72rem; }
+</style>
+{% endblock %}

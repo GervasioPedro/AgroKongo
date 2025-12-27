@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Meus Interesses — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5 animate__animated animate__fadeIn">
+
+    <div class="row align-items-center mb-5 g-4">
+        <div class="col-md-7">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-800 tiny ls-1 text-uppercase">Área de Procura</span>
+            </div>
+            <h1 class="fw-900 text-dark display-5" style="letter-spacing: -2px;">Meus Interesses</h1>
+            <p class="text-muted fw-600 fs-5 m-0">Gerencie as suas solicitações para que os produtores o encontrem com facilidade.</p>
+        </div>
+        <div class="col-md-5 text-md-end">
+            <a href="{{ url_for('perfil.novo_interesse') }}" class="btn btn-warning-dark px-4 py-3 rounded-4 shadow-lg fw-800 transition-all hover-up">
+                <i class="bi bi-plus-circle-fill me-2"></i> Criar Novo Pedido
+            </a>
+        </div>
+    </div>
+
+    {% if interesses %}
+        <div class="row g-4">
+            {% for interesse in interesses %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-5 p-4 border-hover-gold transition-all bg-white">
+
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <span class="status-badge status-{{ interesse.status }}">
+                                {% if interesse.status == 'pendente' %}
+                                    <span class="dot-ping"></span> Aguardando Stock
+                                {% else %}
+                                    <i class="bi bi-check-circle-fill me-1"></i> Match Encontrado
+                                {% endif %}
+                            </span>
+                            <span class="tiny fw-800 text-muted opacity-50">#{{ interesse.id }}</span>
+                        </div>
+
+                        <div class="mb-4">
+                            <h3 class="fw-900 text-dark mb-3 h4">{{ interesse.produto.nome if interesse.produto else "Produto" }}</h3>
+
+                            <div class="bg-light rounded-4 p-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="label-caps d-block text-muted mb-1" style="font-size: 0.6rem;">Volume</span>
+                                    <span class="fw-900 fs-5 text-dark">{{ "{:,.0f}".format(interesse.quantidade_kg) }} <small class="fw-600">KG</small></span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="label-caps d-block text-muted mb-1" style="font-size: 0.6rem;">Local de Entrega</span>
+                                    <span class="fw-800 text-dark"><i class="bi bi-geo-alt-fill text-warning me-1"></i>{{ interesse.provincia_alvo }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto pt-3 border-top border-light">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <span class="tiny text-muted fw-600"><i class="bi bi-calendar3 me-1"></i> {{ interesse.data_interesse.strftime('%d/%m/%Y') }}</span>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a href="#" class="btn btn-dark fw-800 w-100 rounded-3 py-2">Ver Matches</a>
+
+                                <form action="{{ url_for('perfil.eliminar_interesse', id=interesse.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger border-0 rounded-3 px-3 py-2"
+                                            onclick="return confirm('Tem certeza que deseja apagar este interesse?')">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card border-0 rounded-5 py-5 text-center shadow-sm bg-white border-dashed-2">
+            <div class="py-5">
+                <div class="display-1 mb-4 opacity-25">📋</div>
+                <h2 class="fw-900 text-dark">Nenhum pedido ativo</h2>
+                <p class="text-muted mx-auto mb-5 fw-600" style="max-width: 450px;">
+                    Publique o que procura e deixe que o AgroKongo encontre os melhores produtores para si automaticamente.
+                </p>
+                <a href="{{ url_for('perfil.novo_interesse') }}" class="btn btn-warning-dark px-5 py-3 rounded-4 shadow-lg fw-900">
+                    Fazer Meu Primeiro Pedido
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-5">
+        <a href="{{ url_for('perfil.dashboard') }}" class="text-decoration-none text-muted fw-800 small hover-opacity transition-all">
+            <i class="bi bi-grid-fill me-2"></i> VOLTAR AO PAINEL PRINCIPAL
+        </a>
+    </div>
+
+</div>
+
+<style>
+    .label-caps { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; }
+    .ls-1 { letter-spacing: 1px; }
+    .tiny { font-size: 0.75rem; }
+
+    .btn-warning-dark { background: #f59e0b; color: white; border: none; }
+    .btn-warning-dark:hover { background: #d97706; color: white; }
+
+    .border-hover-gold:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(245, 158, 11, 0.1) !important; }
+
+    .status-badge {
+        padding: 6px 14px; border-radius: 12px; font-size: 0.65rem; font-weight: 800;
+        text-transform: uppercase; display: flex; align-items: center; gap: 8px;
+    }
+    .status-pendente { background: #fffbeb; color: #b45309; }
+    .status-concluido { background: #f0fdf4; color: #15803d; }
+
+    /* Animação do ponto pulsante */
+    .dot-ping {
+        width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%;
+        display: inline-block; position: relative;
+    }
+    .dot-ping::after {
+        content: ""; position: absolute; width: 100%; height: 100%;
+        background-color: inherit; border-radius: 50%;
+        animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes ping { 75%, 100% { transform: scale(2.5); opacity: 0; } }
+
+    .border-dashed-2 { border: 2px dashed #e2e8f0 !important; }
+    .hover-up:hover { transform: translateY(-3px); }
+    .hover-opacity:hover { opacity: 0.7; }
+</style>
+{% endblock %}

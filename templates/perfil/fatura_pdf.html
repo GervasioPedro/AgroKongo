@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprovativo #{{ transacao.id }} — AgroKongo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --green-ak: #15803d;
+            --dark-ak: #0f172a;
+            --slate-ak: #64748b;
+            --bg-ak: #f8fafc;
+        }
+
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--dark-ak);
+            background: #e2e8f0;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        /* BARRA DE AÇÕES (NÃO IMPRIME) */
+        .no-print-zone {
+            max-width: 850px;
+            margin: 0 auto 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-elite {
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: var(--green-ak); color: white; box-shadow: 0 10px 20px -5px rgba(21, 128, 61, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); background: #166534; }
+
+        .btn-white { background: white; color: var(--dark-ak); border: 2px solid #cbd5e1; }
+        .btn-white:hover { background: #f1f5f9; }
+
+        /* PAPEL DA FATURA */
+        .fatura-paper {
+            background: white;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 60px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            position: relative;
+            min-height: 1000px;
+        }
+
+        /* HEADER */
+        .header-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 4px solid var(--green-ak);
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+
+        .brand-box h1 {
+            margin: 0;
+            font-weight: 900;
+            font-size: 2.2rem;
+            letter-spacing: -2px;
+            color: var(--dark-ak);
+        }
+
+        .meta-box { text-align: right; }
+        .meta-box h2 {
+            margin: 0;
+            color: var(--green-ak);
+            font-weight: 900;
+            font-size: 1.1rem;
+            letter-spacing: 3px;
+        }
+
+        /* INFO GRID */
+        .participant-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 50px;
+        }
+
+        .part-box h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--slate-ak);
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .part-box p { margin: 4px 0; font-weight: 600; font-size: 0.95rem; }
+        .part-box .label-sub { color: var(--slate-ak); font-weight: 400; font-size: 0.8rem; }
+
+        /* TABELA DE PRODUTOS */
+        .table-custom { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .table-custom th {
+            background: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--slate-ak);
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-custom td { padding: 20px 15px; border-bottom: 1px solid #f1f5f9; font-weight: 700; }
+
+        .total-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .total-val { font-size: 2rem; font-weight: 900; color: var(--green-ak); }
+
+        /* ELEMENTOS DE SEGURANÇA */
+        .custody-badge {
+            background: #f0fdf4;
+            border: 2px dashed #15803d;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 50px;
+            position: relative;
+        }
+
+        .custody-badge i {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.5rem;
+            color: var(--green-ak);
+            opacity: 0.1;
+        }
+
+        .status-stamp {
+            position: absolute;
+            top: 150px;
+            right: 100px;
+            border: 5px solid #15803d;
+            color: #15803d;
+            padding: 8px 25px;
+            font-weight: 900;
+            text-transform: uppercase;
+            border-radius: 8px;
+            transform: rotate(15deg);
+            opacity: 0.15;
+            font-size: 1.8rem;
+            pointer-events: none;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: var(--slate-ak);
+            font-size: 0.75rem;
+            padding: 0 60px;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .no-print-zone { display: none; }
+            .fatura-paper { box-shadow: none; padding: 0; max-width: 100%; }
+            .status-stamp { opacity: 0.1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print-zone">
+        <a href="{{ url_for('perfil.dashboard') }}" class="btn-elite btn-white">
+            <i class="bi bi-chevron-left"></i> Sair do Comprovativo
+        </a>
+        <button onclick="window.print()" class="btn-elite btn-primary">
+            <i class="bi bi-printer-fill"></i> Gerar PDF / Imprimir
+        </button>
+    </div>
+
+    <div class="fatura-paper">
+        <div class="status-stamp">Pagamento Retido</div>
+
+        <header class="header-main">
+            <div class="brand-box">
+                <h1>AGRO<span style="color: var(--green-ak);">KONGO</span></h1>
+                <p style="font-weight: 700; color: var(--slate-ak); font-size: 0.8rem; margin: 0;">Business & Intelligence Agrícola</p>
+            </div>
+            <div class="meta-box">
+                <h2>RECIBO DE TRANSAÇÃO</h2>
+                <p style="margin: 0; font-weight: 900; font-size: 1.2rem;">#AK-{{ transacao.id }}</p>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--slate-ak);">Emitido em: {{ transacao.data_criacao.strftime('%d/%m/%Y às %H:%M') }}</p>
+            </div>
+        </header>
+
+        <div class="participant-grid">
+            <div class="part-box">
+                <h3>Vendedor (Emitente)</h3>
+                {% set produtor = transacao.safra.produtor %}
+                <p>{{ produtor.nome }}</p>
+                <p class="label-sub">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    {% if produtor.municipio %}{{ produtor.municipio.nome }}, {{ produtor.provincia.nome }}{% else %}Angola{% endif %}
+                </p>
+                <p class="label-sub"><i class="bi bi-phone"></i> +244 {{ produtor.telemovel }}</p>
+            </div>
+            <div class="part-box">
+                <h3>Comprador (Beneficiário)</h3>
+                <p>{{ transacao.comprador.nome }}</p>
+                <p class="label-sub"><i class="bi bi-shield-check text-success"></i> Identidade Verificada na Rede</p>
+                <p class="label-sub"><i class="bi bi-phone"></i> +244 {{ transacao.comprador.telemovel }}</p>
+            </div>
+        </div>
+
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Descrição Técnica do Lote</th>
+                    <th style="text-align: center;">Quantidade</th>
+                    <th style="text-align: right;">Custo Unitário</th>
+                    <th style="text-align: right;">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div style="font-size: 1.1rem; margin-bottom: 4px;">{{ transacao.safra.produto.nome }}</div>
+                        <div style="color: var(--slate-ak); font-size: 0.75rem; font-weight: 400;">
+                            Referência Única: AgroKongo-Lote-{{ transacao.safra.id }}
+                        </div>
+                    </td>
+                    <td style="text-align: center;">{{ transacao.quantidade }} KG</td>
+                    <td style="text-align: right;">{{ transacao.preco_unitario | formata_kz }}</td>
+                    <td style="text-align: right;">{{ transacao.preco_total | formata_kz }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <span style="font-weight: 800; color: var(--slate-ak);">VALOR TOTAL GARANTIDO:</span>
+            <span class="total-val">{{ transacao.preco_total | formata_kz }}</span>
+        </div>
+
+        <div class="custody-badge">
+            <i class="bi bi-lock-fill"></i>
+            <h4 style="margin: 0 0 10px 0; color: var(--green-ak); font-weight: 900; letter-spacing: 1px; font-size: 0.8rem;">
+                PROTEÇÃO DE CUSTÓDIA (ESCROW)
+            </h4>
+            <p style="margin: 0; font-size: 0.85rem; color: #166534; font-weight: 600; max-width: 80%;">
+                Este valor encontra-se depositado na conta de garantia da AgroKongo.
+                A libertação dos fundos ao vendedor está condicionada à confirmação de receção da mercadoria pelo comprador.
+                Transação 100% protegida contra fraude.
+            </p>
+        </div>
+
+        <footer class="footer">
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <p style="margin-bottom: 5px; font-weight: 800;">AGROKONGO — ACELERANDO O AGRONEGÓCIO EM ANGOLA</p>
+                <p>Este documento eletrónico serve como prova de transação financeira dentro do ecossistema AgroKongo.</p>
+                <p>Luanda, Angola • Verificação Digital: www.agrokongo.com/verify/{{ transacao.id }}</p>
+            </div>
+        </footer>
+    </div>
+
+</body>
+</html>+

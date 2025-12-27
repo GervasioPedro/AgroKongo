@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://agrokongo:senha_segura@db:5432/agrokongo
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=chave-secreta-producao
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./app:/app
+    command: gunicorn -w 4 -b 0.0.0.0:5000 app:app
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=agrokongo
+      - POSTGRES_USER=agrokongo
+      - POSTGRES_PASSWORD=senha_segura
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A app.celery worker --loglevel=info
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://agrokongo:senha_segura@db:5432/agrokongo
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./app:/app
+
+volumes:
+  postgres_data:

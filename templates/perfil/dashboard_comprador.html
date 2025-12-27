@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Painel de Compras — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-container animate__animated animate__fadeIn">
+
+    <div class="welcome-section mb-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-4">
+            <div class="d-flex align-items-center gap-4">
+                <div class="profile-avatar shadow-sm">
+                    {{ current_user.nome[0]|upper if current_user.nome else 'U' }}
+                </div>
+                <div>
+                    <span class="badge bg-success-soft text-success rounded-pill px-3 mb-2">
+                        <i class="bi bi-patch-check-fill me-1"></i> Comprador Verificado
+                    </span>
+                    <h1 class="display-6 fw-900 m-0 text-dark-sharp">Olá, {{ current_user.nome.split()[0] }}!</h1>
+                    <p class="text-slate m-0 fw-500">Gerencie suas propostas e acompanhe seus pagamentos seguros.</p>
+                </div>
+            </div>
+            <a href="{{ url_for('mercado.explorar') }}" class="btn btn-shop shadow-shop">
+                <i class="bi bi-search me-2"></i> EXPLORAR MERCADO
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="status-card-v2">
+                        <div class="status-icon-box bg-warning-soft text-warning">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3 class="m-0 fw-900 text-dark-sharp">{{ pedidos_pendentes_count }}</h3>
+                            <span class="text-slate fw-700 text-uppercase tiny-label">Ações Pendentes</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="status-card-v2">
+                        <div class="status-icon-box bg-primary-soft text-primary">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3 class="m-0 fw-900 text-dark-sharp">{{ pedidos_custodia_count }}</h3>
+                            <span class="text-slate fw-700 text-uppercase tiny-label">Protegido em Custódia</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="surface-white shadow-sm mb-5">
+                <div class="p-4 border-bottom bg-light">
+                    <h5 class="fw-900 m-0 text-dark-sharp"><i class="bi bi-receipt me-2 text-primary"></i> Pagamentos e Faturas</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4 py-3 tiny-label fw-800 text-slate">PRODUTO / REF</th>
+                                <th class="py-3 tiny-label fw-800 text-slate text-center">ESTADO</th>
+                                <th class="pe-4 py-3 tiny-label fw-800 text-slate text-end">AÇÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transacoes %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-800 text-dark-sharp">{{ t.safra.produto.nome }}</div>
+                                    <div class="tiny text-slate fw-600">Fatura: {{ t.fatura_ref }}</div>
+                                </td>
+                                <td class="text-center">
+                                    {% if t.status == 'pendente_pagamento' %}
+                                        <span class="badge-status bg-warning-soft text-warning">Aguardando Pagamento</span>
+                                    {% elif t.status == 'aguardando_validacao' %}
+                                        <span class="badge-status bg-info-soft text-info pulsate">Em Validação</span>
+                                    {% elif t.status == 'pago_custodia' %}
+                                        <span class="badge-status bg-primary-soft text-primary">Dinheiro em Custódia</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4 text-end">
+                                    {% if t.status == 'pendente_pagamento' %}
+                                        <a href="{{ url_for('perfil.realizar_pagamento', id=t.id) }}" class="btn btn-sm btn-dark rounded-pill px-3 fw-800">Pagar</a>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-light rounded-pill px-3 fw-800" disabled>Ver Detalhes</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="surface-white shadow-sm">
+                <div class="p-4 border-bottom">
+                    <h5 class="fw-900 m-0 text-dark-sharp"><i class="bi bi-chat-left-dots me-2 text-success"></i> Minhas Propostas</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <tbody>
+                            {% for i in interesses %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-800 text-dark-sharp">{{ i.safra.produto.nome }}</div>
+                                    <div class="tiny text-slate fw-600">{{ i.safra.produtor.nome }}</div>
+                                </td>
+                                <td class="text-center">
+                                    {% if i.status == 'pendente' %}
+                                        <span class="badge-status bg-warning-soft text-warning">Sob Análise</span>
+                                    {% elif i.status == 'aceito' %}
+                                        <span class="badge-status bg-success-soft text-success">Aceite</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4 text-end text-slate small">
+                                    {{ i.data_criacao.strftime('%d/%m/%Y') }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <div class="info-card-dark shadow-lg">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="text-success fs-2"><i class="bi bi-shield-lock"></i></div>
+                        <div>
+                            <h6 class="fw-900 text-white mb-2">Segurança AgroKongo</h6>
+                            <p class="small text-white-50 m-0">O pagamento é validado pelo Admin e o valor fica retido até que você confirme a entrega.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos Adicionais para Status */
+    .bg-info-soft { background: #e0f2fe; color: #0369a1; }
+
+    .pulsate {
+        animation: pulse-info 2s infinite;
+    }
+
+    @keyframes pulse-info {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    /* Manter seus estilos originais abaixo */
+    .dashboard-container { max-width: 1250px; margin: 0 auto; padding: 2rem; background: #f8fafc; min-height: 100vh; }
+    .profile-avatar { width: 75px; height: 75px; background: #0f172a; color: white; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 900; }
+    .surface-white { background: white; border-radius: 28px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .badge-status { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+    .status-card-v2 { background: white; border-radius: 24px; padding: 25px; display: flex; align-items: center; gap: 20px; border: 1px solid #e2e8f0; }
+    .info-card-dark { background: #0f172a; border-radius: 24px; padding: 30px; }
+</style>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Página não encontrada — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center animate__animated animate__fadeIn">
+    <div class="py-5">
+        <h1 class="display-1 fw-900 text-success mb-0">404</h1>
+        <div class="mb-4">
+            <i class="bi bi-search display-4 text-muted opacity-25"></i>
+        </div>
+
+        <h2 class="fw-900 text-dark">Parece que se perdeu no campo...</h2>
+        <p class="text-muted fs-5 mb-5">A página que procura não existe ou foi movida para outra colheita.</p>
+
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="/" class="btn btn-success rounded-pill px-5 py-3 fw-800 shadow-lg">
+                <i class="bi bi-house-door-fill me-2"></i>Voltar ao Início
+            </a>
+
+            <a href="{{ url_for('mercado.explorar') }}" class="btn btn-outline-dark rounded-pill px-5 py-3 fw-800">
+                Ver Mercado
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .display-1 {
+        font-size: 8rem;
+        letter-spacing: -5px;
+    }
+</style>
+{% endblock %}

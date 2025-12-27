@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Painel de Controlo — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-lg-4">
+
+    <div class="row align-items-center mb-5 animate__animated animate__fadeIn">
+        <div class="col-md-7">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-800 tiny text-uppercase ls-2 border border-success border-opacity-10">
+                    Área do {{ current_user.tipo|capitalize }}
+                </span>
+                <span class="text-muted tiny fw-800"><i class="bi bi-calendar3 me-1"></i> Hoje, {% set dt = None %}{{ "27 de Dez" }}</span>
+            </div>
+            <h1 class="fw-900 text-dark display-5 mb-1" style="letter-spacing: -2px;">
+                Olá, {{ current_user.nome.split(' ')[0] if current_user.nome else 'Amigo' }}! 👋
+            </h1>
+            <p class="text-muted fw-600 fs-5">Gerencie os seus negócios no campo com clareza.</p>
+        </div>
+        <div class="col-md-5 text-md-end mt-4 mt-md-0">
+            <div class="d-flex gap-2 justify-content-md-end">
+                {% if current_user.tipo == 'produtor' %}
+                    <a href="{{ url_for('perfil.nova_safra') }}" class="btn btn-success px-4 py-3 rounded-pill shadow-lg fw-900 transition-all hover-up border-0">
+                        <i class="bi bi-plus-lg me-2"></i>Publicar Safra
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('mercado.explorar') }}" class="btn btn-success px-4 py-3 rounded-pill shadow-lg fw-900 transition-all hover-up border-0">
+                        <i class="bi bi-search me-2"></i>Explorar Mercado
+                    </a>
+                {% endif %}
+                <button class="btn btn-white shadow-sm rounded-circle p-3 d-flex align-items-center justify-content-center border" style="width: 55px; height: 55px;">
+                    <i class="bi bi-bell-fill text-muted"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-5 p-4 h-100 bg-white border-bottom border-4 border-success">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-box-icon bg-success bg-opacity-10 text-success rounded-4">
+                        <i class="bi bi-briefcase-fill fs-4"></i>
+                    </div>
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill tiny fw-800">+12%</span>
+                </div>
+                <span class="label-caps text-muted mb-1">Total de Pedidos</span>
+                <h2 class="fw-900 mb-0 text-dark display-6">{{ total_pedidos|default(0) }}</h2>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-5 p-4 h-100 bg-white border-bottom border-4 border-primary">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-box-icon bg-primary bg-opacity-10 text-primary rounded-4">
+                        <i class="bi bi-cash-stack fs-4"></i>
+                    </div>
+                    <span class="text-muted tiny fw-800">Estimativa</span>
+                </div>
+                <span class="label-caps text-muted mb-1">Volume de Negócios</span>
+                <h2 class="fw-900 mb-0 text-dark display-6 text-truncate">
+                    {{ "{:,.0f}".format(total_valor|default(0)) }} <small class="fs-6 fw-800">Kz</small>
+                </h2>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-5 p-4 h-100 bg-white border-bottom border-4 border-warning">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="stat-box-icon bg-warning bg-opacity-10 text-warning rounded-4">
+                        <i class="bi bi-star-fill fs-4"></i>
+                    </div>
+                    <div class="text-warning">
+                        <i class="bi bi-star-fill tiny"></i> <span class="fw-900 tiny">Premium</span>
+                    </div>
+                </div>
+                <span class="label-caps text-muted mb-1">Reputação Digital</span>
+                <h2 class="fw-900 mb-0 text-dark display-6">4.9 <small class="text-muted fs-6">/ 5.0</small></h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row animate__animated animate__fadeInUp">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-5 overflow-hidden bg-white">
+                <div class="p-4 p-md-5 border-bottom bg-light bg-opacity-50">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <h4 class="fw-900 mb-1 text-dark">Atividade Recente</h4>
+                            <p class="text-muted small fw-600 mb-0">Últimas 10 transações realizadas na plataforma.</p>
+                        </div>
+                        <a href="#" class="btn btn-white rounded-pill px-4 py-2 fw-800 small border shadow-sm">
+                            Ver Histórico Completo
+                        </a>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle custom-table mb-0">
+                        <thead class="bg-light bg-opacity-20">
+                            <tr>
+                                <th class="label-caps py-4 ps-4">Referência / Produto</th>
+                                <th class="label-caps py-4">Data do Registo</th>
+                                <th class="label-caps py-4">Estado</th>
+                                <th class="label-caps py-4 text-end pe-4">Valor Estimado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos_recentes %}
+                            <tr class="border-bottom border-light">
+                                <td class="py-4 ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-avatar bg-light rounded-4 me-3 fs-3">
+                                            {% if 'Batata' in pedido.produto %}🥔{% elif 'Milho' in pedido.produto %}🌽{% else %}📦{% endif %}
+                                        </div>
+                                        <div>
+                                            <span class="d-block fw-900 text-dark fs-6">{{ pedido.produto }}</span>
+                                            <span class="tiny text-muted fw-800 text-uppercase ls-1">#REF-{{ pedido.id }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-muted fw-700 small">{{ pedido.data.strftime('%d %b, %Y') }}</td>
+                                <td>
+                                    <span class="badge {% if pedido.status == 'Concluído' %}bg-success{% else %}bg-warning text-dark{% endif %} rounded-pill px-3 py-2 fw-800 tiny">
+                                        {{ pedido.status|upper }}
+                                    </span>
+                                </td>
+                                <td class="text-end fw-900 pe-4 text-dark fs-6">{{ "{:,.2f}".format(pedido.valor) }} Kz</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 border-0 bg-white">
+                                    <div class="empty-state py-5">
+                                        <i class="bi bi-inbox display-1 text-muted opacity-10"></i>
+                                        <h5 class="fw-900 text-dark mt-3">Ainda sem movimentos</h5>
+                                        <p class="text-muted fw-600">As suas atividades aparecerão aqui em tempo real.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root { --green-agrokongo: #15803d; }
+
+    .label-caps { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+    .ls-2 { letter-spacing: 2px; }
+    .tiny { font-size: 0.72rem; }
+
+    /* Avatar do Ícone do Produto */
+    .icon-avatar {
+        width: 55px; height: 55px; display: flex; align-items: center; justify-content: center;
+        border: 1px solid #f1f5f9;
+    }
+
+    /* Stat Boxes */
+    .stat-box-icon {
+        width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Tabela Customizada */
+    .custom-table thead th { border: none; color: #64748b; }
+    .custom-table tbody tr { transition: 0.2s; }
+    .custom-table tbody tr:hover { background-color: #f8fafc !important; }
+
+    .btn-white { background: white; color: #1e293b; transition: 0.3s; }
+    .btn-white:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    .hover-up:hover { transform: translateY(-5px); }
+    .shadow-lg { box-shadow: 0 15px 30px -5px rgba(21, 128, 61, 0.25) !important; }
+</style>
+{% endblock %}

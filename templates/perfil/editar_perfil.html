@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Definições de Perfil — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f8fafc 0%, #f1f5f9 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+        <div class="row g-4 lg-g-5 justify-content-center">
+
+            <div class="col-lg-4 col-xl-3">
+                <div class="sticky-top" style="top: 20px;">
+                    <div class="card border-0 shadow-sm rounded-5 overflow-hidden bg-white mb-4 border border-light-sharp">
+                        <div class="p-4 text-center border-bottom bg-light-sharp">
+                            <div class="profile-avatar-wrapper mx-auto mb-3">
+                                <div class="profile-avatar-main shadow-lg rounded-circle border border-white border-4 bg-success text-white fw-900 fs-1 d-flex align-items-center justify-content-center">
+                                    {{ current_user.nome[0]|upper }}
+                                </div>
+                                <label for="photo-upload" class="btn-edit-overlay shadow-sm" title="Mudar Foto">
+                                    <i class="bi bi-camera-fill"></i>
+                                </label>
+                                <input type="file" id="photo-upload" class="d-none">
+                            </div>
+                            <h5 class="fw-900 text-dark-sharp m-0">{{ current_user.nome }}</h5>
+                            <div class="mt-2">
+                                <span class="badge bg-success-dark text-white rounded-pill px-3 py-1 fw-800 tiny text-uppercase ls-1">
+                                    {{ current_user.tipo }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-3">
+                            <div class="nav flex-column nav-pills custom-pills-elite">
+                                <button class="nav-link active mb-2 border-0 text-start d-flex align-items-center w-100" onclick="scrollToSection(this, 'seccao-dados')">
+                                    <i class="bi bi-person-circle fs-5 me-3"></i>
+                                    <div>
+                                        <span class="d-block">Dados Gerais</span>
+                                        <small class="opacity-50 fw-600">Informações básicas</small>
+                                    </div>
+                                </button>
+                                <button class="nav-link mb-2 border-0 text-start d-flex align-items-center w-100" onclick="scrollToSection(this, 'seccao-seguranca')">
+                                    <i class="bi bi-shield-lock-fill fs-5 me-3"></i>
+                                    <div>
+                                        <span class="d-block">Segurança</span>
+                                        <small class="opacity-50 fw-600">Senha e acessos</small>
+                                    </div>
+                                </button>
+                                <button class="nav-link mb-2 border-0 text-start d-flex align-items-center w-100" onclick="scrollToSection(this, 'seccao-localizacao')">
+                                    <i class="bi bi-geo-alt-fill fs-5 me-3"></i>
+                                    <div>
+                                        <span class="d-block">Localização</span>
+                                        <small class="opacity-50 fw-600">Sede e logística</small>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-glass border-0 rounded-5 p-4 text-center border-dashed-success">
+                        <div class="d-flex flex-column align-items-center gap-2">
+                            <div class="icon-shape bg-success text-white rounded-circle shadow-sm mb-2" style="width: 40px; height: 40px;">
+                                <i class="bi bi-patch-check-fill"></i>
+                            </div>
+                            <p class="tiny fw-900 text-success-dark m-0 ls-2">IDENTIDADE VERIFICADA</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-lg rounded-5 p-4 p-md-5 bg-white border border-light-sharp">
+                    <div class="d-flex justify-content-between align-items-start mb-5 flex-wrap gap-3">
+                        <div>
+                            <h3 class="fw-900 text-dark-sharp" style="letter-spacing: -1.5px;">Configurações de Perfil</h3>
+                            <p class="text-slate-bold fw-600 m-0">Mantenha seus dados atualizados para melhores negócios.</p>
+                        </div>
+                        <span class="badge bg-light-sharp text-slate-bold border rounded-pill px-3 py-2 fw-800 tiny">ID: #AK-{{ current_user.id }}</span>
+                    </div>
+
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+                        <div id="seccao-dados" class="row g-4 mb-5 animate__animated animate__fadeIn">
+                            <div class="col-12">
+                                <h5 class="fw-900 text-dark-sharp mb-3"><i class="bi bi-person me-2"></i>Dados Gerais</h5>
+                            </div>
+                            <div class="col-12">
+                                <label class="label-caps-elite mb-2 d-block">Nome do Perfil ou Empresa</label>
+                                <div class="input-modern-wrapper">
+                                    <i class="bi bi-person-fill input-icon"></i>
+                                    <input type="text" name="nome" class="form-control-elite" value="{{ current_user.nome }}" required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="label-caps-elite mb-2 d-block">Biografia / Descrição da Atividade</label>
+                                <textarea name="bio" rows="4" class="form-control-elite-area" placeholder="Descreva sua produção...">{{ current_user.bio or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div id="seccao-seguranca" class="row g-4 mb-5 pt-5 border-top animate__animated animate__fadeIn">
+                            <div class="col-12">
+                                <h5 class="fw-900 text-dark-sharp mb-3"><i class="bi bi-shield-lock me-2"></i>Segurança da Conta</h5>
+                            </div>
+                            <div class="col-12">
+                                <div class="bg-light-sharp p-4 rounded-4 border border-light-sharp">
+                                    <p class="text-slate-bold small fw-700 mb-3">Para alterar sua senha, clique no botão abaixo para receber um link de redefinição no seu e-mail cadastrado.</p>
+                                    <button type="button" class="btn btn-white-sharp border-2 rounded-pill px-4 py-2 fw-800 tiny shadow-sm">
+                                        Solicitar Nova Senha
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="seccao-localizacao" class="row g-4 mb-5 pt-5 border-top animate__animated animate__fadeIn">
+                            <div class="col-12">
+                                <h5 class="fw-900 text-dark-sharp mb-3"><i class="bi bi-geo-alt me-2"></i>Localização e Contacto</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="label-caps-elite mb-2 d-block">Contacto Telefónico</label>
+                                <div class="input-modern-wrapper">
+                                    <span class="ms-3 fw-900 text-success-dark">+244</span>
+                                    <input type="tel" name="telemovel" class="form-control-elite" value="{{ current_user.telemovel }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="label-caps-elite mb-2 d-block">Província</label>
+                                <div class="input-modern-wrapper">
+                                    <i class="bi bi-geo-alt-fill input-icon text-success"></i>
+                                    <select name="provincia_id" id="provincia_id" class="form-select border-0 bg-transparent fw-800 shadow-none ps-2 text-dark-sharp">
+                                        {% for p in provincias %}
+                                            <option value="{{ p.id }}" {{ 'selected' if p.id == current_user.provincia_id }}>{{ p.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="label-caps-elite mb-2 d-block">Município</label>
+                                <div class="input-modern-wrapper">
+                                    <i class="bi bi-map-fill input-icon"></i>
+                                    <select name="municipio_id" id="municipio_id" class="form-select border-0 bg-transparent fw-800 shadow-none ps-2 text-dark-sharp">
+                                        {% for m in municipios %}
+                                            <option value="{{ m.id }}" {{ 'selected' if m.id == current_user.municipio_id }}>{{ m.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="label-caps-elite mb-2 d-block">Ponto de Referência</label>
+                                <div class="input-modern-wrapper">
+                                    <i class="bi bi-pin-map-fill input-icon"></i>
+                                    <input type="text" name="referencia" class="form-control-elite" value="{{ current_user.referencia or '' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-5 pt-4 border-top">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-4">
+                                <a href="{{ url_for('perfil.dashboard') }}" class="text-decoration-none text-slate-bold fw-800 small transition-all hover-success-text">
+                                    <i class="bi bi-arrow-left me-1"></i> Descartar
+                                </a>
+                                <button type="submit" class="btn btn-success-dark px-5 py-3 rounded-pill shadow-green fw-900 transition-all hover-up border-0">
+                                    Guardar Alterações <i class="bi bi-check-lg ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* REFINAMENTOS VISUAIS */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .text-success-dark { color: #15803d !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .border-light-sharp { border-color: #e2e8f0 !important; }
+
+    /* MENU LATERAL */
+    .custom-pills-elite .nav-link {
+        color: #64748b; padding: 16px; border-radius: 20px;
+        transition: 0.3s; border: 1px solid transparent !important;
+        background: transparent;
+    }
+    .custom-pills-elite .nav-link.active {
+        background: #ffffff !important; color: #15803d !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-color: #f1f5f9 !important;
+    }
+    .custom-pills-elite .nav-link:hover:not(.active) { background: #f8fafc; color: #0f172a; }
+
+    /* FORMULÁRIO */
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; }
+    .input-modern-wrapper {
+        display: flex; align-items: center; background: #f8fafc;
+        border: 2px solid #f1f5f9; border-radius: 18px; transition: 0.3s;
+    }
+    .input-modern-wrapper:focus-within {
+        background: white; border-color: #15803d;
+        box-shadow: 0 12px 24px rgba(21, 128, 61, 0.08);
+    }
+    .form-control-elite {
+        border: none; background: transparent; padding: 15px 12px;
+        width: 100%; font-weight: 800; color: #0f172a; outline: none;
+    }
+    .form-control-elite-area {
+        border: 2px solid #f1f5f9; background: #f8fafc; padding: 18px;
+        width: 100%; font-weight: 700; color: #0f172a; outline: none;
+        border-radius: 20px; transition: 0.3s;
+    }
+    .input-icon { margin-left: 18px; color: #94a3b8; font-size: 1.1rem; }
+
+    /* AVATAR */
+    .profile-avatar-wrapper { position: relative; width: 100px; height: 100px; }
+    .btn-edit-overlay {
+        position: absolute; bottom: 0; right: 0;
+        width: 32px; height: 32px; background: #15803d; color: white;
+        border: 3px solid white; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: 0.3s;
+    }
+
+    .shadow-green { box-shadow: 0 10px 25px -5px rgba(21, 128, 61, 0.4) !important; }
+    .hover-up:hover { transform: translateY(-4px); }
+</style>
+
+<script>
+// FUNÇÃO DE SCROLL SUAVE E ATIVAÇÃO DE MENU
+function scrollToSection(btn, sectionId) {
+    // Atualiza classes active
+    const allLinks = document.querySelectorAll('.custom-pills-elite .nav-link');
+    allLinks.forEach(link => link.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Scroll suave
+    const target = document.getElementById(sectionId);
+    if (target) {
+        const headerOffset = 40;
+        const elementPosition = target.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+        });
+    }
+}
+
+// LOGICA DE MUNICÍPIOS
+document.getElementById('provincia_id').addEventListener('change', function() {
+    const p_id = this.value;
+    const m_select = document.getElementById('municipio_id');
+    m_select.innerHTML = '<option>A carregar...</option>';
+
+    fetch(`/auth/get_municipios/${p_id}`)
+        .then(response => response.json())
+        .then(data => {
+            m_select.innerHTML = '';
+            data.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.nome;
+                m_select.appendChild(opt);
+            });
+        });
+});
+</script>
+{% endblock %}

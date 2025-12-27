@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Log de Actividades Global — Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-container animate__animated animate__fadeIn">
+    <div class="p-4 bg-dark text-white rounded-4 mb-4 shadow-lg">
+        <h2 class="fw-900 m-0"><i class="bi bi-activity text-success me-2"></i> Auditoria do Sistema</h2>
+        <p class="text-white-50 m-0 small">Histórico de todas as transações financeiras na plataforma.</p>
+    </div>
+
+    <div class="surface-white shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 tiny-label fw-800 text-slate">TIME</th>
+                        <th class="py-3 tiny-label fw-800 text-slate">ENVOLVIDOS</th>
+                        <th class="py-3 tiny-label fw-800 text-slate">FLUXO FINANCEIRO</th>
+                        <th class="pe-4 py-3 tiny-label fw-800 text-slate text-end">ESTADO ATUAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in atividades %}
+                    <tr>
+                        <td class="ps-4 text-slate small fw-600">
+                            {{ a.data_criacao.strftime('%H:%M:%S') }}<br>
+                            {{ a.data_criacao.strftime('%d/%m/%y') }}
+                        </td>
+                        <td>
+                            <div class="fw-800 text-dark-sharp">{{ a.comprador.nome.split()[0] }} <i class="bi bi-arrow-right text-muted mx-1"></i> {{ a.safra.produtor.nome.split()[0] }}</div>
+                            <div class="tiny text-slate fw-500">Ref: {{ a.fatura_ref }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-900 text-dark-sharp">{{ "{:,.2f}".format(a.preco_total) }} Kz</div>
+                            <div class="tiny text-muted uppercase fw-700">{{ a.metodo_pagamento or 'N/A' }}</div>
+                        </td>
+                        <td class="pe-4 text-end">
+                             <span class="badge-status {% if a.status == 'pago_custodia' %}bg-primary-soft text-primary{% else %}bg-warning-soft text-warning{% endif %}">
+                                {{ a.status.upper().replace('_', ' ') }}
+                             </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

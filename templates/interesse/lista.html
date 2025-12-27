@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Interesse de Compra — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate__animated animate__fadeIn">
+
+    <div class="mb-4 d-flex align-items-center">
+        <a href="{{ url_for('perfil.dashboard') }}" class="btn btn-light rounded-pill px-3 py-2 fw-800 small text-muted border-0 shadow-sm transition-all hover-up">
+            <i class="bi bi-arrow-left me-2"></i> Voltar ao Painel
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
+
+                <div class="bg-warning py-1"></div>
+
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-5">
+                        <div class="icon-circle-gold mb-3 shadow-sm">📢</div>
+                        <h1 class="fw-900 text-dark h2" style="letter-spacing: -1.5px;">O que procura hoje?</h1>
+                        <p class="text-muted fw-600">Não encontrou o que precisava? Avise-nos e notificaremos os produtores assim que houver stock.</p>
+                    </div>
+
+                    <div class="info-alert-gold mb-5 p-4 rounded-4 d-flex align-items-start gap-3">
+                        <div class="bg-white rounded-circle p-2 shadow-sm">
+                            <i class="bi bi-lightbulb-fill text-warning fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-900 mb-1" style="font-size: 0.85rem; letter-spacing: 0.5px;">ESTRATÉGIA AGROKONGO</h6>
+                            <p class="small m-0 fw-600 opacity-80">Dê preferência a produtores da sua região para economizar no frete e garantir produtos mais frescos.</p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('perfil.novo_interesse') }}">
+                        <div class="row g-4">
+
+                            <div class="col-12">
+                                <label class="label-caps mb-2 text-muted">Produto Desejado</label>
+                                <div class="input-group-modern-gold">
+                                    <i class="bi bi-search text-warning fs-5"></i>
+                                    <select name="produto_id" class="form-select-modern-gold shadow-none fw-700" required>
+                                        <option value="" disabled selected>O que quer comprar?</option>
+                                        {% for produto in produtos %}
+                                            <option value="{{ produto.id }}">{{ produto.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="label-caps mb-2 text-muted">Quantidade (KG)</label>
+                                <div class="input-group-modern-gold">
+                                    <i class="bi bi-box-seam text-warning fs-5"></i>
+                                    <input type="number" name="quantidade_kg" step="0.01" min="0.1"
+                                           class="form-control-modern-gold shadow-none fw-800"
+                                           placeholder="Ex: 500" required>
+                                    <span class="fw-800 text-muted small ms-2">KG</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="label-caps mb-2 text-muted">Onde levantar?</label>
+                                <div class="input-group-modern-gold">
+                                    <i class="bi bi-geo-alt text-warning fs-5"></i>
+                                    <select name="provincia_alvo" class="form-select-modern-gold shadow-none fw-700" required>
+                                        <option value="" disabled selected>Província...</option>
+                                        {% for provincia in provincias %}
+                                            <option value="{{ provincia.nome }}">{{ provincia.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-5">
+                                <button type="submit" class="btn btn-warning-dark w-100 py-3 rounded-4 shadow-lg fw-900 fs-5 transition-all hover-up">
+                                    Publicar Intenção de Compra <i class="bi bi-megaphone-fill ms-2"></i>
+                                </button>
+                                <div class="text-center mt-4">
+                                    <span class="badge bg-light text-muted border px-3 py-2 rounded-pill fw-700 tiny">
+                                        <i class="bi bi-shield-check text-success me-1"></i> VISÍVEL PARA PRODUTORES VERIFICADOS
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .label-caps { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+
+    .icon-circle-gold {
+        width: 80px; height: 80px; border-radius: 28px; background: #fffbeb;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem; margin: 0 auto;
+    }
+
+    .info-alert-gold { background: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
+
+    .input-group-modern-gold {
+        display: flex; align-items: center; background: #f8fafc; border: 2px solid #f1f5f9;
+        border-radius: 18px; padding: 12px 20px; transition: 0.3s;
+    }
+
+    .input-group-modern-gold:focus-within {
+        border-color: #f59e0b; background: white; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.05);
+    }
+
+    .form-control-modern-gold, .form-select-modern-gold {
+        border: none; background: transparent; width: 100%; margin-left: 12px;
+        font-weight: 600; outline: none; color: #1e293b;
+    }
+
+    .btn-warning-dark {
+        background: #f59e0b; color: white; border: none;
+    }
+
+    .btn-warning-dark:hover {
+        background: #d97706; color: white; transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(245, 158, 11, 0.3) !important;
+    }
+
+    .hover-up:hover { transform: translateY(-2px); }
+    .tiny { font-size: 0.7rem; }
+</style>
+{% endblock %}

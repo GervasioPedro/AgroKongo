@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Seja um Produtor — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5 animate__animated animate__fadeIn">
+    <div class="row justify-content-center">
+        <div class="col-lg-11 col-xl-10">
+            <div class="card bg-white rounded-5 shadow-lg overflow-hidden border-0">
+                <div class="row g-0">
+
+                    <div class="col-lg-5 d-none d-lg-flex p-5 flex-column justify-content-between text-white position-relative"
+                         style="background: linear-gradient(rgba(21, 128, 61, 0.9), rgba(2, 6, 23, 0.92)),
+                                url('https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800');
+                                background-size: cover; background-position: center;">
+
+                        <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');"></div>
+
+                        <div class="position-relative animate__animated animate__fadeInLeft">
+                            <div class="icon-box bg-success-light bg-opacity-20 text-green-bright mb-4" style="width: 60px; height: 60px; font-size: 2rem; border-radius: 18px;">
+                                <i class="bi bi-patch-check"></i>
+                            </div>
+                            <h2 class="display-5 fw-900 mb-4" style="letter-spacing: -2px; line-height: 1;">O seu campo, agora <span class="text-green-bright">digital.</span></h2>
+                            <p class="lead opacity-80 fw-500">Transforme a sua colheita num negócio nacional. Sem intermediários, sem barreiras.</p>
+                        </div>
+
+                        <div class="features-list position-relative animate__animated animate__fadeInUp">
+                            <div class="d-flex align-items-center gap-3 mb-3 bg-white bg-opacity-10 p-3 rounded-4 border border-white border-opacity-10">
+                                <i class="bi bi-shop text-green-bright fs-4"></i>
+                                <span class="fw-700">Montra aberta 24h para Angola</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 bg-white bg-opacity-10 p-3 rounded-4 border border-white border-opacity-10">
+                                <i class="bi bi-wallet2 text-green-bright fs-4"></i>
+                                <span class="fw-700">Pagamentos garantidos via Escrow</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7 p-4 p-md-5 bg-white">
+                        <form method="POST" action="{{ url_for('auth.cadastro', tipo='produtor') }}" id="formProdutor">
+
+                            <div class="mb-5 text-center text-lg-start">
+                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-800 tiny mb-3 border border-success border-opacity-25 animate__animated animate__flash animate__delay-2s">
+                                    <i class="bi bi-1-circle-fill me-1"></i> PASSO 1 DE 2
+                                </span>
+                                <h2 class="fw-900 text-dark mt-2 h3" style="letter-spacing: -1px;">Criar conta de Produtor</h2>
+                                <p class="text-muted fw-600">Defina os seus dados de acesso ao painel agrícola.</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="label-caps mb-2">Contacto do Campo (WhatsApp)</label>
+                                <div class="input-group-modern">
+                                    <span class="fw-900 text-success me-2 border-end pe-3">+244</span>
+                                    <input type="tel" name="telemovel" class="form-control-modern"
+                                           placeholder="9xxxxxxxx" required pattern="9[0-9]{8}" maxlength="9">
+                                    <i class="bi bi-phone text-muted opacity-50"></i>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="label-caps mb-2">Definir Senha</label>
+                                    <div class="input-group-modern">
+                                        <i class="bi bi-lock-fill text-success"></i>
+                                        <input type="password" name="senha" id="senha" class="form-control-modern"
+                                               placeholder="Mínimo 6" required minlength="6">
+                                    </div>
+                                    <div class="strength-meter-2026 mt-2"><div id="strength-bar" class="s-bar"></div></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="label-caps mb-2">Confirmar Senha</label>
+                                    <div class="input-group-modern">
+                                        <i class="bi bi-shield-check text-success"></i>
+                                        <input type="password" id="confirmar_senha" class="form-control-modern"
+                                               placeholder="Repita a senha" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="label-caps mb-2">Província da Exploração Agrícola</label>
+                                <div class="input-group-modern">
+                                    <i class="bi bi-geo-alt-fill text-success"></i>
+                                    <select name="provincia" required class="form-select-modern">
+                                        <option value="" disabled selected>Selecionar Província</option>
+                                        {% for p in provincias %}
+                                            <option value="{{ p.id }}">{{ p.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <i class="bi bi-chevron-down ms-auto text-muted"></i>
+                                </div>
+                                <p class="tiny text-muted mt-2 fw-700 bg-light p-2 rounded-3 d-inline-block">
+                                    <i class="bi bi-info-circle-fill me-1 text-primary"></i> No próximo passo escolheremos o seu município.
+                                </p>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 py-3 rounded-4 shadow-lg d-flex align-items-center justify-content-center gap-2 fw-900 fs-5 transition-all hover-up border-0 btn-glow">
+                                <span>Prosseguir para Município</span>
+                                <i class="bi bi-arrow-right-circle-fill fs-4"></i>
+                            </button>
+
+                            <p class="text-center mt-4 text-muted fw-700">
+                                Já vende no AgroKongo?
+                                <a href="{{ url_for('auth.login') }}" class="text-success fw-900 text-decoration-none ms-1 border-bottom border-success border-2">Entrar na Conta</a>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root { --green-agrokongo: #15803d; --green-bright: #4ade80; }
+
+    .label-caps { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: #64748b; }
+
+    .input-group-modern {
+        display: flex; align-items: center; background: #f8fafc; border: 2.5px solid #f1f5f9;
+        border-radius: 20px; padding: 12px 20px; transition: all 0.3s ease;
+    }
+    .input-group-modern:focus-within {
+        border-color: var(--green-agrokongo);
+        background: white;
+        box-shadow: 0 10px 25px rgba(21, 128, 61, 0.08);
+    }
+
+    .form-control-modern { border: none; background: transparent; width: 100%; font-weight: 700; outline: none; color: #1e293b; }
+    .form-select-modern { border: none; background: transparent; width: 100%; font-weight: 700; outline: none; cursor: pointer; appearance: none; color: #1e293b; }
+
+    .strength-meter-2026 { height: 6px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+    .s-bar { height: 100%; width: 0; transition: 0.5s ease; border-radius: 10px; }
+
+    .text-green-bright { color: var(--green-bright) !important; }
+    .bg-green-light { background-color: rgba(74, 222, 128, 0.1); }
+
+    .btn-glow { position: relative; overflow: hidden; }
+    .btn-glow:after {
+        content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+        transform: rotate(45deg); transition: 0.5s;
+    }
+    .btn-glow:hover:after { left: 100%; }
+
+    .hover-up:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(21, 128, 61, 0.3) !important; }
+    .icon-box { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+</style>
+
+<script>
+    const senha = document.getElementById('senha');
+    const bar = document.getElementById('strength-bar');
+
+    senha.addEventListener('input', () => {
+        const val = senha.value;
+        let score = 0;
+        if (val.length >= 6) score += 30;
+        if (val.match(/[A-Z]/)) score += 35;
+        if (val.match(/[0-9]/)) score += 35;
+        bar.style.width = score + '%';
+        bar.style.backgroundColor = score <= 30 ? '#ef4444' : (score < 100 ? '#f59e0b' : '#15803d');
+    });
+
+    document.getElementById('formProdutor').onsubmit = function(e) {
+        const s1 = document.getElementById('senha').value;
+        const s2 = document.getElementById('confirmar_senha').value;
+        if (s1 !== s2) {
+            e.preventDefault();
+            alert("As senhas não coincidem. Verifique por favor.");
+            return false;
+        }
+        return true;
+    };
+</script>
+{% endblock %}

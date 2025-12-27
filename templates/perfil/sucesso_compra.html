@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Sucesso — AgroKongo{% endblock %}
+
+{% block content %}
+<canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;"></canvas>
+
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f0fdf4 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+        <div class="mx-auto" style="max-width: 580px;">
+
+            <div class="card border-0 shadow-2xl rounded-5 overflow-hidden position-relative bg-white">
+
+                <div class="text-center p-5 bg-green-light position-relative">
+                    <div class="success-icon-float animate__animated animate__bounceIn">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <span class="label-caps-elite text-success d-block mb-2 mt-4">Transação Concluída</span>
+                    <h2 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -2px;">Pagamento Confirmado!</h2>
+                    <p class="text-slate-bold fw-700 px-4 small">O seu investimento está protegido pela nossa Custódia Inteligente.</p>
+
+                    <div class="receipt-zigzag-bottom"></div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <div class="receipt-inner-box p-4 rounded-5 border-dashed-custom bg-light-sharp">
+                        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light">
+                            <span class="label-caps-elite opacity-50">Ordem de Compra #{{ transacao.id }}</span>
+                            <span class="badge-status-elite available fs-tiny">PAGO</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-slate-bold fw-800 tiny-elite text-uppercase ls-2">Produto Selecionado</span>
+                                <span class="text-dark-sharp fw-900">{{ transacao.safra.produto.nome }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-slate-bold fw-800 tiny-elite text-uppercase ls-2">Volume Reservado</span>
+                                <span class="text-dark-sharp fw-900">{{ "{:,.0f}".format(transacao.quantidade) }} KG</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-slate-bold fw-800 tiny-elite text-uppercase ls-2">Produtor / Origem</span>
+                                <span class="text-dark-sharp fw-900">{{ transacao.safra.produtor.nome }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-slate-bold fw-800 tiny-elite text-uppercase ls-2">Data do Depósito</span>
+                                <span class="text-dark-sharp fw-900">{{ transacao.data_criacao.strftime('%d/%m/%Y') }}</span>
+                            </div>
+
+                            <div class="my-4 pt-4 border-top border-2 border-white shadow-inner-lite">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-900 text-dark-sharp fs-5">Valor Liquidado</span>
+                                    <div class="text-end">
+                                        <h2 class="fw-900 text-success-dark m-0">{{ "{:,.2f}".format(transacao.preco_total) }}</h2>
+                                        <span class="tiny-elite fw-900 text-slate-bold">KWANZAS (AOA)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 mb-5 p-4 bg-dark-sharp rounded-5 text-white position-relative overflow-hidden">
+                        <div class="security-watermark-small"><i class="bi bi-shield-check"></i></div>
+                        <h6 class="fw-900 text-white mb-4 position-relative z-1">Próximos Passos Obrigatórios:</h6>
+
+                        <div class="d-flex gap-3 mb-4 position-relative z-1">
+                            <div class="step-badge-elite">1</div>
+                            <div>
+                                <h6 class="fw-800 m-0 small text-white">Combinar Entrega</h6>
+                                <p class="tiny-elite text-white text-opacity-70 m-0 fw-600">O produtor já foi notificado. Contacte-o para agendar a logística.</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 position-relative z-1">
+                            <div class="step-badge-elite">2</div>
+                            <div>
+                                <h6 class="fw-800 m-0 small text-white">Validar Receção</h6>
+                                <p class="tiny-elite text-white text-opacity-70 m-0 fw-600">Apenas confirme a entrega no sistema quando tiver o produto em mãos.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('perfil.fatura', transacao_id=transacao.id) }}" class="btn btn-primary-elite py-3 rounded-pill fw-900 shadow-blue transition-all hover-up">
+                            <i class="bi bi-file-earmark-pdf-fill me-2"></i> Abrir Fatura Oficial (PDF)
+                        </a>
+
+                        <div class="row g-2">
+                            <div class="col-8">
+                                <a href="{{ url_for('perfil.dashboard') }}" class="btn btn-light-sharp border border-light-sharp fw-900 w-100 py-3 rounded-pill hover-dark">
+                                    Voltar ao Dashboard
+                                </a>
+                            </div>
+                            <div class="col-4">
+                                <button onclick="window.print()" class="btn btn-light-sharp border border-light-sharp w-100 py-3 rounded-pill">
+                                    <i class="bi bi-printer-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-5">
+                <div class="d-inline-flex align-items-center gap-2 px-4 py-2 bg-white rounded-pill shadow-sm border border-light-sharp">
+                    <i class="bi bi-lock-fill text-success"></i>
+                    <span class="tiny-elite fw-900 text-dark-sharp text-uppercase ls-2">Monitorização AgroKongo Ativa</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .text-success-dark { color: #15803d !important; }
+    .bg-green-light { background-color: #f0fdf4 !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; }
+    .tiny-elite { font-size: 0.65rem; }
+    .ls-2 { letter-spacing: 2px; }
+
+    /* ICON CELEBRATION */
+    .success-icon-float {
+        width: 100px; height: 100px; background: white; color: #22c55e;
+        border-radius: 35px; display: flex; align-items: center; justify-content: center;
+        font-size: 4rem; margin: 0 auto; box-shadow: 0 20px 40px rgba(34, 197, 94, 0.2);
+    }
+
+    /* RECEIPT STYLE */
+    .receipt-inner-box { border: 2px dashed #e2e8f0; }
+    .receipt-zigzag-bottom {
+        position: absolute; bottom: -12px; left: 0; width: 100%; height: 24px;
+        background-image: radial-gradient(circle, #fff 12px, transparent 13px);
+        background-size: 32px 40px; background-position: -16px -20px;
+    }
+
+    /* STEPS */
+    .step-badge-elite {
+        width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        font-weight: 900; font-size: 0.8rem; flex-shrink: 0;
+    }
+
+    .security-watermark-small { position: absolute; bottom: -20px; right: -10px; font-size: 8rem; color: white; opacity: 0.03; pointer-events: none; }
+
+    /* BUTTONS */
+    .btn-primary-elite { background: #2563eb; color: white; border: none; }
+    .btn-primary-elite:hover { background: #1d4ed8; color: white; transform: translateY(-3px); }
+    .shadow-blue { box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.4) !important; }
+
+    .hover-dark:hover { background: #0f172a !important; color: white !important; }
+    .badge-status-elite.available { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-weight: 900; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15); }
+    .hover-up:hover { transform: translateY(-4px); }
+
+    @media print {
+        .dashboard-wrapper { background: white !important; }
+        .btn, .label-caps-elite:not(.receipt-inner-box .label-caps-elite), .text-center:not(h2) { display: none !important; }
+        .card { border: none !important; box-shadow: none !important; }
+        .receipt-inner-box { border: 1px solid #ccc !important; background: white !important; }
+        .bg-dark-sharp { background: #f8fafc !important; color: black !important; border: 1px solid #eee; }
+        .step-badge-elite { color: black !important; border-color: #ccc !important; }
+        .text-white { color: black !important; }
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var duration = 3 * 1000;
+        var end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 3,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#22c55e', '#15803d', '#2563eb']
+            });
+            confetti({
+                particleCount: 3,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#22c55e', '#15803d', '#2563eb']
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    });
+</script>
+{% endblock %}

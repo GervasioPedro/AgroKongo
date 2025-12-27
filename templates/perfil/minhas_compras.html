@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Minhas Compras — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #eff6ff 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-4">
+            <div>
+                <span class="label-caps-elite text-primary d-block mb-2">Histórico de Aquisições</span>
+                <h1 class="fw-900 display-5 text-dark-sharp mb-1" style="letter-spacing: -2.5px;">Minhas Compras 🛍️</h1>
+                <p class="text-slate-bold fw-600 fs-5">Acompanhe os seus pedidos e a qualidade dos lotes recebidos.</p>
+            </div>
+            <a href="{{ url_for('mercado.explorar') }}" class="btn btn-primary-elite shadow-blue px-4 py-3">
+                <i class="bi bi-cart-plus-fill me-2"></i> Explorar Novo Lote
+            </a>
+        </div>
+
+        {% if compras %}
+        <div class="row g-4">
+            {% for transacao in compras %}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-5 overflow-hidden transition-all hover-card-elite bg-white border-start border-4 {% if transacao.avaliado %}border-success{% else %}border-primary{% endif %}">
+                    <div class="card-body p-4 p-md-4">
+                        <div class="row align-items-center">
+
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-avatar bg-light-sharp rounded-4 fs-2 me-3 shadow-sm">
+                                        {% if 'Milho' in transacao.safra.produto.nome %}🌽{% elif 'Batata' in transacao.safra.produto.nome %}🥔{% elif 'Tomate' in transacao.safra.produto.nome %}🍅{% else %}🚜{% endif %}
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-900 mb-0 text-dark-sharp fs-5">{{ transacao.safra.produto.nome }}</h5>
+                                        <p class="tiny fw-800 text-slate-bold text-uppercase mb-0 ls-1">REF: #AK-{{ transacao.id }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5 my-4 my-md-0">
+                                <div class="row text-center border-start-md border-end-md">
+                                    <div class="col-6">
+                                        <span class="label-caps-elite d-block opacity-50 mb-1" style="font-size: 0.55rem;">Volume</span>
+                                        <span class="fw-900 text-dark-sharp fs-4">{{ "{:,.0f}".format(transacao.quantidade) }} <small class="tiny ls-0">KG</small></span>
+                                    </div>
+                                    <div class="col-6 border-start border-light-sharp">
+                                        <span class="label-caps-elite d-block opacity-50 mb-1" style="font-size: 0.55rem;">Investimento</span>
+                                        <span class="fw-900 text-primary-dark fs-4">{{ "{:,.0f}".format(transacao.preco_total) }} <small class="tiny ls-0">Kz</small></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 text-md-end">
+                                <div class="mb-3">
+                                    <span class="tiny fw-900 text-slate-bold text-uppercase ls-1">
+                                        <i class="bi bi-calendar2-check-fill text-success me-1"></i> {{ transacao.data_criacao.strftime('%d %b, %Y') }}
+                                    </span>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-md-end">
+                                    <a href="{{ url_for('perfil.fatura', transacao_id=transacao.id) }}" class="btn btn-light-sharp border fw-800 rounded-pill px-3 py-2 btn-sm transition-all hover-up">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i> Fatura
+                                    </a>
+
+                                    {% if not transacao.avaliado %}
+                                        <button type="button" class="btn btn-warning-elite btn-sm rounded-pill px-4 py-2 fw-900 shadow-sm"
+                                                data-bs-toggle="modal" data-bs-target="#modalAvaliar{{ transacao.id }}">
+                                            <i class="bi bi-star-fill me-1"></i> AVALIAR
+                                        </button>
+                                    {% else %}
+                                        <div class="badge-status-elite success">
+                                            <i class="bi bi-patch-check-fill"></i> CONCLUÍDO
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalAvaliar{{ transacao.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-2xl rounded-5 overflow-hidden">
+                            <div class="modal-header border-0 pt-4 px-4 pb-0">
+                                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ url_for('perfil.avaliar_produto', transacao_id=transacao.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="modal-body text-center p-4 p-md-5 pt-0">
+                                    <div class="mb-4">
+                                        <div class="icon-avatar bg-warning bg-opacity-10 mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 30px;">
+                                            <span style="font-size: 2.5rem;">🌟</span>
+                                        </div>
+                                        <h4 class="fw-900 text-dark-sharp fs-3" style="letter-spacing: -1px;">Qualidade do Lote</h4>
+                                        <p class="text-slate-bold fw-600">Como avalia o produto <strong>{{ transacao.safra.produto.nome }}</strong> que recebeu?</p>
+                                    </div>
+
+                                    <div class="star-rating-box mb-4">
+                                        <div class="star-rating-elite">
+                                            <input type="radio" name="estrelas" value="5" id="5-{{transacao.id}}" required><label for="5-{{transacao.id}}">★</label>
+                                            <input type="radio" name="estrelas" value="4" id="4-{{transacao.id}}"><label for="4-{{transacao.id}}">★</label>
+                                            <input type="radio" name="estrelas" value="3" id="3-{{transacao.id}}"><label for="3-{{transacao.id}}">★</label>
+                                            <input type="radio" name="estrelas" value="2" id="2-{{transacao.id}}"><label for="2-{{transacao.id}}">★</label>
+                                            <input type="radio" name="estrelas" value="1" id="1-{{transacao.id}}"><label for="1-{{transacao.id}}">★</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4 text-start">
+                                        <label class="label-caps-elite opacity-50 mb-2 d-block">Experiência de Compra</label>
+                                        <textarea name="comentario" class="form-control-elite-area"
+                                                  rows="3" placeholder="O produto estava fresco? A entrega foi pontual?"></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-dark-sharp w-100 rounded-pill py-3 fw-900 shadow-lg hover-up mt-2">
+                                        Publicar Avaliação <i class="bi bi-send-fill ms-2"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5 bg-white rounded-5 border-dashed-blue mt-4">
+            <div class="icon-avatar bg-light-sharp mx-auto mb-4" style="width: 100px; height: 100px; border-radius: 40px;">
+                <span style="font-size: 3rem;">🛒</span>
+            </div>
+            <h3 class="fw-900 text-dark-sharp fs-2" style="letter-spacing: -1px;">Cesto de Compras Vazio</h3>
+            <p class="text-slate-bold fw-600 fs-5 mb-4">Ainda não realizou aquisições no mercado.<br>Os melhores lotes de Angola esperam por si.</p>
+            <a href="{{ url_for('mercado.explorar') }}" class="btn btn-primary-elite px-5 py-3 shadow-blue">Explorar Agora</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .text-primary-dark { color: #1e40af !important; }
+    .bg-light-sharp { background-color: #f1f5f9 !important; }
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+
+    /* BUTTONS & BADGES */
+    .btn-primary-elite { background: #2563eb; color: white; border: none; border-radius: 50px; font-weight: 900; transition: 0.3s; }
+    .btn-primary-elite:hover { background: #1d4ed8; transform: translateY(-3px); color: white; }
+    .shadow-blue { box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4) !important; }
+
+    .btn-dark-sharp { background: #0f172a; color: white; border: none; transition: 0.3s; }
+    .btn-dark-sharp:hover { background: #000; color: white; transform: translateY(-3px); }
+
+    .btn-warning-elite { background: #fbbf24; color: #000; border: none; transition: 0.3s; }
+    .btn-warning-elite:hover { background: #f59e0b; transform: translateY(-2px); }
+
+    .badge-status-elite { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 50px; font-weight: 900; font-size: 0.7rem; letter-spacing: 1px; }
+    .badge-status-elite.success { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+
+    /* CARDS */
+    .hover-card-elite { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .hover-card-elite:hover { transform: translateX(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.06) !important; }
+
+    .icon-avatar { display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; }
+    .border-dashed-blue { border: 3px dashed #dbeafe !important; }
+
+    /* STAR RATING ELITE */
+    .star-rating-elite { display: flex; flex-direction: row-reverse; justify-content: center; }
+    .star-rating-elite input { display: none; }
+    .star-rating-elite label { font-size: 3rem; color: #e2e8f0; cursor: pointer; transition: 0.2s; margin: 0 4px; }
+    .star-rating-elite input:checked ~ label,
+    .star-rating-elite label:hover,
+    .star-rating-elite label:hover ~ label { color: #fbbf24; transform: scale(1.1); }
+
+    .form-control-elite-area {
+        border: 2px solid #f1f5f9; background: #f8fafc; border-radius: 20px;
+        padding: 15px; width: 100%; font-weight: 600; transition: 0.3s;
+    }
+    .form-control-elite-area:focus { outline: none; border-color: #2563eb; background: white; }
+
+    @media (min-width: 768px) {
+        .border-start-md { border-left: 2px solid #f1f5f9; }
+        .border-end-md { border-right: 2px solid #f1f5f9; }
+    }
+</style>
+{% endblock %}

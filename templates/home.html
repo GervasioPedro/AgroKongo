@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}AgroKongo — O Mercado Digital da Agricultura Angolana{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <section class="hero-2026 position-relative overflow-hidden">
+        <div class="hero-overlay"></div>
+        <div class="container position-relative z-index-10 d-flex align-items-center justify-content-center" style="min-height: 90vh;">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-10 animate__animated animate__fadeInUp">
+                    <span class="badge-new mb-3 shadow-sm">CONECTANDO AS 18 PROVÍNCIAS 🇦🇴</span>
+                    <h1 class="display-1 fw-900 text-white mb-4" style="letter-spacing: -4px; line-height: 0.95;">
+                        O Campo na palma <br><span class="text-green-bright">da sua mão.</span>
+                    </h1>
+                    <p class="lead text-white-50 fs-4 mb-5 mx-auto" style="max-width: 750px;">
+                        A plataforma inteligente que une produtores locais a compradores em todo o país. Escoamento rápido, preço justo e transparência total.
+                    </p>
+
+                    <div class="d-flex flex-column flex-md-row gap-3 justify-content-center align-items-center">
+                        {% if not current_user.is_authenticated %}
+                            <a href="{{ url_for('auth.cadastro', tipo='produtor') }}" class="btn-hero-primary shadow-lg">Começar a Vender</a>
+                            <a href="{{ url_for('auth.cadastro', tipo='comprador') }}" class="btn-hero-primary shadow-lg">Começar a Comprar</a>
+                        {% else %}
+                            {% if current_user.tipo == 'produtor' %}
+                                <a href="{{ url_for('perfil.dashboard') }}" class="btn-hero-primary shadow-lg">Meu Painel de Vendas</a>
+                            {% else %}
+                                <a href="{{ url_for('perfil.meu_perfil_comprador') }}" class="btn-hero-primary shadow-lg">Meu Painel de Compras</a>
+                            {% endif %}
+                        {% endif %}
+                        <a href="{{ url_for('mercado.explorar') }}" class="btn-hero-outline">Explorar o Mercado</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-wave">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V46.35C50.7,56.56,120.52,62.19,185.06,58.33,235.26,55.3,281.42,61.05,321.39,56.44Z" class="shape-fill"></path>
+            </svg>
+        </div>
+    </section>
+
+    <section class="bg-white py-5 border-bottom">
+        <div class="container">
+            <div class="row text-center g-4">
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <h4 class="fw-900 text-dark mb-0 fs-2">+500</h4>
+                        <small class="text-muted text-uppercase fw-bold tiny">Produtores Ativos</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <h4 class="fw-900 text-dark mb-0 fs-2">18</h4>
+                        <small class="text-muted text-uppercase fw-bold tiny">Províncias Unidas</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <h4 class="fw-900 text-dark mb-0 fs-2">+10k</h4>
+                        <small class="text-muted text-uppercase fw-bold tiny">Toneladas Escoadas</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <h4 class="fw-900 text-green mb-0 fs-2">0%</h4>
+                        <small class="text-muted text-uppercase fw-bold tiny">Intermediários</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-10 bg-light">
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <span class="label-caps text-green fw-800">Tecnologia no Campo</span>
+                <h2 class="fw-900 text-dark display-5" style="letter-spacing: -2px;">Simples, Direto e Digital.</h2>
+                <p class="text-muted fs-5">Eliminamos as barreiras entre a colheita e o consumidor final através de um ecossistema integrado.</p>
+            </div>
+
+            <div class="row g-5 mt-4">
+                <div class="col-md-4">
+                    <div class="feature-card text-center p-4 bg-white rounded-5 shadow-sm h-100">
+                        <div class="icon-box-large bg-green-soft mb-4">🚜</div>
+                        <h4 class="fw-900">Para o Produtor</h4>
+                        <p class="text-muted small">Anuncie a sua safra em segundos, receba pedidos diretos de compradores e gerencie o seu lucro sem papelada.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center p-4 bg-white rounded-5 shadow-sm h-100">
+                        <div class="icon-box-large bg-blue-soft mb-4">🛒</div>
+                        <h4 class="fw-900">Para o Comprador</h4>
+                        <p class="text-muted small">Aceda a produtos frescos de qualquer província, compare preços em tempo real e negocie diretamente com quem produz.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center p-4 bg-white rounded-5 shadow-sm h-100">
+                        <div class="icon-box-large bg-orange-soft mb-4">🛡️</div>
+                        <h4 class="fw-900">Segurança Total</h4>
+                        <p class="text-muted small">Todos os perfis são verificados. Garantimos um ambiente de negócio seguro e auditado para o agronegócio nacional.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 mb-5">
+        <div class="container">
+            <div class="cta-banner-2026 rounded-5 p-5 text-center text-white position-relative overflow-hidden">
+                <div class="position-relative z-index-10">
+                    <h2 class="display-4 fw-900 mb-4" style="letter-spacing: -2px;">Pronto para transformar a sua produção?</h2>
+                    <p class="fs-5 mb-5 opacity-75">Junte-se a milhares de angolanos que já estão a digitalizar o campo.</p>
+                    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                        {% if not current_user.is_authenticated %}
+                            <a href="{{ url_for('auth.cadastro', tipo='produtor') }}" class="btn btn-success btn-lg px-5 py-3 fw-800 rounded-pill shadow">Começar a Vender</a>
+                            <a href="{{ url_for('auth.cadastro', tipo='comprador') }}" class="btn btn-outline-light btn-lg px-5 py-3 fw-800 rounded-pill">Quero Comprar</a>
+                        {% else %}
+                            <a href="{{ url_for('mercado.explorar') }}" class="btn btn-success btn-lg px-5 py-3 fw-800 rounded-pill shadow">Ir para o Mercado</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="decoration-circle-1"></div>
+                <div class="decoration-circle-2"></div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<style>
+    /* Estilos Home 2026 Otimizados */
+    .hero-2026 {
+        background: url('https://images.unsplash.com/photo-1595841696677-54897f28bc32?q=80&w=2070&auto=format&fit=crop');
+        background-size: cover; background-position: center;
+        min-height: 90vh;
+    }
+    .hero-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(135deg, rgba(2, 6, 23, 0.95) 0%, rgba(21, 128, 61, 0.4) 100%);
+    }
+
+    .text-green-bright { color: #4ade80; }
+    .badge-new {
+        background: rgba(255,255,255,0.1); color: white; padding: 10px 20px;
+        border-radius: 50px; font-weight: 800; font-size: 0.7rem; letter-spacing: 1.5px;
+        backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2);
+        display: inline-block;
+    }
+
+    .btn-hero-primary {
+        background: #15803d; color: white; padding: 18px 45px; border-radius: 20px;
+        font-weight: 800; text-decoration: none; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-hero-primary:hover {
+        background: #166534; transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(21, 128, 61, 0.4) !important;
+        color: white;
+    }
+
+    .btn-hero-outline {
+        background: rgba(255,255,255,0.05); color: white; padding: 18px 45px; border-radius: 20px;
+        font-weight: 800; text-decoration: none; transition: 0.4s; backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    .btn-hero-outline:hover { background: white; color: #020617; }
+
+    .hero-wave { position: absolute; bottom: -1px; left: 0; width: 100%; line-height: 0; }
+    .hero-wave svg { position: relative; display: block; width: calc(100% + 1.3px); height: 80px; }
+    .hero-wave .shape-fill { fill: #FFFFFF; }
+
+    .icon-box-large {
+        width: 80px; height: 80px; border-radius: 24px; display: flex;
+        align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto;
+    }
+
+    .feature-card { transition: 0.3s; border: 1px solid #f1f5f9; }
+    .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.05) !important; }
+
+    .cta-banner-2026 {
+        background: linear-gradient(135deg, #020617 0%, #15803d 100%);
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3);
+    }
+
+    .decoration-circle-1 { position: absolute; top: -100px; left: -100px; width: 300px; height: 300px; background: rgba(74, 222, 128, 0.05); border-radius: 50%; }
+    .decoration-circle-2 { position: absolute; bottom: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255, 255, 255, 0.03); border-radius: 50%; }
+
+    .text-green { color: #15803d !important; }
+    .bg-green-soft { background: #f0fdf4; }
+    .bg-blue-soft { background: #eff6ff; }
+    .bg-orange-soft { background: #fff7ed; }
+    .tiny { font-size: 0.65rem; }
+</style>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Minhas Safras — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f0fdf4 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+
+        <div class="row mb-5 align-items-end g-4">
+            <div class="col-md-7">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{{ url_for('perfil.dashboard') }}" class="text-decoration-none fw-800 tiny text-success-dark text-uppercase ls-2">Painel de Controlo</a></li>
+                        <li class="breadcrumb-item active fw-800 tiny text-uppercase ls-2 text-slate-bold" aria-current="page">Inventário Ativo</li>
+                    </ol>
+                </nav>
+                <h1 class="fw-900 display-5 text-dark-sharp mb-1" style="letter-spacing: -2.5px;">Gestão de Safras 📦</h1>
+                <p class="text-slate-bold fs-5 fw-600">Controle o fluxo de saída e a visibilidade do seu stock no mercado.</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <a href="{{ url_for('perfil.nova_safra') }}" class="btn btn-success-dark px-4 py-3 shadow-green rounded-pill fw-900 transition-all hover-up">
+                    <i class="bi bi-plus-circle-fill me-2"></i> Registar Nova Colheita
+                </a>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-5 p-3 mb-5 bg-white border border-light-sharp">
+            <form method="GET" class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-modern-wrapper py-1 px-2" style="border-radius: 15px;">
+                        <i class="bi bi-filter-right input-icon text-success"></i>
+                        <select name="status" onchange="this.form.submit()" class="form-select border-0 bg-transparent fw-900 shadow-none ps-2 text-dark-sharp">
+                            <option value="todos" {% if request.args.get('status') == 'todos' %}selected{% endif %}>Todos os Lotes</option>
+                            <option value="disponivel" {% if request.args.get('status') == 'disponivel' %}selected{% endif %}>🟢 Disponíveis para Venda</option>
+                            <option value="vendido" {% if request.args.get('status') == 'vendido' %}selected{% endif %}>🔵 Histórico de Vendas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-8 text-md-end">
+                    <div class="d-flex justify-content-md-end gap-3">
+                        <div class="metric-pill">
+                            <span class="label">TOTAL DE LOTES:</span>
+                            <span class="value">{{ safras|length }}</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if safras %}
+        <div class="row g-4">
+            {% for safra in safras %}
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card border-0 shadow-sm rounded-5 overflow-hidden transition-all hover-card-inventory bg-white border border-light-sharp">
+                    <div class="status-bar-top {% if safra.status == 'disponivel' %}bg-success{% else %}bg-indigo{% endif %}"></div>
+
+                    <div class="p-4 p-md-5">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-avatar-inventory {% if safra.status == 'disponivel' %}bg-green-light{% else %}bg-light-sharp{% endif %} rounded-4 shadow-sm">
+                                    {% if 'Milho' in safra.produto %}🌽{% elif 'Batata' in safra.produto %}🥔{% elif 'Tomate' in safra.produto %}🍅{% else %}🌾{% endif %}
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="fw-900 m-0 text-dark-sharp fs-4">{{ safra.produto }}</h5>
+                                    <span class="tiny fw-800 text-slate-bold text-uppercase ls-1">ID: #AK-{{ safra.id }}</span>
+                                </div>
+                            </div>
+                            <div class="badge-status-inventory {% if safra.status == 'disponivel' %}available{% else %}sold{% endif %}">
+                                {{ 'EM MERCADO' if safra.status == 'disponivel' else 'VENDIDO' }}
+                            </div>
+                        </div>
+
+                        <div class="inventory-grid rounded-5 p-4 mb-4">
+                            <div class="row g-0 text-center">
+                                <div class="col-6 border-end border-light-sharp border-opacity-50">
+                                    <span class="label-caps-elite d-block opacity-50 mb-1">Disponível</span>
+                                    <span class="fw-900 text-dark-sharp fs-4">{{ "{:,.0f}".format(safra.quantidade_kg) }} <small class="tiny ls-0">KG</small></span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="label-caps-elite d-block opacity-50 mb-1">Preço/KG</span>
+                                    <span class="fw-900 text-success-dark fs-4">{{ "{:,.0f}".format(safra.preco) }} <small class="tiny ls-0 text-dark-sharp">Kz</small></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center text-slate-bold small mb-4 fw-700">
+                            <i class="bi bi-calendar3 me-2 text-success-dark"></i> Colheita: {{ safra.data_publicacao.strftime('%d/%m/%Y') }}
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{{ url_for('perfil.editar_safra', safra_id=safra.id) }}" class="btn btn-light-sharp border-light-sharp fw-900 w-100 rounded-pill py-2 btn-sm transition-all hover-up">
+                                    <i class="bi bi-pencil-square me-2"></i>Editar
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                {% if safra.status == 'disponivel' %}
+                                <form action="{{ url_for('perfil.marcar_como_vendido', safra_id=safra.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-dark-sharp fw-900 w-100 rounded-pill py-2 btn-sm shadow-sm transition-all hover-up"
+                                            onclick="return confirm('Confirmar encerramento deste lote? Esta ação remove o produto do mercado público.')">
+                                        <i class="bi bi-check2-circle me-1"></i>Vender
+                                    </button>
+                                </form>
+                                {% else %}
+                                <button class="btn btn-light-sharp border-0 fw-900 w-100 rounded-pill py-2 btn-sm text-slate-bold opacity-50" disabled>
+                                    <i class="bi bi-lock-fill me-1"></i>Arquivado
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5 bg-white rounded-5 shadow-sm border-dashed-success mt-4">
+            <div class="icon-avatar-inventory bg-green-light mx-auto mb-4" style="width: 100px; height: 100px;">
+                <span style="font-size: 3rem;">🚜</span>
+            </div>
+            <h3 class="fw-900 text-dark-sharp fs-2" style="letter-spacing: -1px;">Celeiro Vazio</h3>
+            <p class="text-slate-bold fw-600 fs-5 mb-4">Ainda não registou nenhuma colheita para venda.<br>O mercado de Angola está à espera dos seus produtos.</p>
+            <a href="{{ url_for('perfil.nova_safra') }}" class="btn btn-success-dark rounded-pill px-5 py-3 shadow-green fw-900 transition-all hover-up">
+                Lançar Primeira Safra
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .text-success-dark { color: #15803d !important; }
+    .bg-green-light { background-color: #f0fdf4 !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .border-light-sharp { border-color: #e2e8f0 !important; }
+    .label-caps-elite { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+
+    /* COMPONENTS */
+    .metric-pill { background: #0f172a; color: white; padding: 10px 20px; border-radius: 50px; display: inline-flex; align-items: center; gap: 10px; }
+    .metric-pill .label { font-size: 0.6rem; font-weight: 800; opacity: 0.7; letter-spacing: 1px; }
+    .metric-pill .value { font-weight: 900; font-size: 1.1rem; }
+
+    .status-bar-top { height: 6px; width: 100%; }
+    .bg-indigo { background: #4338ca; }
+
+    .hover-card-inventory { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .hover-card-inventory:hover { transform: translateY(-12px); box-shadow: 0 40px 80px -20px rgba(15, 23, 42, 0.1) !important; }
+
+    .icon-avatar-inventory { display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 20px; }
+
+    .badge-status-inventory { padding: 6px 14px; border-radius: 50px; font-size: 0.6rem; font-weight: 900; letter-spacing: 1px; }
+    .badge-status-inventory.available { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+    .badge-status-inventory.sold { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+    .inventory-grid { background: #f8fafc; border: 1px solid #f1f5f9; }
+
+    .input-modern-wrapper { display: flex; align-items: center; background: #f8fafc; border: 2px solid #f1f5f9; }
+    .input-icon { margin-left: 10px; font-size: 1.1rem; }
+
+    /* UTILS */
+    .shadow-green { box-shadow: 0 10px 25px -5px rgba(21, 128, 61, 0.4) !important; }
+    .btn-success-dark { background: #15803d; color: white; border: none; }
+    .btn-success-dark:hover { background: #166534; color: white; }
+    .btn-dark-sharp { background: #0f172a; color: white; border: none; }
+    .btn-dark-sharp:hover { background: #000; color: white; }
+    .border-dashed-success { border: 3px dashed #dcfce7 !important; }
+    .ls-2 { letter-spacing: 2px; }
+    .hover-up:hover { transform: translateY(-3px); }
+</style>
+{% endblock %}

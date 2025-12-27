@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Vendas Recebidas — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f0fdf4 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+
+        <div class="row mb-5 align-items-center g-4">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge-status-elite available">ORDER MANAGEMENT</span>
+                    <div class="pulse-dot-green"></div>
+                </div>
+                <h1 class="fw-900 display-5 text-dark-sharp mb-1" style="letter-spacing: -2.5px;">Vendas Recebidas 💰</h1>
+                <p class="text-slate-bold fs-5 fw-600">Gerencie seus pedidos e cultive a lealdade dos seus compradores.</p>
+            </div>
+            <div class="col-md-5">
+                <div class="card border-0 shadow-2xl rounded-5 bg-dark-sharp text-center overflow-hidden position-relative">
+                    <div class="card-body p-4 p-lg-5 position-relative" style="z-index: 2;">
+                        <span class="label-caps-elite text-white text-opacity-50 d-block mb-2">Faturação Bruta Acumulada</span>
+                        <h2 class="fw-900 text-success m-0 display-5">
+                            {{ "{:,.2f}".format(total_faturado) }} <small class="fs-6 opacity-75">Kz</small>
+                        </h2>
+                    </div>
+                    <div class="security-watermark" style="font-size: 10rem; right: -20px; bottom: -40px; opacity: 0.05;">
+                        <i class="bi bi-cash-coin text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if vendas %}
+        <div class="card border-0 shadow-sm rounded-5 overflow-hidden bg-white border-light-sharp">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light-sharp">
+                        <tr>
+                            <th class="border-0 px-4 py-4 label-caps-elite opacity-50">Produto & Data</th>
+                            <th class="border-0 py-4 text-center label-caps-elite opacity-50">Volume</th>
+                            <th class="border-0 py-4 text-center label-caps-elite opacity-50">Total Líquido</th>
+                            <th class="border-0 py-4 label-caps-elite opacity-50">Cliente</th>
+                            <th class="border-0 px-4 py-4 text-end label-caps-elite opacity-50">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venda in vendas %}
+                        <tr class="venda-row">
+                            <td class="px-4 py-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm-elite bg-green-light text-success me-3">
+                                        {% if 'Milho' in venda.safra.produto.nome %}🌽{% elif 'Batata' in venda.safra.produto.nome %}🥔{% else %}📦{% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-900 mb-0 text-dark-sharp fs-6">{{ venda.safra.produto.nome }}</h6>
+                                        <span class="tiny-elite fw-800 text-slate-bold text-uppercase ls-1">{{ venda.data_criacao.strftime('%d %b, %Y') }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center fw-900 text-dark-sharp">{{ "{:,.0f}".format(venda.quantidade) }} <span class="tiny-elite opacity-50">KG</span></td>
+                            <td class="text-center">
+                                <span class="fw-900 text-success-dark fs-5">{{ "{:,.0f}".format(venda.preco_total) }} <small class="tiny-elite">Kz</small></span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="fw-900 text-dark-sharp mb-0">{{ venda.comprador.nome.split()[0] }}</div>
+                                    <i class="bi bi-patch-check-fill text-primary tiny-elite"></i>
+                                </div>
+                                <span class="tiny-elite text-slate-bold fw-800 text-uppercase"><i class="bi bi-geo-alt me-1"></i>{{ venda.comprador.municipio }}</span>
+                            </td>
+                            <td class="px-4 text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="https://wa.me/244{{ venda.comprador.telemovel }}" target="_blank"
+                                       class="btn btn-whatsapp-elite shadow-sm rounded-pill px-4">
+                                        <i class="bi bi-whatsapp me-2"></i> <span class="d-none d-lg-inline">Contactar</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+
+                        {# SECÇÃO DE FEEDBACK COM DESIGN DE CHAT #}
+                        {% set avaliacao = venda.safra.avaliacoes | selectattr('autor_id', 'equalto', venda.comprador_id) | first %}
+                        {% if avaliacao %}
+                        <tr class="feedback-row bg-light-sharp border-light-sharp">
+                            <td colspan="5" class="px-4 py-4">
+                                <div class="card border-0 shadow-sm rounded-5 overflow-hidden mx-md-5 bg-white border-light-sharp animate__animated animate__fadeInUp">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="stars-elite text-warning">
+                                                    {% for i in range(5) %}
+                                                        <i class="bi bi-star{{ '-fill' if i < avaliacao.estrelas else '' }}"></i>
+                                                    {% endfor %}
+                                                </div>
+                                                <span class="label-caps-elite opacity-50">Avaliação do Cliente</span>
+                                            </div>
+                                            <span class="tiny-elite fw-900 text-slate-bold text-uppercase ls-1">Ref: #{{ venda.id }}</span>
+                                        </div>
+
+                                        <div class="comment-bubble-elite mb-3">
+                                            <i class="bi bi-quote fs-4 text-success opacity-25"></i>
+                                            <p class="mb-0 fw-700 text-dark-sharp fs-6 italic">"{{ avaliacao.comentario }}"</p>
+                                        </div>
+
+                                        {% if avaliacao.resposta_produtor %}
+                                            <div class="response-box-elite ms-md-5">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <div class="pulse-dot-green"></div>
+                                                    <span class="tiny-elite fw-900 text-success text-uppercase ls-1">Sua Resposta:</span>
+                                                </div>
+                                                <p class="mb-0 small text-slate-bold fw-600">"{{ avaliacao.resposta_produtor }}"</p>
+                                            </div>
+                                        {% else %}
+                                            <div class="text-end">
+                                                <button class="btn btn-outline-success border-2 rounded-pill px-4 fw-900 tiny-elite text-uppercase ls-1"
+                                                        data-bs-toggle="collapse" data-bs-target="#resp{{avaliacao.id}}">
+                                                    <i class="bi bi-chat-left-text-fill me-2"></i> Responder ao Cliente
+                                                </button>
+                                            </div>
+                                            <div class="collapse mt-3" id="resp{{avaliacao.id}}">
+                                                <form action="{{ url_for('perfil.responder_avaliacao', id=avaliacao.id) }}" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <div class="input-modern-group border-light-sharp shadow-sm bg-light-sharp p-1">
+                                                        <input type="text" name="resposta" class="form-input-elite"
+                                                               placeholder="Escreva uma mensagem de agradecimento..." required>
+                                                        <button type="submit" class="btn btn-dark-sharp rounded-pill px-4 fw-900 shadow-sm">Enviar</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5 bg-white rounded-5 border-dashed-blue mt-4 animate__animated animate__fadeIn">
+            <div class="display-1 mb-3">👨‍🌾</div>
+            <h3 class="fw-900 text-dark-sharp mt-3" style="letter-spacing: -1.5px;">A colheita está pronta?</h3>
+            <p class="text-slate-bold fw-600 mb-4">Ainda não recebeu vendas. Publique os seus produtos no Mercado e interaja no Radar.</p>
+            <a href="{{ url_for('perfil.nova_safra') }}" class="btn btn-success-dark rounded-pill px-5 py-3 shadow-green fw-900 hover-up">
+                Publicar Primeiro Lote <i class="bi bi-plus-circle-fill ms-2"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .text-success-dark { color: #15803d !important; }
+    .bg-green-light { background-color: #f0fdf4 !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+    .tiny-elite { font-size: 0.65rem; }
+    .ls-1 { letter-spacing: 1.5px; }
+    .border-light-sharp { border: 1px solid #e2e8f0 !important; }
+
+    /* COMPONENTS */
+    .venda-row { transition: background 0.3s; }
+    .venda-row:hover { background-color: #fcfdfd; }
+
+    .avatar-sm-elite { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+
+    .btn-whatsapp-elite { background: #25d366; color: white; border: none; font-weight: 900; font-size: 0.8rem; padding: 10px 20px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .btn-whatsapp-elite:hover { background: #128c7e; color: white; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2) !important; }
+
+    /* FEEDBACK & COMMENTS */
+    .comment-bubble-elite { background: #f8fafc; padding: 20px; border-radius: 25px; position: relative; border: 1px solid #f1f5f9; }
+    .response-box-elite { background: #f0fdf4; padding: 18px; border-radius: 20px; border-left: 4px solid #22c55e; }
+
+    .input-modern-group { display: flex; align-items: center; border-radius: 50px; overflow: hidden; padding: 6px; }
+    .form-input-elite { border: none; background: transparent; padding: 10px 20px; width: 100%; font-weight: 700; color: #0f172a; outline: none; }
+
+    /* UTILS */
+    .pulse-dot-green { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 rgba(34, 197, 94, 0.4); animation: pulse-green 2s infinite; }
+    @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+
+    .btn-success-dark { background: #15803d; color: white; border: none; }
+    .btn-success-dark:hover { background: #166534; color: white; }
+    .shadow-green { box-shadow: 0 15px 30px -5px rgba(21, 128, 61, 0.3) !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.2); }
+    .border-dashed-blue { border: 2px dashed #dbeafe !important; }
+    .hover-up:hover { transform: translateY(-4px); }
+    .italic { font-style: italic; }
+
+    .security-watermark { position: absolute; pointer-events: none; z-index: 1; }
+</style>

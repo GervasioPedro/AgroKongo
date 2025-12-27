@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Negociações — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper bg-light-sharp" style="min-height: 100vh;">
+    <div class="container py-4 font-sharp">
+
+        <div class="row g-0 rounded-5 overflow-hidden shadow-2xl bg-white border-light-sharp" style="height: 80vh;">
+
+            <div class="col-lg-4 border-end border-light-sharp d-flex flex-column bg-white">
+                <div class="p-4 border-bottom border-light-sharp">
+                    <h4 class="fw-900 text-dark-sharp mb-3">Mensagens</h4>
+                    <div class="input-modern-group bg-light-sharp py-2 px-3 rounded-4">
+                        <i class="bi bi-search text-muted"></i>
+                        <input type="text" class="form-input-elite" placeholder="Procurar negociante...">
+                    </div>
+                </div>
+
+                <div class="flex-grow-1 overflow-y-auto custom-scrollbar">
+                    <div class="chat-user-pill active p-4 d-flex align-items-center gap-3">
+                        <div class="position-relative">
+                            <div class="avatar-sm-elite bg-green-light text-success fw-900">JC</div>
+                            <span class="status-indicator online"></span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="fw-900 m-0 text-dark-sharp">João Camponês</h6>
+                                <span class="tiny-elite text-muted">14:20</span>
+                            </div>
+                            <p class="small text-slate-bold m-0 text-truncate">Consegue entregar no Porto de Luanda?</p>
+                        </div>
+                    </div>
+
+                    <div class="chat-user-pill p-4 d-flex align-items-center gap-3">
+                        <div class="avatar-sm-elite bg-indigo-light text-primary fw-900">MB</div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="fw-900 m-0 text-dark-sharp">Maria Benguela</h6>
+                                <span class="tiny-elite text-muted">Ontem</span>
+                            </div>
+                            <p class="small text-slate-bold m-0 text-truncate">O preço da tonelada ainda é o mesmo?</p>
+                        </div>
+                        <span class="badge bg-success rounded-pill tiny-elite">2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8 d-flex flex-column bg-light-sharp">
+
+                <div class="p-3 px-4 bg-white border-bottom border-light-sharp d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-sm-elite bg-green-light text-success fw-900">JC</div>
+                        <div>
+                            <h6 class="fw-900 m-0 text-dark-sharp">João Camponês</h6>
+                            <span class="tiny-elite text-success fw-700 text-uppercase ls-1">Produtor Verificado • Huambo</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light-sharp border-light-sharp rounded-pill px-3 fw-800 small">
+                            <i class="bi bi-telephone-fill me-2"></i> Ligar
+                        </button>
+                        <button class="btn btn-dark-sharp rounded-pill px-3 fw-800 small shadow-sm">
+                            <i class="bi bi-file-earmark-check me-2"></i> Fechar Negócio
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-grow-1 p-4 overflow-y-auto d-flex flex-column gap-3 custom-scrollbar">
+
+                    <div class="text-center my-3">
+                        <div class="d-inline-block p-3 bg-white rounded-5 border border-light-sharp shadow-sm">
+                            <span class="tiny-elite text-slate-bold text-uppercase d-block mb-1">Negociação sobre</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fs-4">🌽</span>
+                                <span class="fw-900 text-dark-sharp">Milho Branco (Lote 2 Toneladas)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="message-bubble recipient">
+                        Boa tarde! Vi o seu anúncio no Radar. O milho já está seco e pronto para transporte?
+                        <span class="message-time">14:15</span>
+                    </div>
+
+                    <div class="message-bubble sender">
+                        Boa tarde, sim! Foi colhido há 3 dias. Está armazenado em local seco no Huambo.
+                        <span class="message-time">14:18</span>
+                    </div>
+
+                    <div class="message-bubble recipient">
+                        Excelente. Consegue entregar no Porto de Luanda ou a recolha tem de ser feita na fazenda?
+                        <span class="message-time">14:20</span>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white border-top border-light-sharp">
+                    <div class="d-flex gap-3 align-items-center">
+                        <button class="btn btn-light-sharp rounded-circle icon-avatar-payment p-0" style="width: 45px; height: 45px;">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                        <div class="flex-grow-1 bg-light-sharp rounded-pill px-4 py-2 border border-light-sharp d-flex align-items-center">
+                            <input type="text" class="form-control border-0 bg-transparent shadow-none fw-600" placeholder="Escreva a sua proposta...">
+                            <i class="bi bi-emoji-smile text-muted"></i>
+                        </div>
+                        <button class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-send-fill text-white fs-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* CHAT DESIGN SYSTEM */
+    .chat-user-pill { cursor: pointer; border-left: 4px solid transparent; transition: 0.3s; }
+    .chat-user-pill:hover { background: #f8fafc; }
+    .chat-user-pill.active { background: #f0fdf4; border-left-color: #22c55e; }
+
+    .status-indicator { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; }
+    .status-indicator.online { background: #22c55e; }
+
+    .message-bubble {
+        max-width: 70%; padding: 14px 18px; border-radius: 22px; position: relative;
+        font-weight: 600; font-size: 0.95rem; line-height: 1.5;
+    }
+    .message-bubble.recipient { background: white; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; color: #0f172a; }
+    .message-bubble.sender { background: #0f172a; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+    .message-time { display: block; font-size: 0.65rem; margin-top: 5px; opacity: 0.6; font-weight: 800; }
+    .sender .message-time { text-align: right; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.1); }
+</style>
+{% endblock %}

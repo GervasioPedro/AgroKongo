@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Acesso Restrito — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center animate__animated animate__zoomIn">
+    <div class="py-5 bg-light rounded-5 shadow-sm border border-2 border-danger border-opacity-10">
+        <h1 class="display-1 fw-900 text-danger mb-0">403</h1>
+        <div class="mb-4">
+            <i class="bi bi-shield-lock-fill display-4 text-danger opacity-50"></i>
+        </div>
+        <h2 class="fw-900 text-dark">Área Reservada</h2>
+        <p class="text-muted fs-5 mb-5 px-4">Pedimos desculpa, mas a sua conta não tem permissão para aceder a esta zona.<br>Certifique-se de que está ligado com o perfil correto.</p>
+
+        <div class="d-flex justify-content-center gap-3 mb-4">
+            <button onclick="history.back()" class="btn btn-dark rounded-pill px-5 py-3 fw-800 shadow-lg">
+                <i class="bi bi-arrow-left me-2"></i>Voltar
+            </button>
+        </div>
+        <p class="small text-muted fw-600">Se acha que isto é um erro, contacte o suporte do AgroKongo.</p>
+    </div>
+</div>
+{% endblock %}

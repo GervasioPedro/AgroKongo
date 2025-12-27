@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Validar Pagamentos — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="admin-ops-wrapper animate__animated animate__fadeIn">
+    <div class="container py-5">
+
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-4">
+            <div class="header-content">
+                <a href="{{ url_for('admin.dashboard') }}" class="btn-back-soft mb-3">
+                    <i class="bi bi-arrow-left"></i> Voltar ao Painel
+                </a>
+                <h1 class="display-6 fw-900 text-dark-sharp m-0" style="letter-spacing: -2px;">Gestão de Transações</h1>
+                <p class="text-slate fw-600 m-0">Interface de conferência financeira e libertação de ordens.</p>
+            </div>
+
+            <div class="stats-pill-group">
+                <div class="stat-item">
+                    <span class="dot bg-warning"></span>
+                    <span class="label">Pendentes:</span>
+                    <span class="count">{{ pendentes|length if pendentes else 0 }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="dot bg-primary"></span>
+                    <span class="label">Custódia:</span>
+                    <span class="count">{{ custodia|length if custodia else 0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="custom-tabs-container mb-4">
+            <ul class="nav nav-tabs-modern" id="pills-tab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link-modern active" data-bs-toggle="pill" data-bs-target="#pendentes">
+                        <i class="bi bi-clock-history me-2"></i> Validação Necessária
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link-modern" data-bs-toggle="pill" data-bs-target="#custodia">
+                        <i class="bi bi-shield-shaded me-2"></i> Ativos em Escrow
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content" id="pills-tabContent">
+
+            <div class="tab-pane fade show active" id="pendentes">
+                <div class="surface-glass shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">Referência / Registo</th>
+                                    <th>Comprador</th>
+                                    <th>Valor Total</th>
+                                    <th class="text-center">Comprovativo</th>
+                                    <th class="text-end pe-4">Ação Final</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in pendentes %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="ref-id">#{{ t.fatura_ref }}</div>
+                                        <div class="tiny-date"><i class="bi bi-calendar3 me-1"></i> {{ t.data_criacao.strftime('%d/%m/%Y %H:%M') }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-init shadow-sm">{{ t.comprador.nome[0]|upper }}</div>
+                                            <div class="ms-3">
+                                                <div class="fw-800 text-dark-sharp small">{{ t.comprador.nome }}</div>
+                                                <div class="tiny-phone">{{ t.comprador.telemovel }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-900 text-success-dark fs-5">{{ "{:,.2f}".format(t.preco_total) }} Kz</div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if t.comprovativo_path %}
+                                        <a href="{{ url_for('static', filename='uploads/comprovativos/' + t.comprovativo_path) }}"
+                                           target="_blank" class="btn-verify">
+                                            <i class="bi bi-file-earmark-medical"></i> Analisar
+                                        </a>
+                                        {% else %}
+                                        <span class="badge bg-light text-muted">Sem Anexo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <form action="{{ url_for('admin.validar_comprovativo', transacao_id=t.id) }}" method="POST">
+                                                {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                                                <button type="submit" class="btn-check-success" title="Aprovar">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            <button class="btn-check-danger" data-bs-toggle="modal" data-bs-target="#modalRejeitar{{ t.id }}" title="Rejeitar">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <div class="modal fade" id="modalRejeitar{{ t.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-0 rounded-4">
+                                            <form action="{{ url_for('admin.rejeitar_pagamento', id=t.id) }}" method="POST">
+                                                {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                                                <div class="modal-header border-0 p-4">
+                                                    <h5 class="fw-900 m-0">Rejeitar Pagamento #{{ t.fatura_ref }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body p-4 pt-0">
+                                                    <p class="text-slate small fw-600">Informe o motivo da rejeição. O comprador receberá uma notificação.</p>
+                                                    <textarea name="motivo" class="form-control bg-light border-0 rounded-3" rows="3" placeholder="Ex: Comprovativo ilegível ou valor incompleto..." required></textarea>
+                                                </div>
+                                                <div class="modal-footer border-0 p-4">
+                                                    <button type="button" class="btn btn-light rounded-pill px-4 fw-800" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-800">Confirmar Rejeição</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-slate fw-600">
+                                        <i class="bi bi-check2-all d-block fs-1 mb-2 opacity-25"></i>
+                                        Tudo em ordem! Não há validações pendentes.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="custodia">
+                <div class="surface-glass shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle mb-0">
+                            <thead class="bg-dark text-white opacity-75">
+                                <tr>
+                                    <th class="ps-4">ID de Fatura</th>
+                                    <th>Trajeto Comercial</th>
+                                    <th>Montante Retido</th>
+                                    <th class="pe-4 text-end">Proteção Ativa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in custodia %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="ref-id-dark">#{{ t.fatura_ref }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="trade-path">
+                                            <span class="entity">{{ t.comprador.nome.split()[0] if t.comprador.nome else 'User' }}</span>
+                                            <i class="bi bi-arrow-right text-primary"></i>
+                                            <span class="entity">{{ t.safra.produtor.nome.split()[0] if t.safra.produtor.nome else 'Produtor' }}</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="fw-900 text-primary">{{ "{:,.2f}".format(t.preco_total) }} Kz</span></td>
+                                    <td class="text-end pe-4">
+                                        <div class="escrow-lock-badge">
+                                            <i class="bi bi-lock-fill me-2"></i> FUNDO SEGURO
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-slate fw-600">Nenhuma transação em custódia no momento.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

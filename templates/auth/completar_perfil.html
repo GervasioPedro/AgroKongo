@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Finalizar Cadastro — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5 animate__animated animate__fadeIn">
+    <div class="row justify-content-center">
+        <div class="col-lg-11 col-xl-10">
+            <div class="card bg-white rounded-5 shadow-lg overflow-hidden border-0">
+                <div class="row g-0">
+
+                    <div class="col-lg-5 d-none d-lg-flex p-5 flex-column justify-content-between text-white position-relative"
+                         style="background: linear-gradient(rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.8)),
+                                url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=800');
+                                background-size: cover; background-position: center;">
+
+                        <div class="animate__animated animate__fadeInLeft">
+                            <span class="badge bg-success text-white fw-900 px-3 py-2 rounded-pill mb-4 shadow-sm animate__animated animate__pulse animate__infinite">
+                                <i class="bi bi-shield-check me-1"></i> ETAPA DE SEGURANÇA
+                            </span>
+                            <h2 class="display-5 fw-900 mb-4" style="letter-spacing: -2px; line-height: 1;">A maior rede de Angola <span class="text-success">espera por si.</span></h2>
+                            <p class="lead opacity-75 fw-500">Estamos quase lá! Estes dados garantem que as suas transações sejam legais e seguras.</p>
+                        </div>
+
+                        <div class="bg-white bg-opacity-10 p-4 rounded-4 backdrop-blur border border-white border-opacity-10 animate__animated animate__fadeInUp">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="bi bi-lock-fill fs-2 text-success"></i>
+                                <div>
+                                    <h6 class="fw-800 m-0">Privacidade Total</h6>
+                                    <p class="small m-0 opacity-80 fw-500">O seu NIF e IBAN são encriptados e usados apenas para fins de faturação e pagamento.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7 p-4 p-md-5 bg-white">
+                        <div class="mb-5">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h2 class="fw-900 text-dark m-0 h3">Dados de Identidade</h2>
+                                <span class="badge bg-light text-muted rounded-pill border fw-800 tiny">{{ current_user.tipo | upper }}</span>
+                            </div>
+                            <p class="text-muted fw-600">Complete o seu perfil profissional.</p>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('auth.completar_perfil') }}" id="formFinal">
+                            <div class="row g-3">
+                                <div class="col-md-7 mb-3">
+                                    <label class="label-caps mb-2">Nome Completo / Comercial</label>
+                                    <div class="input-group-modern">
+                                        <i class="bi bi-person-badge text-success fs-5"></i>
+                                        <input type="text" name="nome" class="form-control-modern" placeholder="Ex: Cooperativa Agrícola do Huambo" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-5 mb-3">
+                                    <label class="label-caps mb-2">NIF</label>
+                                    <div class="input-group-modern">
+                                        <i class="bi bi-hash text-success fs-5"></i>
+                                        <input type="text" name="nif" class="form-control-modern" placeholder="000000000" required maxlength="14">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if current_user.tipo == 'produtor' %}
+                            <div class="mb-4">
+                                <label class="label-caps mb-2 text-primary"><i class="bi bi-star-fill me-1 tiny"></i> IBAN para Recebimentos</label>
+                                <div class="input-group-modern border-primary border-opacity-25 bg-primary bg-opacity-10">
+                                    <i class="bi bi-bank2 text-primary fs-5"></i>
+                                    <input type="text" name="iban" class="form-control-modern fw-900"
+                                           placeholder="AO06 0000 0000..." required
+                                           style="letter-spacing: 1px;">
+                                </div>
+                                <div class="d-flex align-items-center gap-1 mt-2 text-primary">
+                                    <i class="bi bi-info-circle-fill tiny"></i>
+                                    <span class="tiny fw-800">Verifique os 21 dígitos com atenção.</span>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="label-caps mb-2">Província</label>
+                                    <div class="input-group-modern">
+                                        <i class="bi bi-geo-alt text-success fs-5"></i>
+                                        <select id="provincia_select" class="form-control-modern form-select p-0 shadow-none" required>
+                                            <option value="" disabled selected>Escolha...</option>
+                                            {% for p in provincias %}
+                                                <option value="{{ p.id }}">{{ p.nome }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="label-caps mb-2">Município</label>
+                                    <div class="input-group-modern">
+                                        <i class="bi bi-geo text-success fs-5"></i>
+                                        <select name="municipio_id" id="municipio_select" class="form-control-modern form-select p-0 shadow-none" required disabled>
+                                            <option value="" disabled selected>Aguardando...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="label-caps mb-2">Ponto de Referência Próximo</label>
+                                <div class="input-group-modern align-items-start py-3">
+                                    <i class="bi bi-map text-success fs-5 mt-1"></i>
+                                    <textarea name="referencia" rows="2" class="form-control-modern" placeholder="Ex: Junto ao mercado municipal, porta verde..."></textarea>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 py-3 rounded-4 shadow-lg d-flex align-items-center justify-content-center gap-2 fw-900 fs-5 transition-all hover-up border-0">
+                                <span>Concluir e Explorar</span>
+                                <i class="bi bi-rocket-takeoff-fill fs-4"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const municipios_data = {
+        {% for p in provincias %}
+            "{{ p.id }}": [{% for m in p.municipios %}{id: "{{ m.id }}", nome: "{{ m.nome }}"},{% endfor %}],
+        {% endfor %}
+    };
+
+    document.getElementById('provincia_select').addEventListener('change', function() {
+        const selectM = document.getElementById('municipio_select');
+        const municipios = municipios_data[this.value];
+
+        selectM.disabled = false;
+        selectM.classList.add('animate__animated', 'animate__fadeIn');
+        selectM.innerHTML = '<option value="" disabled selected>Escolha o município...</option>';
+
+        municipios.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m.id;
+            option.textContent = m.nome;
+            selectM.appendChild(option);
+        });
+    });
+</script>
+
+<style>
+    :root { --green-agrokongo: #15803d; }
+    .label-caps { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: #64748b; }
+    .input-group-modern { display: flex; align-items: center; background: #f8fafc; border: 2.5px solid #f1f5f9; border-radius: 20px; padding: 12px 20px; transition: all 0.3s ease; }
+    .input-group-modern:focus-within { border-color: var(--green-agrokongo); background: white; box-shadow: 0 12px 30px rgba(21, 128, 61, 0.08); }
+    .form-control-modern { border: none; background: transparent; width: 100%; margin-left: 12px; font-weight: 700; outline: none; color: #1e293b; font-size: 1rem; }
+    .form-control-modern::placeholder { color: #cbd5e1; font-weight: 400; }
+    .backdrop-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .hover-up:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(21, 128, 61, 0.25) !important; }
+    .tiny { font-size: 0.72rem; }
+</style>
+{% endblock %}

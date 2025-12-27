@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Pagamentos — AgroKongo Admin{% endblock %}
+
+{% block content %}
+<div class="admin-finance-wrapper animate__animated animate__fadeIn">
+
+    <div class="container-fluid py-5 px-md-5" style="max-width: 1300px;">
+
+        <div class="d-flex align-items-end justify-content-between mb-5 flex-wrap gap-4">
+            <div class="header-main">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item small fw-bold text-uppercase ls-1"><a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none">Painel</a></li>
+                        <li class="breadcrumb-item small fw-bold text-uppercase ls-1 active">Módulo Financeiro</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-900 text-dark-sharp m-0" style="letter-spacing: -2px;">Gestão de Custódia</h1>
+            </div>
+
+            <div class="quick-stats d-flex gap-3">
+                <div class="stat-pill">
+                    <span class="label">Pendentes</span>
+                    <span class="value text-warning">{{ pendentes|length }}</span>
+                </div>
+                <div class="stat-pill bg-dark text-white">
+                    <span class="label text-white-50">Em Escrow</span>
+                    <span class="value text-white">{{ custodia|length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="finance-surface shadow-sm mb-5">
+            <div class="surface-header-gold">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="header-icon bg-warning-light text-warning"><i class="bi bi-shield-exclamation"></i></div>
+                    <div>
+                        <h5 class="fw-900 m-0 text-dark">Aguardando Verificação Bancária</h5>
+                        <p class="m-0 tiny text-slate fw-700 text-uppercase ls-1">Confirme a entrada de fundos para libertar a ordem</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table admin-table-v2 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Referência / Lote</th>
+                            <th>Comprador</th>
+                            <th>Valor da Operação</th>
+                            <th class="text-center">Comprovativo</th>
+                            <th class="text-end pe-4">Decisão Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pendentes %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="ref-badge">{{ p.fatura_ref }}</span>
+                                <div class="tiny fw-800 text-slate mt-1">{{ p.data_criacao.strftime('%d/%m/%Y às %H:%M') }}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar-mini bg-primary-light text-primary">
+                                        {{ p.comprador.nome[0]|upper if p.comprador.nome else 'U' }}
+                                    </div>
+                                    <div class="ms-3">
+                                        <div class="fw-900 text-dark small">{{ p.comprador.nome }}</div>
+                                        <div class="tiny text-slate fw-700">{{ p.comprador.telemovel }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-900 text-dark fs-5">{{ "{:,.2f}".format(p.preco_total) }} <small class="tiny opacity-50">Kz</small></div>
+                            </td>
+                            <td class="text-center">
+                                {% if p.comprovativo_path %}
+                                <a href="{{ url_for('static', filename='uploads/comprovativos/' + p.comprovativo_path) }}"
+                                   target="_blank" class="btn-view-doc">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i> Analisar Doc
+                                </a>
+                                {% else %}
+                                <span class="badge bg-danger-light text-danger fw-900">SEM ARQUIVO</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <form action="{{ url_for('admin.validar_comprovativo', transacao_id=p.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn-action-success" onclick="return confirm('Confirmar entrada de valores?')">
+                                            <i class="bi bi-check-circle-fill"></i> Validar
+                                        </button>
+                                    </form>
+                                    <button class="btn-action-danger" data-bs-toggle="modal" data-bs-target="#modalRejeitar{{ p.id }}">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="modalRejeitar{{ p.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 rounded-5 shadow-2xl">
+                                    <div class="modal-body p-5 text-center">
+                                        <div class="icon-circle-danger mb-4"><i class="bi bi-shield-x"></i></div>
+                                        <h4 class="fw-900 text-dark-sharp mb-2">Rejeitar Comprovativo</h4>
+                                        <p class="text-slate fw-600 mb-4">O comprador será notificado para enviar um novo ficheiro ou corrigir o valor.</p>
+
+                                        <form action="{{ url_for('admin.rejeitar_comprovativo', transacao_id=p.id) }}" method="POST">
+                                            <select name="motivo" class="form-select modern-select mb-4">
+                                                <option value="Ficheiro Ilegível">Ficheiro Ilegível / Má Qualidade</option>
+                                                <option value="Valor Incorreto">Valor não coincide com a fatura</option>
+                                                <option value="Ficheiro Errado">Documento não é um comprovativo</option>
+                                                <option value="IBAN Incorreto">Destino do pagamento incorreto</option>
+                                            </select>
+                                            <div class="d-grid gap-2">
+                                                <button type="submit" class="btn btn-danger py-3 rounded-pill fw-900">Confirmar Rejeição</button>
+                                                <button type="button" class="btn btn-link text-slate fw-800 text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="empty-state-inner py-4">
+                                    <i class="bi bi-check-all display-3 text-success opacity-25"></i>
+                                    <h6 class="fw-900 text-dark mt-3">Tudo Validado!</h6>
+                                    <p class="text-slate fw-600 small">Não existem novos pagamentos na fila.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="finance-surface border-0 shadow-sm opacity-90">
+            <div class="p-4 border-bottom bg-light bg-opacity-50 d-flex justify-content-between align-items-center">
+                <h6 class="fw-900 m-0 text-slate"><i class="bi bi-safe2-fill me-2"></i> Monitor de Capital Retido (Escrow)</h6>
+                <span class="badge bg-white text-dark border rounded-pill px-3 fw-800">Total Garantido: {{ custodia|length }} ordens</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table admin-table-v2 align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Referência</th>
+                            <th>Estado do Fundo</th>
+                            <th class="text-end pe-4">Localização Bancária</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in custodia %}
+                        <tr>
+                            <td class="ps-4 fw-900 text-dark">{{ c.fatura_ref }}</td>
+                            <td>
+                                <div class="d-flex align-items-center text-success">
+                                    <i class="bi bi-lock-fill me-2"></i>
+                                    <span class="fw-900 small">CAPITAL PROTEGIDO</span>
+                                </div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <span class="tiny fw-800 text-slate text-uppercase">Conta Agrokongo • BAI</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM FINANCEIRO */
+    .admin-finance-wrapper { background: #f1f5f9; min-height: 100vh; font-family: 'Inter', sans-serif; }
+    .text-dark-sharp { color: #0f172a; }
+    .text-slate { color: #64748b; }
+    .ls-1 { letter-spacing: 1px; }
+
+    /* STAT PILLS */
+    .stat-pill { background: white; padding: 10px 25px; border-radius: 18px; border: 1px solid #e2e8f0; text-align: right; }
+    .stat-pill .label { display: block; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; }
+    .stat-pill .value { font-size: 1.4rem; font-weight: 900; line-height: 1; }
+
+    /* SURFACE */
+    .finance-surface { background: white; border-radius: 35px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .surface-header-gold { padding: 30px; border-bottom: 2px solid #fffbeb; background: linear-gradient(to right, #ffffff, #fffbeb); }
+    .header-icon { width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .bg-warning-light { background: #fffbeb; }
+
+    /* TABLE */
+    .admin-table-v2 thead th { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; padding: 20px; border-bottom: 1px solid #f1f5f9; }
+    .admin-table-v2 tbody td { padding: 20px; border-bottom: 1px solid #f8fafc; }
+    .ref-badge { background: #0f172a; color: white; padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 900; }
+
+    /* BUTTONS */
+    .btn-view-doc {
+        background: #eff6ff; color: #2563eb; border: none; padding: 8px 15px; border-radius: 12px;
+        font-weight: 800; font-size: 0.75rem; text-decoration: none; transition: 0.3s;
+    }
+    .btn-view-doc:hover { background: #2563eb; color: white; }
+
+    .btn-action-success {
+        background: #15803d; color: white; border: none; padding: 10px 20px; border-radius: 12px;
+        font-weight: 900; font-size: 0.8rem; transition: 0.3s;
+    }
+    .btn-action-success:hover { background: #166534; transform: scale(1.05); }
+
+    .btn-action-danger {
+        background: #fee2e2; color: #ef4444; border: none; padding: 10px 15px; border-radius: 12px;
+        font-weight: 900; transition: 0.3s;
+    }
+    .btn-action-danger:hover { background: #ef4444; color: white; }
+
+    /* MODAL */
+    .icon-circle-danger { width: 80px; height: 80px; background: #fef2f2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto; }
+    .modern-select { border-radius: 15px; padding: 12px; border: 2px solid #f1f5f9; font-weight: 700; color: #0f172a; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+
+    /* AVATAR */
+    .user-avatar-mini { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; }
+    .bg-primary-light { background: #eff6ff; }
+</style>
+{% endblock %}

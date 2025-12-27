@@ -1,0 +1,473 @@
+/* static/css/main.css */
+:root {
+  /* CORES PRINCIPAIS */
+  --primary: #28a745;        /* Verde para ações */
+  --primary-light: #218838;  /* Verde mais escuro para cabeçalhos */
+  --primary-dark: #1e7e34;   /* Hover */
+  --secondary: #17a2b8;      /* Azul para informações */
+  --secondary-light: #138496;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --gray-10: #ffffff;
+  --gray-50: #f9f9f9;
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  padding-bottom: 20px;
+}
+
+/* BARRA SUPERIOR */
+.barra-superior {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--primary);
+  color: var(--gray-10);
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.barra-superior h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.acoes {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-acao {
+  background: rgba(255,255,255,0.2);
+  color: var(--gray-10);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-acao:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.icone-perfil {
+  color: var(--gray-10);
+  font-size: 1.3rem;
+  text-decoration: none;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: var(--gray-10);
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 101;
+  border-radius: 8px;
+  overflow: hidden;
+  right: 0;
+}
+
+.dropdown-content a {
+  color: var(--gray-900);
+  padding: 10px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 0.95rem;
+}
+
+.dropdown-content a:hover {
+  background: var(--gray-200);
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* CONTAINER PRINCIPAL */
+.container {
+  max-width: 600px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+/* TYPOGRAFIA */
+h1, h2, h3, h4 {
+  color: var(--gray-900);
+  margin: 0 0 16px;
+  font-weight: 700;
+}
+
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.15rem; }
+h4 { font-size: 1.1rem; }
+
+p, label {
+  color: var(--gray-700);
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+}
+
+/* BOTÕES */
+.btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  margin: 16px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--gray-10);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--gray-10);
+}
+
+.btn-outline {
+  background: var(--gray-10);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+/* MENSAGENS */
+.alert {
+  padding: 16px;
+  margin: 16px 0;
+  border-radius: 10px;
+  font-weight: 600;
+  border-left: 4px solid;
+}
+
+.alert-success {
+  background: #d4edda;
+  color: #155724;
+  border-left-color: var(--primary);
+}
+
+.alert-error {
+  background: #f8d7da;
+  color: #721c24;
+  border-left-color: var(--danger);
+}
+
+/* FORMULÁRIOS */
+label {
+  display: block;
+  margin: 20px 0 8px;
+  font-weight: 700;
+  color: var(--gray-900);
+  font-size: 1.05rem;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--gray-300);
+  border-radius: 10px;
+  font-size: 1.1rem;
+  background: var(--gray-10);
+}
+
+input:focus, select:focus {
+  outline: 2px solid var(--primary);
+  border-color: var(--primary);
+}
+
+/* CARTÕES E SEÇÕES */
+.card, .secao {
+  background: var(--gray-10);
+  border-radius: 14px;
+  padding: 20px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* LISTAS DE ITENS */
+.item-interesse, .item-oferta, .item-colheita, .item-interesse-comprador {
+  background: var(--gray-10);
+  padding: 20px;
+  margin: 16px 0;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.item-interesse {
+  border-left: 4px solid var(--warning);
+}
+
+.item-oferta, .item-colheita {
+  border-left: 4px solid var(--primary);
+}
+
+.item-interesse-comprador {
+  border-left: 4px solid var(--secondary);
+}
+
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  align-items: flex-start;
+}
+
+.cabecalho strong {
+  font-size: 1.2rem;
+  color: var(--gray-900);
+}
+
+.quantidade {
+  background: var(--gray-200);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: var(--gray-600);
+}
+
+.detalhes p {
+  color: var(--gray-600);
+  margin: 6px 0;
+  font-size: 0.95rem;
+}
+
+.acoes {
+  margin-top: 16px;
+}
+
+.btn-notificar, .btn-contactar, .btn-registar {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  margin-top: 10px;
+  transition: transform 0.1s;
+}
+
+.btn-notificar, .btn-contactar {
+  color: var(--gray-10);
+}
+
+.btn-notificar {
+  background: var(--primary);
+}
+
+.btn-contactar {
+  background: var(--secondary);
+}
+
+.btn-registar {
+  background: var(--gray-600);
+  color: var(--gray-10);
+}
+
+.btn-notificar:hover, .btn-contactar:hover, .btn-registar:hover {
+  transform: translateY(-2px);
+}
+
+/* ESTADOS VAZIOS */
+.empty-state {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--gray-600);
+  background: var(--gray-10);
+  border-radius: 16px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* BADGES E CONTADORES */
+.badge, .contador {
+  background: #d4edda;
+  color: #155724;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.badge.azul, .contador.azul {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.contador {
+  min-width: 24px;
+  text-align: center;
+}
+
+/* AVATAR */
+.avatar {
+  width: 60px;
+  height: 60px;
+  background: var(--gray-200);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--gray-700);
+}
+
+.avatar.azul {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+/* FEEDBACK DE SUCESSO */
+#feedback-sucesso {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #d4edda;
+  color: #155724;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateX(200%);
+  transition: transform 0.3s ease-out;
+  z-index: 1000;
+  font-weight: 600;
+}
+
+/* RESPONSIVIDADE */
+@media (max-width: 480px) {
+  .barra-superior {
+    padding: 10px 12px;
+  }
+
+  .barra-superior h1 {
+    font-size: 1.15rem;
+  }
+
+  .btn {
+    padding: 14px;
+    font-size: 1.05rem;
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+}
+
+<style>
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+    }
+    .star-rating input { display: none; }
+    .star-rating label {
+        color: #ddd;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #f59e0b; /* Cor Dourada */
+    }
+
+    /* Card AgroKongo Pro */
+.card-safra-premium {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.card-safra-premium:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 40px 60px -15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.img-zoom {
+    transition: transform 1s ease;
+}
+
+.card-safra-premium:hover .img-zoom {
+    transform: scale(1.1);
+}
+
+/* Badges e Efeitos */
+.badge-glass-dark {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.65rem;
+}
+
+.shadow-inner {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+}
+
+/* Botão Magnético */
+.btn-success {
+    background-color: #15803d;
+    border: none;
+    transition: 0.3s;
+}
+
+.btn-success:hover {
+    background-color: #166534;
+    transform: scale(1.05);
+}
+
+.ls-1 { letter-spacing: 1px; }
+.fw-900 { font-weight: 900; }
+
+
+
+</style>

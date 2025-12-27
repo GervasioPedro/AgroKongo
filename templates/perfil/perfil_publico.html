@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Produtor: {{ produtor.nome }} — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f0fdf4 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="sticky-top" style="top: 100px; z-index: 10;">
+                    <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white border border-light-sharp">
+                        <div class="card-header-elite-produtor">
+                            <div class="avatar-elite-frame">
+                                <div class="avatar-huge-text shadow-lg">
+                                    {{ produtor.nome[0]|upper }}
+                                </div>
+                                <div class="verification-badge-elite">
+                                    <i class="bi bi-patch-check-fill"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4 p-md-5 pt-0 text-center mt-n5">
+                            <h2 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -2px;">{{ produtor.nome }}</h2>
+                            <p class="text-slate-bold mb-4 fw-700 fs-6">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ produtor.provincia }}
+                            </p>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <div class="reputation-pill bg-light-sharp border border-light-sharp">
+                                        <h4 class="fw-900 text-warning m-0">★ {{ "%.1f"|format(produtor.obter_reputacao()) }}</h4>
+                                        <span class="label-caps-elite opacity-50">Rating</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="reputation-pill bg-light-sharp border border-light-sharp">
+                                        <h4 class="fw-900 text-dark-sharp m-0">{{ produtor.minhas_safras|length }}</h4>
+                                        <span class="label-caps-elite opacity-50">Lotes</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-3">
+                                <a href="https://wa.me/244{{ produtor.telemovel }}" target="_blank" class="btn btn-whatsapp-elite py-3 rounded-pill fw-900 shadow-sm transition-all hover-up">
+                                    <i class="bi bi-whatsapp me-2"></i> Negociar por WhatsApp
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-dark-sharp border-0 p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-trust-shield text-success">
+                                    <i class="bi bi-shield-fill-check"></i>
+                                </div>
+                                <div class="text-start">
+                                    <h6 class="text-white fw-900 m-0 small">Produtor Verificado</h6>
+                                    <p class="text-white-50 tiny m-0 fw-600">Identidade confirmada pela AgroKongo</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center justify-content-between mb-4 border-bottom border-light-sharp pb-3">
+                    <h4 class="fw-900 text-dark-sharp m-0" style="letter-spacing: -1px;">🛒 Mercadoria em Stock</h4>
+                    <span class="badge-status-elite available">
+                        {{ produtor.minhas_safras|selectattr('status', 'equalto', 'disponivel')|list|length }} DISPONÍVEIS
+                    </span>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    {% for safra in produtor.minhas_safras if safra.status == 'disponivel' %}
+                    <div class="col-md-6">
+                        <div class="card border-0 rounded-5 shadow-sm hover-card-elite transition-all h-100 overflow-hidden bg-white border border-light-sharp">
+                            <div class="p-4 p-md-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="label-caps-elite text-success">Colheita Ativa</span>
+                                    <span class="tiny fw-800 text-slate-bold">#AK-{{ safra.id }}</span>
+                                </div>
+                                <h4 class="fw-900 text-dark-sharp mb-2">{{ safra.produto.nome }}</h4>
+
+                                <div class="price-box-elite mb-4">
+                                    <span class="fw-900 text-success-dark fs-3">{{ "{:,.0f}".format(safra.preco_kg) }}</span>
+                                    <span class="tiny fw-900 text-slate-bold ms-1">Kz / KG</span>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center pt-3 border-top border-light-sharp">
+                                    <div>
+                                        <span class="d-block tiny fw-800 text-slate-bold text-uppercase">Quantidade</span>
+                                        <span class="fw-900 text-dark-sharp">{{ "{:,.0f}".format(safra.quantidade_kg) }} KG</span>
+                                    </div>
+                                    <a href="{{ url_for('mercado.detalhe_safra', id=safra.id) }}" class="btn btn-dark-sharp btn-sm rounded-pill px-4 fw-900 transition-all hover-up">
+                                        Ver Lote
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-5 bg-white rounded-5 border-dashed-blue">
+                        <p class="text-slate-bold fw-700 m-0">Este produtor não tem lotes ativos no momento.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-5">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <h4 class="fw-900 text-dark-sharp m-0" style="letter-spacing: -1px;">💬 Voz da Comunidade</h4>
+                        <div class="h-line-elite"></div>
+                    </div>
+
+                    <div class="row g-3">
+                        {% set ns = namespace(count=0) %}
+                        {% for safra in produtor.minhas_safras %}
+                            {% for avaliacao in safra.avaliacoes %}
+                            {% set ns.count = ns.count + 1 %}
+                            <div class="col-12">
+                                <div class="card border-0 rounded-5 shadow-sm bg-white p-4 border border-light-sharp">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm-elite">
+                                                {{ avaliacao.autor.nome[0]|upper }}
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-900 text-dark-sharp m-0">{{ avaliacao.autor.nome }}</h6>
+                                                <div class="text-warning tiny">
+                                                    {% for i in range(5) %}
+                                                        <i class="bi bi-star{{ '-fill' if i < avaliacao.estrelas else '' }}"></i>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span class="badge-status-elite indigo">
+                                            {{ avaliacao.safra.produto.nome }}
+                                        </span>
+                                    </div>
+                                    <div class="comment-bubble-elite">
+                                        <i class="bi bi-quote fs-4 text-primary opacity-25 me-1"></i>
+                                        <span class="text-slate-bold fw-600 fs-6 italic">{{ avaliacao.comentario }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endfor %}
+
+                        {% if ns.count == 0 %}
+                        <div class="col-12 text-center py-5 bg-white rounded-5 shadow-sm border-dashed-blue">
+                            <div class="display-4 opacity-10 mb-3">⭐</div>
+                            <p class="text-slate-bold fw-700 m-0 fs-5">Este produtor ainda não recebeu avaliações.</p>
+                            <small class="text-slate-bold opacity-75">Seja o primeiro a negociar e deixe o seu feedback!</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .text-success-dark { color: #15803d !important; }
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+
+    /* CARD HEADER ELITE */
+    .card-header-elite-produtor {
+        height: 120px; background: linear-gradient(45deg, #15803d, #22c55e);
+        position: relative; display: flex; justify-content: center;
+    }
+    .avatar-elite-frame { position: absolute; bottom: -45px; }
+    .avatar-huge-text {
+        width: 100px; height: 100px; background: white; border: 6px solid white;
+        border-radius: 35px; display: flex; align-items: center; justify-content: center;
+        font-size: 3rem; font-weight: 900; color: #15803d;
+    }
+    .verification-badge-elite {
+        position: absolute; bottom: 0; right: -5px; background: white;
+        border-radius: 50%; color: #2563eb; font-size: 1.5rem; line-height: 1;
+    }
+
+    /* METRICS & PILLS */
+    .reputation-pill { padding: 15px; rounded-radius: 20px; border-radius: 20px; text-align: center; }
+    .badge-status-elite { padding: 6px 14px; border-radius: 50px; font-size: 0.65rem; font-weight: 900; letter-spacing: 1px; }
+    .badge-status-elite.available { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+    .badge-status-elite.indigo { background: #eef2ff; color: #4338ca; border: 1px solid #e0e7ff; }
+
+    /* BUTTONS */
+    .btn-whatsapp-elite { background: #25d366; color: white; border: none; }
+    .btn-whatsapp-elite:hover { background: #128c7e; color: white; transform: translateY(-3px); }
+    .btn-dark-sharp { background: #0f172a; color: white; border: none; }
+    .btn-dark-sharp:hover { background: #000; color: white; }
+
+    /* CARDS & UI */
+    .hover-card-elite:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.1) !important; }
+    .price-box-elite { background: #f0fdf4; padding: 10px 20px; border-radius: 15px; display: inline-block; }
+    .h-line-elite { flex-grow: 1; height: 2px; background: #f1f5f9; }
+    .avatar-sm-elite { width: 45px; height: 45px; background: #eef2ff; color: #4338ca; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+    .comment-bubble-elite { background: #f8fafc; padding: 20px; border-radius: 25px; border: 1px solid #f1f5f9; }
+
+    .icon-trust-shield { font-size: 2.2rem; }
+    .border-dashed-blue { border: 2px dashed #dbeafe !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15); }
+    .hover-up:hover { transform: translateY(-4px); }
+</style>
+{% endblock %}

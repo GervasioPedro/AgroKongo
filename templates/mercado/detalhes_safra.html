@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}{{ safra.produto.nome }} - AgroKongo{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container mt-4 animate__animated animate__fadeIn">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted fw-600">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('mercado.explorar') }}" class="text-decoration-none text-muted fw-600">Mercado</a></li>
+            <li class="breadcrumb-item active fw-800 text-success" aria-current="page">{{ safra.produto.nome }}</li>
+        </ol>
+    </nav>
+    <button onclick="history.back()" class="btn btn-white btn-sm rounded-pill px-3 fw-700 shadow-sm border">
+        <i class="bi bi-arrow-left me-1"></i> Voltar
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5 animate__animated animate__fadeIn">
+    <div class="row g-4 lg-g-5">
+
+        <div class="col-lg-7 col-xl-8">
+            <div class="card border-0 shadow-sm rounded-5 overflow-hidden bg-white mb-4">
+                <div class="position-relative">
+                    <img src="{{ safra.imagem_url or 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200' }}"
+                         class="w-100" style="height: 400px; object-fit: cover;" alt="{{ safra.produto.nome }}">
+
+                    <div class="position-absolute top-0 start-0 m-4">
+                        <span class="badge bg-success px-3 py-2 rounded-pill fw-900 shadow-lg animate__animated animate__pulse animate__infinite">
+                            <i class="bi bi-check-circle-fill me-1"></i> EM STOCK
+                        </span>
+                    </div>
+
+                    <div class="position-absolute bottom-0 start-0 w-100 p-4 p-md-5"
+                         style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                        <h1 class="fw-900 display-5 text-white mb-0" style="letter-spacing: -2px;">{{ safra.produto.nome }}</h1>
+                        <p class="text-white-50 fs-5 mb-0 fw-600">
+                            <i class="bi bi-geo-alt-fill me-2 text-success-light"></i>{{ safra.produtor.provincia.nome }}, {{ safra.produtor.municipio.nome }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <div class="row g-4 mb-5 text-center text-md-start">
+                        <div class="col-md-6">
+                            <div class="p-4 rounded-5 bg-light border border-white shadow-sm h-100">
+                                <h6 class="text-muted fw-800 text-uppercase small ls-2 mb-2">Preço de Venda</h6>
+                                <h2 class="fw-900 text-success mb-0">{{ safra.preco_kg | formata_kz }}<span class="fs-5 text-muted fw-700"> /kg</span></h2>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-4 rounded-5 bg-light border border-white shadow-sm h-100">
+                                <h6 class="text-muted fw-800 text-uppercase small ls-2 mb-2">Total em Stock</h6>
+                                <h2 class="fw-900 text-dark mb-0">{{ safra.quantidade_kg | formata_kg }}<span class="fs-5 text-muted fw-700"> disp.</span></h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-top">
+                        <h5 class="fw-900 mb-4 text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-person-badge text-success"></i> Origem do Produto
+                        </h5>
+                        <div class="d-flex align-items-center gap-4 p-4 bg-white rounded-5 border shadow-sm transition-all hover-card">
+                            <div class="avatar-wrapper">
+                                <div class="avatar-circle-lg bg-success text-white fw-900 display-6 shadow-sm">
+                                    {{ safra.produtor.nome[0]|upper }}
+                                </div>
+                                <div class="verified-badge"><i class="bi bi-patch-check-fill"></i></div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-900 m-0 text-dark">{{ safra.produtor.nome }}</h5>
+                                <p class="text-muted fw-600 m-0">Produtor de {{ safra.produtor.provincia.nome }}</p>
+                                <p class="tiny text-success fw-800 text-uppercase ls-1 mt-1">Membro desde {{ safra.produtor.data_cadastro.strftime('%Y') }}</p>
+                            </div>
+                            <div class="d-none d-md-block">
+                                <a href="{{ url_for('publico.perfil_produtor', usuario_id=safra.produtor_id) }}" class="btn btn-dark rounded-pill px-4 fw-800 shadow-sm">Ver Perfil</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 col-xl-4">
+            <div class="card border-0 shadow-lg rounded-5 sticky-top overflow-hidden bg-white" style="top: 100px; z-index: 10;">
+                <div class="p-4 bg-success text-white text-center">
+                    <h4 class="fw-900 m-0">Fazer Pedido</h4>
+                    <p class="small opacity-75 m-0 fw-600">Negociação direta e segura</p>
+                </div>
+
+                <div class="card-body p-4 p-xl-5">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.tipo == 'comprador' %}
+                        <form action="{{ url_for('mercado.fazer_match', safra_id=safra.id) }}" method="POST">
+                            <div class="mb-4">
+                                <label class="fw-800 text-muted small text-uppercase mb-3 d-block ls-1 text-center">Quantidade pretendida</label>
+
+                                <div class="quantity-picker bg-light rounded-pill p-2 d-flex align-items-center border-2 border border-light">
+                                    <input type="number" name="quantidade_pretendida"
+                                           class="form-control border-0 bg-transparent fw-900 text-center fs-3 shadow-none"
+                                           max="{{ safra.quantidade_kg }}" min="0.1" step="0.1" placeholder="0.0" required>
+                                    <span class="badge bg-white text-dark rounded-pill shadow-sm px-3 py-2 fw-800 fs-6 me-1">kg</span>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-3 px-2">
+                                    <span class="tiny fw-700 text-muted">Stock Disponível:</span>
+                                    <span class="tiny fw-900 text-dark">{{ safra.quantidade_kg | formata_kg }}</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-900 py-3 mb-4 shadow-lg transition-all hover-up">
+                                <span>ENVIAR PROPOSTA</span>
+                                <i class="bi bi-arrow-right-circle-fill ms-2"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="bg-warning bg-opacity-10 border border-warning border-opacity-25 rounded-4 p-4 text-center mb-4">
+                            <i class="bi bi-info-circle-fill text-warning fs-3 mb-2 d-block"></i>
+                            <p class="small fw-800 text-dark mb-0">Apenas compradores podem realizar pedidos nesta plataforma.</p>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-2">
+                            <div class="mb-4 text-muted">
+                                <i class="bi bi-lock-fill display-4 opacity-25"></i>
+                                <p class="fw-700 mt-2">Inicie sessão para comprar diretamente na fonte.</p>
+                            </div>
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-dark w-100 rounded-pill fw-900 py-3 mb-3 shadow-sm">Entrar na Conta</a>
+                            <p class="small fw-700">Não tem conta? <a href="{{ url_for('auth.escolha_perfil') }}" class="text-success text-decoration-none">Registe-se aqui</a></p>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-2 pt-4 border-top text-center">
+                        <div class="d-flex align-items-center justify-content-center gap-2 text-muted fw-700 small">
+                            <i class="bi bi-shield-check-fill text-success fs-5"></i>
+                            <span>Proteção de Compra AgroKongo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root { --green-agrokongo: #15803d; }
+
+    .ls-2 { letter-spacing: 2px; }
+    .ls-1 { letter-spacing: 1px; }
+    .fw-900 { font-weight: 900; }
+    .text-success-light { color: #4ade80 !important; }
+
+    /* Avatar e Verified Badge */
+    .avatar-wrapper { position: relative; }
+    .avatar-circle-lg {
+        width: 80px; height: 80px; border-radius: 30px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .verified-badge {
+        position: absolute; bottom: -5px; right: -5px;
+        background: white; color: #0ea5e9; border-radius: 50%;
+        width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 1.1rem;
+    }
+
+    /* Input Customizado */
+    .quantity-picker:focus-within {
+        border-color: var(--green-agrokongo) !important;
+        background: white !important;
+        box-shadow: 0 10px 30px rgba(21, 128, 61, 0.08);
+    }
+
+    /* Cards e Hover */
+    .hover-card:hover { transform: scale(1.02); border-color: var(--green-agrokongo) !important; cursor: pointer; }
+    .hover-up:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(21, 128, 61, 0.2) !important; }
+
+    .btn-white { background: white; color: #1e293b; border: 1.5px solid #e2e8f0; transition: 0.3s; }
+    .btn-white:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    .tiny { font-size: 0.7rem; }
+</style>
+{% endblock %}

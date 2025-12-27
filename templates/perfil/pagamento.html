@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Pagamento Seguro — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: linear-gradient(135deg, #f0fdf4 0%, #e2e8f0 100%); min-height: 100vh; position: relative; overflow: hidden;">
+
+    <div class="blob-decorator"></div>
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp" style="max-width: 1150px; position: relative; z-index: 1;">
+
+        <div class="mb-5 d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('perfil.dashboard') }}" class="btn-back-premium">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                <span>Voltar ao Painel</span>
+            </a>
+            <div class="status-badge-secure">
+                <i class="bi bi-patch-check-fill me-2"></i> Encriptação Ativa 256-bit
+            </div>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-lg-5 col-xl-4">
+                <div class="receipt-card animate__animated animate__fadeInLeft">
+                    <div class="receipt-header text-center">
+                        <div class="receipt-logo">AK</div>
+                        <h5 class="fw-900 mt-3 mb-1">Recibo de Reserva</h5>
+                        <p class="tiny fw-700 opacity-50 text-uppercase ls-2">Fatura #{{ transacao.fatura_ref }}</p>
+                    </div>
+
+                    <div class="receipt-body">
+                        <div class="item-row mb-4 d-flex align-items-center">
+                            <div class="product-icon" style="width: 50px; height: 50px; background: #f0fdf4; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                {% if 'Milho' in transacao.safra.produto.nome %}🌽{% elif 'Batata' in transacao.safra.produto.nome %}🥔{% else %}📦{% endif %}
+                            </div>
+                            <div class="ps-3">
+                                <p class="label-tiny mb-0" style="font-size: 0.65rem; text-transform: uppercase; font-weight: 800; color: #64748b;">Produto</p>
+                                <h6 class="fw-900 m-0 text-dark-sharp">{{ transacao.safra.produto.nome }}</h6>
+                            </div>
+                        </div>
+
+                        <div class="divider-dashed" style="border-top: 2px dashed #e2e8f0; margin: 25px 0;"></div>
+
+                        <div class="price-breakdown">
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="text-slate-bold small fw-700">Quantidade</span>
+                                <span class="fw-900">{{ "{:,.0f}".format(transacao.quantidade or 0) }} KG</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="text-slate-bold small fw-700">Preço Unitário</span>
+                                <span class="fw-900">{{ "{:,.0f}".format(transacao.safra.preco_kg or 0) }} Kz/kg</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-slate-bold small fw-700">Taxa de Serviço</span>
+                                <span class="text-success fw-900">Grátis</span>
+                            </div>
+                        </div>
+
+                        <div class="receipt-footer mt-4">
+                            <div class="total-box" style="background: #0f172a; color: white; padding: 20px; border-radius: 20px; text-align: center;">
+                                <span class="total-label" style="font-size: 0.65rem; text-transform: uppercase; opacity: 0.7;">Total a Liquidar</span>
+                                <h2 class="total-amount m-0 fw-900" style="color: white;">{{ "{:,.2f}".format(transacao.preco_total or 0) }} <small style="font-size: 1rem;">Kz</small></h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7 col-xl-8">
+                <div class="payment-main-card shadow-lg bg-white p-4 p-md-5" style="border-radius: 40px;">
+                    <div class="d-flex align-items-center mb-5">
+                        <div class="step-indicator" style="width: 35px; height: 35px; background: #15803d; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900;">1</div>
+                        <h3 class="fw-900 m-0 ms-3 text-dark-sharp h2">Método de Pagamento</h3>
+                    </div>
+
+                    <form action="" method="POST" enctype="multipart/form-data">
+                        {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+
+                        <div class="payment-options-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <input type="radio" name="metodo_pagamento" value="express" id="express" checked style="display: none;">
+                            <label for="express" class="payment-card-option">
+                                <div class="card-inner">
+                                    <i class="bi bi-phone-vibrate-fill fs-1"></i>
+                                    <span class="fw-900 mt-2 d-block">MCX Express</span>
+                                </div>
+                            </label>
+
+                            <input type="radio" name="metodo_pagamento" value="transferencia" id="transferencia" style="display: none;">
+                            <label for="transferencia" class="payment-card-option">
+                                <div class="card-inner">
+                                    <i class="bi bi-bank2 fs-1"></i>
+                                    <span class="fw-900 mt-2 d-block">Transferência</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="mt-5">
+                            <div id="campos-express" class="detail-container animate__animated animate__fadeIn">
+                                <div class="input-modern-v2 shadow-sm" style="display: flex; align-items: center; background: #f8fafc; padding: 15px 25px; border-radius: 20px; border: 1px solid #e2e8f0;">
+                                    <div class="input-icon" style="color: #15803d; margin-right: 15px;"><i class="bi bi-phone"></i></div>
+                                    <div class="input-body">
+                                        <label style="display: block; font-size: 0.65rem; text-transform: uppercase; font-weight: 800; color: #64748b;">Telemóvel MCX</label>
+                                        <input type="text" name="telemovel_mcx" value="{{ current_user.telemovel or '' }}" placeholder="9XX XXX XXX" style="border: none; background: transparent; outline: none; font-weight: 800; width: 100%;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="campos-transferencia" class="detail-container animate__animated animate__fadeIn" style="display: none;">
+                                <div class="iban-display-card text-white p-4 rounded-5 bg-dark" style="border-radius: 25px;">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="text-uppercase opacity-50 small fw-800">IBAN AgroKongo</span>
+                                        <button type="button" class="btn btn-sm btn-outline-light py-0">Copiar</button>
+                                    </div>
+                                    <h4 class="fw-900 mb-2">AO06 0055 0120 0001 2345 6789 0</h4>
+                                    <p class="small opacity-75 m-0">BAI | AGROKONGO LTDA</p>
+                                </div>
+
+                                <div class="upload-area mt-4">
+                                    <input type="file" name="comprovativo" id="comprovativo" class="d-none">
+                                    <label for="comprovativo" class="upload-box-v2" style="border: 2px dashed #e2e8f0; border-radius: 25px; padding: 30px; display: block; text-align: center; cursor: pointer;">
+                                        <i class="bi bi-cloud-upload fs-1 text-success"></i>
+                                        <span class="fw-900 d-block mt-2">Anexar Comprovativo</span>
+                                        <small class="text-muted">PDF ou Imagem (Máx. 5MB)</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="security-banner-v2 mt-5 p-4 rounded-4 d-flex align-items-center" style="background: #f0fdf4; border-radius: 20px;">
+                            <i class="bi bi-shield-lock-fill text-success fs-3"></i>
+                            <div class="ms-3">
+                                <h6 class="fw-900 m-0">Pagamento sob Custódia</h6>
+                                <p class="m-0 small fw-600 text-muted">O valor fica seguro até confirmar a entrega.</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-confirm-payment mt-5" style="width: 100%; background: #15803d; color: white; border: none; padding: 20px; border-radius: 20px; font-weight: 900; transition: 0.3s;">
+                            Finalizar Transação Segura
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-card-option { border: 2px solid #f1f5f9; border-radius: 25px; padding: 30px; cursor: pointer; text-align: center; transition: 0.3s; background: #f8fafc; }
+    input[type="radio"]:checked + .payment-card-option { border-color: #15803d; background: #f0fdf4; transform: translateY(-3px); }
+    input[type="radio"]:checked + .payment-card-option i { color: #15803d; }
+    .btn-back-premium { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #64748b; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const radios = document.querySelectorAll('input[name="metodo_pagamento"]');
+        const cExpress = document.getElementById('campos-express');
+        const cTransf = document.getElementById('campos-transferencia');
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'transferencia') {
+                    cTransf.style.display = 'block';
+                    cExpress.style.display = 'none';
+                } else {
+                    cTransf.style.display = 'none';
+                    cExpress.style.display = 'block';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

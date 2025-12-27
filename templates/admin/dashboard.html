@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container animate__animated animate__fadeIn">
+
+    <div class="welcome-section mb-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-4">
+            <div class="d-flex align-items-center gap-4">
+                <div class="profile-avatar shadow-sm">
+                    {{ current_user.nome[0]|upper if current_user.nome else 'U' }}
+                </div>
+                <div>
+                    <span class="badge bg-success-soft text-success rounded-pill px-3 mb-2">
+                        <i class="bi bi-patch-check-fill me-1"></i> Comprador Verificado
+                    </span>
+                    <h1 class="display-6 fw-900 m-0 text-dark-sharp">Minha Sacola, {{ current_user.nome.split()[0] }}!</h1>
+                    <p class="text-slate m-0 fw-500">Controle as suas encomendas e a segurança dos seus pagamentos.</p>
+                </div>
+            </div>
+            <a href="{{ url_for('mercado.explorar') }}" class="btn btn-shop shadow-shop">
+                <i class="bi bi-search me-2"></i> EXPLORAR MERCADO
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="status-card-v2">
+                        <div class="status-icon-box bg-warning-soft text-warning">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3 class="m-0 fw-900 text-dark-sharp">{{ transacoes_pendentes|length if transacoes_pendentes else '0' }}</h3>
+                            <span class="text-slate fw-700 text-uppercase tiny-label">Aguardando Validação</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="status-card-v2">
+                        <div class="status-icon-box bg-primary-soft text-primary">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="status-info">
+                            <h3 class="m-0 fw-900 text-dark-sharp">{{ transacoes_custodia|length if transacoes_custodia else '0' }}</h3>
+                            <span class="text-slate fw-700 text-uppercase tiny-label">Protegido em Custódia</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="orders-surface shadow-sm bg-white">
+                <div class="p-4 border-bottom d-flex align-items-center">
+                    <h5 class="fw-900 m-0 text-dark-sharp"><i class="bi bi-truck me-2 text-success"></i> Monitor de Pedidos</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="ps-4 py-3 tiny-label fw-800 text-slate">REFERÊNCIA / PRODUTO</th>
+                                <th class="py-3 tiny-label fw-800 text-slate">VALOR</th>
+                                <th class="py-3 tiny-label fw-800 text-slate text-center">STATUS</th>
+                                <th class="pe-4 py-3 tiny-label fw-800 text-slate text-end">DETALHES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transacoes %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-800 text-dark-sharp">#{{ t.fatura_ref }}</div>
+                                    <div class="tiny text-slate fw-600">{{ t.safra.produto.nome }}</div>
+                                </td>
+                                <td>
+                                    <span class="fw-700 text-dark-sharp">{{ "{:,.2f}".format(t.preco_total) }} Kz</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if t.status == 'aguardando_validacao' %}
+                                        <span class="badge bg-warning-soft text-warning rounded-pill px-3 tiny fw-800">EM VALIDAÇÃO</span>
+                                    {% elif t.status == 'pago_custodia' %}
+                                        <span class="badge bg-success-soft text-success rounded-pill px-3 tiny fw-800">PAGO (CUSTÓDIA)</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-light rounded-pill px-3 fw-800 border">Recibo</button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="p-5 text-center">
+                                    <div class="empty-illustration mb-3">
+                                        <i class="bi bi-cart-x text-light" style="font-size: 3rem;"></i>
+                                    </div>
+                                    <p class="fw-700 text-slate">Nenhum pedido encontrado no seu histórico.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <div class="info-card-dark shadow-lg">
+                    <div class="d-flex gap-3 align-start">
+                        <div class="text-success fs-2"><i class="bi bi-shield-lock"></i></div>
+                        <div>
+                            <h6 class="fw-900 text-white mb-2">Segurança Garantida</h6>
+                            <p class="small text-white-50 m-0">O seu capital está protegido pelo sistema de custódia AgroKongo em todas as compras.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="help-surface p-4 text-center shadow-sm">
+                    <div class="help-icon-circle mb-3"><i class="bi bi-headset"></i></div>
+                    <h6 class="fw-900 text-dark-sharp">Precisa de Ajuda?</h6>
+                    <p class="small text-slate mb-4">Problemas com pagamentos ou entregas? Fale connosco.</p>
+                    <button class="btn btn-outline-dark w-100 rounded-pill fw-800 py-2">Contactar Suporte</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container { max-width: 1250px; margin: 0 auto; padding: 2rem; }
+    .text-dark-sharp { color: #0f172a; }
+    .text-slate { color: #64748b; }
+    .tiny-label { font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; }
+    .profile-avatar { width: 70px; height: 70px; background: #0f172a; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 900; }
+    .btn-shop { background: #15803d; color: white; padding: 14px 30px; border-radius: 16px; font-weight: 800; border: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; text-decoration: none; display: inline-block;}
+    .status-card-v2 { background: white; border-radius: 24px; padding: 25px; display: flex; align-items: center; gap: 20px; border: 1px solid #e2e8f0; }
+    .status-icon-box { width: 55px; height: 55px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+    .bg-warning-soft { background: #fffbeb; color: #b45309; }
+    .bg-primary-soft { background: #eff6ff; color: #1e40af; }
+    .orders-surface { background: white; border-radius: 28px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .info-card-dark { background: #0f172a; border-radius: 24px; padding: 30px; }
+    .help-surface { background: white; border-radius: 24px; border: 1px solid #e2e8f0; }
+</style>
+{% endblock %}

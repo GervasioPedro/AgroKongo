@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f0fdf4 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+
+        <div class="row mb-5 align-items-end g-4">
+            <div class="col-md-8 text-center text-md-start">
+                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+                    <span class="badge-status-elite available">BI & ANALYTICS</span>
+                    <div class="pulse-dot-green"></div>
+                </div>
+                <h1 class="fw-900 display-5 text-dark-sharp mb-1" style="letter-spacing: -2.5px;">Análise de Performance 📊</h1>
+                <p class="text-slate-bold fs-5 fw-600">Acompanhe a inteligência de escoamento do seu negócio.</p>
+            </div>
+            <div class="col-md-4 text-center text-md-end">
+                <button onclick="window.print()" class="btn btn-dark-sharp px-4 py-3 rounded-pill fw-900 shadow-sm transition-all hover-up">
+                    <i class="bi bi-file-earmark-pdf-fill me-2"></i> Gerar Relatório Anual
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-5 p-4 bg-white border-light-sharp kpi-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-avatar-payment bg-green-light text-success">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <span class="tiny fw-900 text-success bg-success bg-opacity-10 px-2 py-1 rounded-pill">+12% vs mês ant.</span>
+                    </div>
+                    <span class="label-caps-elite opacity-50 d-block">Faturação Total</span>
+                    <h2 class="fw-900 text-dark-sharp m-0">{{ (valores|sum if valores else 0) | formata_kz }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-5 p-4 bg-white border-light-sharp kpi-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-avatar-payment bg-light-sharp text-primary">
+                            <i class="bi bi-truck-flatbed"></i>
+                        </div>
+                    </div>
+                    <span class="label-caps-elite opacity-50 d-block">Volume Escoado</span>
+                    <h2 class="fw-900 text-dark-sharp m-0">{{ total_kg_vendido|default(0) | formata_kg }}</h2>
+                    <p class="tiny text-slate-bold fw-700 mt-2 mb-0">Total de colheitas processadas</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-green rounded-5 p-4 bg-dark-sharp text-white kpi-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-avatar-payment bg-white bg-opacity-10 text-white">
+                            <i class="bi bi-tag-fill"></i>
+                        </div>
+                    </div>
+                    <span class="label-caps-elite text-white text-opacity-50 d-block">Ticket Médio</span>
+                    <h2 class="fw-900 m-0">{{ ticket_medio|default(0) | formata_kz }}</h2>
+                    <p class="tiny text-white text-opacity-50 fw-700 mt-2 mb-0">Rendimento médio por transação</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-5 p-4 p-md-5 bg-white border-light-sharp h-100">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+                        <div>
+                            <h4 class="fw-900 text-dark-sharp m-0">Histórico de Receita</h4>
+                            <p class="text-slate-bold small fw-600 m-0">Fluxo de caixa gerado no mercado AgroKongo</p>
+                        </div>
+                        <select class="form-select-elite border-light-sharp w-auto py-2">
+                            <option>Últimos 6 meses</option>
+                            <option>Último ano</option>
+                        </select>
+                    </div>
+                    <div style="height: 380px; position: relative;">
+                        <canvas id="vendasChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-5 p-4 p-md-5 bg-white border-light-sharp h-100">
+                    <h4 class="fw-900 text-dark-sharp mb-4">Rank de Produtos</h4>
+                    <div class="rank-list">
+                        {% for nome, qtd in top_produtos %}
+                        <div class="rank-item animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rank-number-box {% if loop.first %}gold{% endif %}">
+                                    {{ loop.index }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <span class="fw-900 d-block text-dark-sharp fs-6">{{ nome }}</span>
+                                    <div class="progress rounded-pill mt-1" style="height: 6px; background: #f1f5f9;">
+                                        <div class="progress-bar bg-success" style="width: {{ (qtd / (top_produtos[0][1] if top_produtos else 1) * 100) }}%"></div>
+                                    </div>
+                                    <small class="text-slate-bold fw-800 tiny text-uppercase mt-1 d-block">{{ qtd | formata_kg }} vendidos</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <div class="display-1 opacity-10">📉</div>
+                            <p class="text-slate-bold fw-700">Aguardando dados de mercado para gerar ranking.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .bg-green-light { background-color: #f0fdf4 !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+    .border-light-sharp { border: 1px solid #e2e8f0 !important; }
+
+    /* KPI COMPONENTS */
+    .kpi-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .kpi-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1) !important; }
+    .icon-avatar-payment { width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+
+    .pulse-dot-green { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 rgba(34, 197, 94, 0.4); animation: pulse-green 2s infinite; }
+    @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+
+    /* RANKING LIST */
+    .rank-list { display: flex; flex-direction: column; gap: 24px; }
+    .rank-number-box { width: 36px; height: 36px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #0f172a; flex-shrink: 0; }
+    .rank-number-box.gold { background: #fef9c3; color: #854d0e; border: 2px solid #fde047; }
+
+    .form-select-elite { background: #f8fafc; border-radius: 50px; font-weight: 800; color: #0f172a; padding-left: 1.5rem; padding-right: 2.5rem; font-size: 0.85rem; }
+
+    .shadow-green { box-shadow: 0 15px 30px -5px rgba(21, 128, 61, 0.3) !important; }
+    .btn-dark-sharp { background: #0f172a; color: white; border: none; }
+    .hover-up:hover { transform: translateY(-4px); }
+
+    /* PRINT OPTIMIZATION */
+    @media print { .dashboard-wrapper { background: white !important; } .btn-dark-sharp, .form-select-elite { display: none; } }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('vendasChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(34, 197, 94, 0.25)');
+        gradient.addColorStop(1, 'rgba(34, 197, 94, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ labels|tojson }},
+                datasets: [{
+                    label: 'Receita Líquida',
+                    data: {{ valores|tojson }},
+                    borderColor: '#15803d',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.45,
+                    borderWidth: 4,
+                    pointRadius: 0,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: '#15803d',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 14 },
+                        padding: 15,
+                        cornerRadius: 15,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'AOA' })
+                                    .format(context.parsed.y).replace('AOA', 'Kz');
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: { color: '#f1f5f9', drawBorder: false },
+                        beginAtZero: true,
+                        ticks: {
+                            font: { weight: '800', size: 11 },
+                            color: '#94a3b8',
+                            callback: value => value.toLocaleString('pt-PT') + ' Kz'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { weight: '800', size: 11 }, color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

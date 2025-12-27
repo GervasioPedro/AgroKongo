@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Safra — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f8fafc 0%, #f1f5f9 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-xl-5">
+
+                <div class="text-center mb-5">
+                    <div class="icon-circle bg-dark-sharp text-white mx-auto mb-3 shadow-lg" style="width: 70px; height: 70px;">
+                        <i class="bi bi-pencil-square fs-2"></i>
+                    </div>
+                    <h2 class="fw-900 text-dark-sharp display-6" style="letter-spacing: -2px;">Gestão do Lote</h2>
+                    <p class="text-slate-bold fw-600">Lote #{{ safra.id }} • <span class="text-success-dark">{{ safra.produto.nome }}</span></p>
+                </div>
+
+                <div class="card border-0 shadow-lg rounded-5 overflow-hidden border border-white">
+                    <div id="statusIndicator" class="py-2 text-center text-white fw-900 tiny ls-2 transition-all" style="background: #15803d;">
+                        ESTADO ATUAL: <span id="statusText">DISPONÍVEL</span>
+                    </div>
+
+                    <div class="card-body p-4 p-md-5 bg-white">
+                        <form action="{{ url_for('perfil.editar_safra', id=safra.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <label class="label-caps-elite mb-2 d-block">Produto Agrícola</label>
+                                    <div class="input-modern-wrapper bg-light-sharp opacity-75">
+                                        <i class="bi bi-tag-fill input-icon"></i>
+                                        <input type="text" class="form-control-elite" value="{{ safra.produto.nome }}" readonly>
+                                        <input type="hidden" name="produto_id" value="{{ safra.produto_id }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="label-caps-elite mb-2 d-block">Estoque (kg)</label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-scale input-icon"></i>
+                                        <input type="number" name="quantidade_kg" class="form-control-elite"
+                                               value="{{ safra.quantidade_kg }}" min="0" step="0.1" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="label-caps-elite mb-2 d-block">Preço/kg (Kz)</label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-cash-stack input-icon text-success"></i>
+                                        <input type="number" name="preco_kg" class="form-control-elite"
+                                               value="{{ safra.preco_kg }}" min="0" step="0.01" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="label-caps-elite mb-2 d-block">Visibilidade no Mercado</label>
+                                    <div class="input-modern-wrapper" id="statusWrapper">
+                                        <i class="bi bi-eye-fill input-icon"></i>
+                                        <select name="status" id="statusSelect" class="form-select border-0 bg-transparent fw-800 shadow-none ps-2 text-dark-sharp py-3"
+                                                onchange="updateStatusVisual(this)" required>
+                                            <option value="disponivel" {% if safra.status == 'disponivel' %}selected{% endif %}>🟢 Disponível para Venda</option>
+                                            <option value="reservado" {% if safra.status == 'reservado' %}selected{% endif %}>🟡 Reservado / Em Negócio</option>
+                                            <option value="vendido" {% if safra.status == 'vendido' %}selected{% endif %}>🔴 Lote Vendido / Esgotado</option>
+                                        </select>
+                                    </div>
+                                    <p class="tiny text-slate-bold mt-2 px-2 fw-600">
+                                        <i class="bi bi-info-circle"></i> Lotes "Vendidos" deixam de aparecer nas buscas públicas.
+                                    </p>
+                                </div>
+
+                                <div class="col-12 mt-5">
+                                    <button type="submit" class="btn btn-success-dark w-100 rounded-pill py-3 fw-900 shadow-green border-0 transition-all hover-up mb-3">
+                                        Confirmar Atualizações <i class="bi bi-check-lg ms-2"></i>
+                                    </button>
+                                    <a href="{{ url_for('perfil.meu_perfil_produtor') }}" class="btn btn-link w-100 text-slate-bold fw-800 text-decoration-none small transition-all hover-success-text">
+                                        Cancelar e Voltar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="mt-5 pt-4 border-top">
+                            <div class="bg-danger bg-opacity-10 rounded-4 p-3 border border-danger border-opacity-10 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <p class="text-danger fw-900 tiny mb-0 ls-1">ZONA CRÍTICA</p>
+                                    <p class="text-slate-bold tiny fw-700 mb-0">Apagar este lote é irreversível.</p>
+                                </div>
+                                <form action="{{ url_for('perfil.eliminar_safra', id=safra.id) }}" method="POST"
+                                      onsubmit="return confirm('Tem a certeza que deseja eliminar esta safra permanentemente?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                                    <button type="submit" class="btn btn-danger btn-sm rounded-3 fw-900 px-3 py-2" style="font-size: 0.7rem;">
+                                        ELIMINAR
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* DESIGN ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .text-success-dark { color: #15803d !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .border-light-sharp { border-color: #e2e8f0 !important; }
+
+    /* INPUTS */
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; }
+
+    .input-modern-wrapper {
+        display: flex; align-items: center; background: #f8fafc;
+        border: 2px solid #f1f5f9; border-radius: 18px; transition: 0.3s;
+    }
+    .input-modern-wrapper:focus-within {
+        background: white; border-color: #15803d;
+        box-shadow: 0 12px 24px rgba(21, 128, 61, 0.08);
+    }
+    .form-control-elite {
+        border: none; background: transparent; padding: 14px 12px;
+        width: 100%; font-weight: 800; color: #0f172a; outline: none;
+    }
+    .input-icon { margin-left: 18px; color: #94a3b8; font-size: 1.1rem; }
+
+    /* COMPONENTES */
+    .icon-circle { display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    .shadow-green { box-shadow: 0 10px 25px -5px rgba(21, 128, 61, 0.4) !important; }
+    .hover-up:hover { transform: translateY(-3px); }
+    .ls-2 { letter-spacing: 2px; }
+    .tiny { font-size: 0.7rem; }
+
+    .transition-all { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+</style>
+
+<script>
+    function updateStatusVisual(select) {
+        const indicator = document.getElementById('statusIndicator');
+        const textSpan = document.getElementById('statusText');
+
+        const config = {
+            'disponivel': { color: '#15803d', label: 'DISPONÍVEL' },
+            'reservado': { color: '#f59e0b', label: 'RESERVADO' },
+            'vendido': { color: '#dc2626', label: 'ESGOTADO / VENDIDO' }
+        };
+
+        const current = config[select.value] || config['disponivel'];
+
+        indicator.style.backgroundColor = current.color;
+        textSpan.innerText = current.label;
+    }
+
+    // Inicializa no load
+    document.addEventListener('DOMContentLoaded', () => {
+        updateStatusVisual(document.getElementById('statusSelect'));
+    });
+</script>
+{% endblock %}

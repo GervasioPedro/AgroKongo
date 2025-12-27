@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Avaliar Negócio — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate__animated animate__fadeIn">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden bg-white">
+                <div class="bg-success py-2 opacity-75"></div>
+
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-5">
+                        <div class="evaluation-icon-box shadow-sm animate__animated animate__bounceIn">
+                            <span class="fs-1">🤝</span>
+                        </div>
+                        <h2 class="fw-900 text-dark h3 mb-2" style="letter-spacing: -1px;">Como foi o negócio?</h2>
+                        <p class="text-muted fw-600 px-lg-4">A sua avaliação fortalece o mercado agrícola de Angola e ajuda outros a comprarem com confiança.</p>
+                    </div>
+
+                    <div class="d-flex align-items-center bg-light p-3 rounded-4 mb-5 border border-dashed">
+                        <div class="avatar-sm bg-success text-white rounded-circle d-flex align-items-center justify-content-center fw-800 me-3" style="width: 45px; height: 45px;">
+                            P
+                        </div>
+                        <div class="text-start">
+                            <span class="tiny text-muted fw-800 text-uppercase ls-1">Avaliar Produtor</span>
+                            <h6 class="fw-800 m-0 text-dark">João Fazendeiro (Exemplo)</h6>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        <div class="rating-container text-center mb-5">
+                            <label class="label-caps mb-3 d-block text-muted">A sua satisfação geral</label>
+                            <div class="star-rating">
+                                <input type="radio" name="rating" id="star5" value="5" required /><label for="star5" class="bi bi-star-fill"></label>
+                                <input type="radio" name="rating" id="star4" value="4" /><label for="star4" class="bi bi-star-fill"></label>
+                                <input type="radio" name="rating" id="star3" value="3" /><label for="star3" class="bi bi-star-fill"></label>
+                                <input type="radio" name="rating" id="star2" value="2" /><label for="star2" class="bi bi-star-fill"></label>
+                                <input type="radio" name="rating" id="star1" value="1" /><label for="star1" class="bi bi-star-fill"></label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="label-caps mb-2 d-block text-muted text-center text-lg-start">O que mais gostou?</label>
+
+                            <div class="d-flex flex-wrap gap-2 mb-3 justify-content-center justify-content-lg-start">
+                                <span class="badge rounded-pill bg-light text-dark border py-2 px-3 fw-700 cursor-pointer tag-comment">Excelente qualidade</span>
+                                <span class="badge rounded-pill bg-light text-dark border py-2 px-3 fw-700 cursor-pointer tag-comment">Entrega rápida</span>
+                                <span class="badge rounded-pill bg-light text-dark border py-2 px-3 fw-700 cursor-pointer tag-comment">Muito atencioso</span>
+                            </div>
+
+                            <div class="textarea-modern-wrapper shadow-sm">
+                                <textarea name="comentario" id="comentario-input" class="form-control-modern border-0" rows="4"
+                                          placeholder="Escreva aqui mais detalhes sobre o produto ou o atendimento..." required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="verification-note p-3 mb-5 d-flex align-items-center rounded-4 border bg-light">
+                            <div class="bg-white rounded-circle p-2 shadow-sm me-3 border border-success border-opacity-25">
+                                <i class="bi bi-shield-check-fill text-success fs-4"></i>
+                            </div>
+                            <p class="small text-muted fw-700 m-0" style="line-height: 1.3;">
+                                Esta avaliação será visível no perfil do parceiro. Seja honesto e construtivo!
+                            </p>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 py-3 rounded-pill shadow-lg fw-900 fs-5 transition-all hover-up border-0">
+                            Publicar Avaliação <i class="bi bi-send-fill ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="javascript:history.back()" class="text-muted fw-800 text-decoration-none small opacity-75 hover-opacity transition-all">
+                    <i class="bi bi-x-circle me-1"></i> Pular esta etapa agora
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root { --amber-gold: #f59e0b; }
+
+    .label-caps { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+
+    .evaluation-icon-box {
+        width: 90px; height: 90px; background: #f0fdf4; border-radius: 30px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px; border: 1px solid rgba(21, 128, 61, 0.1);
+    }
+
+    /* SISTEMA DE ESTRELAS REINVENTADO */
+    .star-rating { display: flex; flex-direction: row-reverse; justify-content: center; gap: 8px; }
+    .star-rating input { display: none; }
+    .star-rating label {
+        font-size: 3rem; color: #e2e8f0; cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: var(--amber-gold);
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.3));
+    }
+
+    /* TEXTAREA MODERNO */
+    .textarea-modern-wrapper {
+        background: #f8fafc; border: 2.5px solid #f1f5f9; border-radius: 24px; padding: 15px; transition: 0.3s;
+    }
+    .textarea-modern-wrapper:focus-within {
+        background: white; border-color: #15803d; transform: scale(1.01);
+    }
+    .form-control-modern { background: transparent; width: 100%; outline: none; font-weight: 700; color: #1e293b; resize: none; font-size: 0.95rem; }
+
+    /* TAGS */
+    .tag-comment { transition: 0.2s; cursor: pointer; border-style: dashed !important; }
+    .tag-comment:hover { background-color: #f0fdf4 !important; border-color: #15803d !important; color: #15803d !important; }
+
+    .hover-up:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(21, 128, 61, 0.25) !important; }
+    .hover-opacity:hover { opacity: 1 !important; color: #15803d !important; }
+    .cursor-pointer { cursor: pointer; }
+    .ls-1 { letter-spacing: 1px; }
+
+    @media (max-width: 576px) {
+        .star-rating label { font-size: 2.5rem; }
+    }
+</style>
+
+<script>
+    // Pequeno script para as tags preencherem o textarea automaticamente
+    document.querySelectorAll('.tag-comment').forEach(tag => {
+        tag.addEventListener('click', function() {
+            const input = document.getElementById('comentario-input');
+            const currentVal = input.value.trim();
+            input.value = currentVal ? currentVal + ', ' + this.innerText : this.innerText;
+            input.focus();
+        });
+    });
+</script>
+{% endblock %}

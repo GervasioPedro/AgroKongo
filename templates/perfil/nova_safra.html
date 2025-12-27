@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Safra — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #f0fdf4 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="bg-white border-bottom shadow-sm">
+        <div class="container py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-slate-bold fw-600 small">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('perfil.dashboard') }}" class="text-decoration-none text-slate-bold fw-600 small">Painel</a></li>
+                        <li class="breadcrumb-item active fw-900 text-success-dark small" aria-current="page">Publicar Safra</li>
+                    </ol>
+                </nav>
+                <button onclick="history.back()" class="btn btn-white-sharp btn-sm rounded-pill px-3 fw-800 border shadow-sm">
+                    <i class="bi bi-x-lg me-1"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-xl-6">
+
+                <div class="text-center mb-5">
+                    <div class="icon-shape bg-success-dark text-white mx-auto mb-3 shadow-green rounded-5" style="width: 64px; height: 64px;">
+                        <i class="bi bi-box-seam-fill fs-3"></i>
+                    </div>
+                    <h2 class="fw-900 text-dark-sharp display-6" style="letter-spacing: -2px;">O que vamos colher hoje?</h2>
+                    <p class="text-slate-bold fw-600">Preencha os detalhes para listar o seu lote no mercado digital.</p>
+                </div>
+
+                <div class="card border-0 shadow-lg rounded-5 overflow-hidden border border-white">
+                    <div class="card-body p-4 p-md-5 bg-white">
+                        <form action="{{ url_for('perfil.nova_safra') }}" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <label class="label-caps-elite mb-2 d-block">Identificação do Produto</label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-search input-icon text-success"></i>
+                                        <select name="produto_id" class="form-select border-0 bg-transparent fw-800 shadow-none ps-2 text-dark-sharp py-3" required>
+                                            <option value="" disabled selected>Escolha o produto no catálogo...</option>
+                                            {% for produto in produtos %}
+                                                <option value="{{ produto.id }}">{{ produto.nome }} ({{ produto.categoria }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="label-caps-elite mb-2 d-block">Volume Disponível</label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-minecart-loaded input-icon"></i>
+                                        <input type="number" name="quantidade_kg" step="0.1" min="1" class="form-control-elite" placeholder="0.00" required>
+                                        <span class="me-3 fw-900 text-slate-bold small">KG</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="label-caps-elite mb-2 d-block">Preço de Venda</label>
+                                    <div class="input-modern-wrapper highlight-focus">
+                                        <i class="bi bi-cash-stack input-icon text-success"></i>
+                                        <input type="number" name="preco_kg" step="0.01" min="1" class="form-control-elite" placeholder="0.00" required>
+                                        <span class="me-3 fw-900 text-success-dark small">Kz/kg</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="label-caps-elite mb-2 d-block">Aparência do Lote (Foto Real)</label>
+                                    <div class="upload-zone rounded-5 p-5 text-center transition-all position-relative" id="drop-zone">
+                                        <input type="file" name="imagem" id="file-input" class="position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;" accept="image/*">
+                                        <div id="upload-content">
+                                            <div class="icon-circle bg-light-sharp text-slate-bold mx-auto mb-3">
+                                                <i class="bi bi-cloud-arrow-up fs-2"></i>
+                                            </div>
+                                            <h6 class="fw-900 text-dark-sharp mb-1">Carregar Foto</h6>
+                                            <p class="tiny text-slate-bold fw-700 text-uppercase ls-1">JPG, PNG ou WebP até 5MB</p>
+                                        </div>
+                                        <div id="preview-container" class="d-none">
+                                            <img id="image-preview" src="#" alt="Preview" class="img-fluid rounded-4 shadow-sm mb-2" style="max-height: 150px;">
+                                            <p class="small text-success fw-900 mb-0"><i class="bi bi-check-circle-fill"></i> Imagem Selecionada</p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mt-3 p-3 bg-light-sharp rounded-4 border border-light-sharp">
+                                        <i class="bi bi-info-circle-fill text-success"></i>
+                                        <small class="text-slate-bold fw-600">Lotes com fotos reais vendem até 3x mais rápido em Luanda.</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mt-5">
+                                    <button type="submit" class="btn btn-success-dark w-100 rounded-pill py-3 fw-900 shadow-green border-0 transition-all hover-up mb-3">
+                                        <i class="bi bi-megaphone-fill me-2"></i> Publicar no Mercado Agora
+                                    </button>
+                                    <a href="{{ url_for('perfil.dashboard') }}" class="btn btn-link w-100 text-slate-bold fw-800 text-decoration-none small transition-all hover-success-text">
+                                        <i class="bi bi-chevron-left"></i> Voltar ao Painel
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* DESIGN ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .text-success-dark { color: #15803d !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .border-light-sharp { border-color: #e2e8f0 !important; }
+
+    /* INPUTS */
+    .label-caps-elite { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; }
+
+    .input-modern-wrapper {
+        display: flex; align-items: center; background: #f8fafc;
+        border: 2px solid #f1f5f9; border-radius: 20px; transition: 0.3s;
+    }
+    .input-modern-wrapper:focus-within {
+        background: white; border-color: #15803d;
+        box-shadow: 0 12px 24px rgba(21, 128, 61, 0.08);
+    }
+    .highlight-focus:focus-within { border-color: #15803d; }
+
+    .form-control-elite {
+        border: none; background: transparent; padding: 16px 14px;
+        width: 100%; font-weight: 900; color: #0f172a; outline: none;
+        font-size: 1.1rem;
+    }
+    .input-icon { margin-left: 20px; font-size: 1.2rem; color: #94a3b8; }
+
+    /* UPLOAD ZONE */
+    .upload-zone {
+        border: 3px dashed #e2e8f0;
+        background: #f8fafc;
+        cursor: pointer;
+    }
+    .upload-zone:hover {
+        border-color: #15803d;
+        background: #f0fdf4;
+    }
+    .icon-circle {
+        width: 60px; height: 60px; display: flex; align-items: center;
+        justify-content: center; border-radius: 50%; background: white;
+    }
+
+    /* UTILS */
+    .shadow-green { box-shadow: 0 15px 30px -5px rgba(21, 128, 61, 0.35) !important; }
+    .hover-up:hover { transform: translateY(-4px); }
+    .ls-1 { letter-spacing: 1px; }
+    .tiny { font-size: 0.65rem; }
+    .icon-shape { display: flex; align-items: center; justify-content: center; }
+</style>
+
+<script>
+    // PREVIEW DE IMAGEM
+    const fileInput = document.getElementById('file-input');
+    const uploadContent = document.getElementById('upload-content');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+
+    fileInput.onchange = evt => {
+        const [file] = fileInput.files;
+        if (file) {
+            imagePreview.src = URL.createObjectURL(file);
+            uploadContent.classList.add('d-none');
+            previewContainer.classList.remove('d-none');
+        }
+    }
+</script>
+{% endblock %}

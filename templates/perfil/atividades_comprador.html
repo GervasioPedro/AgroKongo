@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Minhas Actividades — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-container animate__animated animate__fadeIn">
+    <div class="mb-5">
+        <h1 class="display-6 fw-900 text-dark-sharp">Histórico de Actividades</h1>
+        <p class="text-slate">Acompanhe o progresso de todas as suas interações no mercado.</p>
+    </div>
+
+    <div class="surface-white shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 tiny-label fw-800 text-slate">DATA / REF</th>
+                        <th class="py-3 tiny-label fw-800 text-slate">PRODUTO</th>
+                        <th class="py-3 tiny-label fw-800 text-slate text-center">ESTADO</th>
+                        <th class="pe-4 py-3 tiny-label fw-800 text-slate text-end">VALOR TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in atividades %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-700 text-dark-sharp small">{{ t.data_criacao.strftime('%d/%m/%Y %H:%M') }}</div>
+                            <div class="tiny text-muted fw-600">ID: {{ t.fatura_ref or 'PROPOSTA' }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-800 text-dark-sharp">{{ t.safra.produto.nome }}</div>
+                            <div class="tiny text-slate">{{ t.safra.produtor.nome }}</div>
+                        </td>
+                        <td class="text-center">
+                            {% if t.status == 'pago_custodia' %}
+                                <span class="badge-status bg-success-soft text-success">Pago (Em Custódia)</span>
+                            {% elif t.status == 'aguardando_validacao' %}
+                                <span class="badge-status bg-info-soft text-info">Em Validação</span>
+                            {% elif t.status == 'pendente_pagamento' %}
+                                <span class="badge-status bg-warning-soft text-warning">Pendente</span>
+                            {% else %}
+                                <span class="badge-status bg-light text-dark">{{ t.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-4 text-end fw-900 text-dark-sharp">
+                            {{ "{:,.2f}".format(t.preco_total) }} Kz
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center p-5 text-slate fw-600">Sem atividades recentes.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Interesse — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: radial-gradient(circle at top right, #eff6ff 0%, #f8fafc 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-9">
+
+                <div class="text-center mb-5">
+                    <div class="interest-icon-header shadow-blue animate__animated animate__bounceIn">
+                        <i class="bi bi-broadcast-pin"></i>
+                    </div>
+                    <span class="label-caps-elite text-primary d-block mb-2">Market Request</span>
+                    <h1 class="fw-900 text-dark-sharp display-6" style="letter-spacing: -2px;">O que procura hoje?</h1>
+                    <p class="text-slate-bold fw-600 fs-5">Ligue o seu pedido aos produtores de <span class="text-primary border-bottom border-2 border-primary-light">{{ current_user.provincia.nome if current_user.provincia else 'Angola' }}</span>.</p>
+                </div>
+
+                <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white position-relative">
+
+                    <div class="bg-primary bg-opacity-10 p-3 d-flex align-items-center border-bottom border-primary border-opacity-10">
+                        <div class="pulse-dot-blue me-3"></div>
+                        <div>
+                            <span class="d-block fw-900 text-primary-dark tiny text-uppercase ls-2">Match Inteligente Ativo</span>
+                            <p class="text-slate-bold small fw-700 m-0" style="font-size: 0.7rem;">Notificaremos produtores locais via Radar assim que publicar.</p>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4 p-md-5">
+                        <form method="POST" action="{{ url_for('perfil.novo_interesse') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <div class="mb-4">
+                                <label class="label-caps-elite opacity-50 mb-2 d-block">Categoria do Produto</label>
+                                <div class="input-modern-group">
+                                    <i class="bi bi-search input-icon-left text-primary"></i>
+                                    <select name="produto_id" id="produto_id" class="form-select-elite" required>
+                                        <option value="" disabled selected>O que deseja comprar?</option>
+                                        {% for produto in produtos %}
+                                            <option value="{{ produto.id }}">{{ produto.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="label-caps-elite opacity-50 mb-2 d-block">Volume Necessário (KG)</label>
+                                <div class="input-modern-group">
+                                    <i class="bi bi-truck input-icon-left text-primary"></i>
+                                    <input type="number" name="quantidade_kg" class="form-input-elite" placeholder="Ex: 5000" min="1" required>
+                                    <span class="input-suffix text-slate-bold fw-900">KG</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mt-2 ps-1">
+                                    <i class="bi bi-info-circle-fill text-primary small"></i>
+                                    <span class="hint-text-elite">Ajuda produtores a calcular a logística de entrega</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="label-caps-elite opacity-50 mb-2 d-block">Requisitos ou Observações</label>
+                                <textarea name="notas" rows="4" class="form-textarea-elite"
+                                          placeholder="Ex: Procuro batata-doce de polpa alaranjada, preferência por entrega em Luanda aos fins de semana."></textarea>
+                            </div>
+
+                            <div class="d-grid gap-3">
+                                <button type="submit" class="btn btn-primary-elite py-3 rounded-pill fs-5 fw-900 shadow-blue transition-all hover-up">
+                                    Publicar no Radar <i class="bi bi-send-fill ms-2"></i>
+                                </button>
+                                <div class="text-center mt-2">
+                                    <a href="{{ url_for('perfil.dashboard') }}" class="text-decoration-none text-slate-bold small fw-900 text-uppercase ls-2 hover-dark">
+                                        <i class="bi bi-arrow-left me-1"></i> Cancelar e Voltar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card-footer bg-light-sharp border-0 p-4 text-center">
+                        <div class="d-flex justify-content-center gap-4 opacity-50">
+                            <i class="bi bi-shield-lock-fill fs-5" title="Transação Segura"></i>
+                            <i class="bi bi-person-check-fill fs-5" title="Vendedores Verificados"></i>
+                            <i class="bi bi-geo-fill fs-5" title="Match Local"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* DESIGN SYSTEM ELITE */
+    .font-sharp { -webkit-font-smoothing: antialiased; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .text-slate-bold { color: #64748b !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .text-primary-dark { color: #1e40af !important; }
+    .label-caps-elite { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+    .ls-2 { letter-spacing: 2px; }
+
+    /* HEADER ICON */
+    .interest-icon-header {
+        width: 90px; height: 90px; background: #2563eb; color: white;
+        border-radius: 30px; display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem; margin: 0 auto 1.5rem;
+    }
+    .shadow-blue { box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.4) !important; }
+
+    /* PULSE DOT */
+    .pulse-dot-blue {
+        width: 12px; height: 12px; background: #2563eb; border-radius: 50%;
+        position: relative;
+    }
+    .pulse-dot-blue::after {
+        content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%;
+        background: #2563eb; animation: pulse-blue 2s infinite;
+    }
+
+    @keyframes pulse-blue {
+        0% { transform: scale(1); opacity: 0.7; }
+        100% { transform: scale(3.5); opacity: 0; }
+    }
+
+    /* FORM ELEMENTS ELITE */
+    .input-modern-group {
+        display: flex; align-items: center; background: #f1f5f9;
+        border: 2px solid #f1f5f9; border-radius: 50px; overflow: hidden;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .input-modern-group:focus-within {
+        border-color: #2563eb; background: white;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.05);
+    }
+
+    .input-icon-left { font-size: 1.2rem; margin-left: 20px; }
+
+    .form-select-elite, .form-input-elite {
+        border: none; background: transparent; padding: 15px 15px;
+        width: 100%; font-weight: 800; color: #0f172a; outline: none;
+    }
+    .input-suffix { padding-right: 25px; font-size: 0.75rem; color: #94a3b8; }
+
+    .form-textarea-elite {
+        border: 2px solid #f1f5f9; background: #f1f5f9; border-radius: 25px;
+        padding: 20px; width: 100%; font-weight: 600; color: #0f172a;
+        transition: 0.3s; outline: none;
+    }
+    .form-textarea-elite:focus { border-color: #2563eb; background: white; }
+
+    /* BUTTONS */
+    .btn-primary-elite { background: #2563eb; border: none; color: white; }
+    .btn-primary-elite:hover { background: #1d4ed8; color: white; }
+
+    .hint-text-elite { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15); }
+
+    .hover-dark:hover { color: #0f172a !important; }
+    .hover-up:hover { transform: translateY(-4px); }
+</style>
+{% endblock %}

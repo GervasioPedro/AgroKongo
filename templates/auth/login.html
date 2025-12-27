@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Entrar — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5 animate__animated animate__fadeIn">
+    <div class="row justify-content-center mt-lg-4">
+        <div class="col-lg-11 col-xl-10">
+            <div class="card bg-white rounded-5 shadow-lg overflow-hidden border-0">
+                <div class="row g-0">
+
+                    <div class="col-lg-5 d-none d-lg-flex p-5 flex-column justify-content-between text-white position-relative"
+                         style="background: linear-gradient(rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.95)),
+                                url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800');
+                                background-size: cover; background-position: center;">
+
+                        <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/leaf.png');"></div>
+
+                        <div class="position-relative animate__animated animate__fadeInLeft">
+                            <h2 class="display-5 fw-900 mb-4" style="letter-spacing: -2px; line-height: 1;">Bom ver-te de <br><span class="text-success-light">volta!</span> 🌿</h2>
+                            <p class="lead opacity-80 fw-500">O mercado agrícola não para. Aceda ao seu painel para acompanhar as suas ofertas e pagamentos.</p>
+                        </div>
+
+                        <div class="bg-white bg-opacity-10 p-4 rounded-4 backdrop-blur border border-white border-opacity-10 position-relative animate__animated animate__fadeInUp animate__delay-1s">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-success-light">
+                                <span class="pulse-dot"></span>
+                                <span class="fw-800 text-uppercase ls-2 small">Tendência do Dia</span>
+                            </div>
+                            <p class="small m-0 opacity-90 fw-600">
+                                <i class="bi bi-info-circle me-1"></i> A procura por <span class="text-white">Milho e Mandioca</span> subiu 15% em Luanda. É o momento ideal para negociar!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7 p-4 p-md-5 bg-white">
+                        <div class="mb-5 text-center text-lg-start">
+                            <h2 class="fw-900 text-dark mb-1 h3" style="letter-spacing: -1px;">Entrar no AgroKongo</h2>
+                            <p class="text-muted fw-600">Introduza os seus dados para continuar a crescer.</p>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('auth.login') }}">
+                            <div class="mb-4">
+                                <label class="label-caps mb-2">Telemóvel Registado</label>
+                                <div class="input-group-modern">
+                                    <i class="bi bi-phone text-success fs-5"></i>
+                                    <input type="tel" name="telemovel" class="form-control-modern"
+                                           placeholder="9xxxxxxxx" required pattern="9[0-9]{8}" maxlength="9" autofocus>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="label-caps m-0">Sua Senha</label>
+                                    <a href="#" class="tiny fw-900 text-success text-decoration-none border-bottom border-success border-opacity-25">Esqueceu a senha?</a>
+                                </div>
+                                <div class="input-group-modern">
+                                    <i class="bi bi-shield-lock text-success fs-5"></i>
+                                    <input type="password" name="senha" class="form-control-modern"
+                                           placeholder="••••••••" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-5 d-flex align-items-center">
+                                <div class="form-check custom-check">
+                                    <input class="form-check-input border-2 shadow-none" type="checkbox" name="remember" id="remember">
+                                    <label class="form-check-label small fw-800 text-muted ms-2 cursor-pointer" for="remember">
+                                        Manter sessão iniciada
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 py-3 rounded-4 shadow-lg d-flex align-items-center justify-content-center gap-2 mb-4 fw-900 fs-5 transition-all hover-up border-0">
+                                <span>Aceder à Minha Conta</span>
+                                <i class="bi bi-box-arrow-in-right fs-4"></i>
+                            </button>
+
+                            <p class="text-center text-muted fw-700">
+                                Ainda não faz parte da rede?
+                                <a href="{{ url_for('auth.completar_perfil') }}" class="text-success fw-900 text-decoration-none ms-1 border-bottom border-success border-2">Criar conta grátis</a>
+                            </p>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root { --green-agrokongo: #15803d; }
+
+    .label-caps { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: #64748b; }
+    .ls-2 { letter-spacing: 2px; }
+
+    .input-group-modern {
+        display: flex; align-items: center; background: #f8fafc; border: 2.5px solid #f1f5f9;
+        border-radius: 20px; padding: 12px 20px; transition: all 0.3s ease;
+    }
+    .input-group-modern:focus-within {
+        border-color: var(--green-agrokongo);
+        background: white;
+        box-shadow: 0 10px 25px rgba(21, 128, 61, 0.08);
+        transform: scale(1.01);
+    }
+
+    .form-control-modern { border: none; background: transparent; width: 100%; margin-left: 12px; font-weight: 700; outline: none; color: #1e293b; font-size: 1rem; }
+    .form-control-modern::placeholder { color: #cbd5e1; font-weight: 400; }
+
+    .text-success-light { color: #86efac !important; }
+    .backdrop-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+
+    .pulse-dot {
+        width: 8px; height: 8px; background-color: #4ade80; border-radius: 50%;
+        display: inline-block; animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+
+    .custom-check .form-check-input:checked { background-color: var(--green-agrokongo); border-color: var(--green-agrokongo); }
+    .hover-up:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(21, 128, 61, 0.25) !important; }
+    .cursor-pointer { cursor: pointer; }
+    .tiny { font-size: 0.75rem; }
+</style>
+{% endblock %}
