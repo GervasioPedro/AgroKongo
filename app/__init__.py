@@ -107,7 +107,9 @@ def _registrar_blueprints(app):
     from app.routes.mercado import mercado_bp
     from app.routes.admin import admin_bp
     from app.routes.comprador import comprador_bp
+    from app.routes.health import health_bp
 
+    app.register_blueprint(health_bp)  # Health check primeiro
     app.register_blueprint(main_bp)
     app.register_blueprint(mercado_bp)
     app.register_blueprint(auth_bp)

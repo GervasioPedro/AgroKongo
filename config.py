@@ -47,6 +47,22 @@ class ProductionConfig(Config):
         uri = uri.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_DATABASE_URI = uri
 
+    # --- CORS PARA NETLIFY ---
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '').split(',') or [
+        'https://agrokongo.netlify.app',
+        'https://www.agrokongo.ao'
+    ]
+
+    # --- REDIS/CELERY ---
+    REDIS_URL = os.environ.get('REDIS_URL')
+    CELERY_BROKER_URL = os.environ.get('REDIS_URL')
+    CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL')
+
+    # --- CLOUDINARY (Storage de Imagens) ---
+    CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+    CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+    CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
+
     # --- SEGURANÇA DE COOKIES (ESSENCIAL PARA HTTPS/PRODUÇÃO) ---
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True

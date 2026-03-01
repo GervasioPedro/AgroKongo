@@ -1,0 +1,61 @@
+services:
+  # Backend API
+  - type: web
+    name: agrokongo-api
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: "pip install -r requirements.txt && flask db upgrade"
+    startCommand: "gunicorn run:app --workers 2 --threads 4 --timeout 120"
+    healthCheckPath: /health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: agrokongo-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          name: agrokongo-redis
+          type: redis
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: https://agrokongo.netlify.app,https://www.agrokongo.ao
+
+  # Celery Worker
+  - type: worker
+    name: agrokongo-worker
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A celery_worker.celery worker --loglevel=info"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: agrokongo-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: agrokongo-redis
+          type: redis
+          property: connectionString
+
+databases:
+  - name: agrokongo-db
+    databaseName: agrokongo
+    user: agrokongo
+    region: frankfurt
+    plan: free
+
+  - name: agrokongo-redis
+    type: redis
+    region: frankfurt
+    plan: free
+    maxmemoryPolicy: allkeys-lru

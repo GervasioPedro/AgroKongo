@@ -1,9 +1,78 @@
-.env
-.venv/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+.venv312/
+venv-release/
+ENV/
+env/
+
+# Flask
 instance/
 *.db
-.pytest_cache/
+*.sqlite
+*.sqlite3
+.flaskenv
+
+# Environment
+.env
+.env.local
+.env.production
+.env.*.local
+
+# IDEs
 .idea/
+.vscode/
+.windsurf/
+.qodo/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node/Frontend
 node_modules/
-*.pyc
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Uploads (não commitar ficheiros de utilizadores)
+data_storage/
+uploads/
+static/uploads/
+
+# Temporary
+*.tmp
+*.temp
+.cache/
+
+# Security
+*.pem
+*.key
+*.cert
+
+# Migrations (opcional - descomentar se não quiser versionar)
+# migrations/versions/*.py
+
+# Release
+release_gate_report.json

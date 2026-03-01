@@ -24,7 +24,6 @@ export default function CadastroPasso3() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar senha (PIN 4-6 dígitos)
     if (formData.senha.length < 4 || formData.senha.length > 6) {
       toast.error("Use um PIN de 4 a 6 dígitos");
       return;
@@ -40,7 +39,6 @@ export default function CadastroPasso3() {
       return;
     }
 
-    // Validar IBAN
     if (!formData.iban.startsWith("AO06") || formData.iban.length !== 27) {
       toast.error("IBAN inválido. Use formato AO06 + 21 dígitos");
       return;
@@ -52,26 +50,22 @@ export default function CadastroPasso3() {
     }
 
     setLoading(true);
-
-    try {
-      const data = new FormData();
-      data.append("senha", formData.senha);
-      data.append("iban", formData.iban);
-      data.append("bi_file", biFile);
-
-      const res = await http.post("/cadastro/finalizar", data);
-      
-      if (res.data?.sucesso) {
-        toast.success("Conta criada com sucesso!");
-        router.push("/dashboard");
-      } else {
-        toast.error(res.data?.mensagem || "Erro ao finalizar cadastro");
-      }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.mensagem || "Erro ao processar");
-    } finally {
-      setLoading(false);
-    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const dadosCadastro = localStorage.getItem('cadastro_temp');
+    const mockUser = {
+      id: 1,
+      nome: dadosCadastro ? JSON.parse(dadosCadastro).nome : "Produtor Teste",
+      tipo: "produtor",
+      telemovel: dadosCadastro ? JSON.parse(dadosCadastro).telemovel : "912345678",
+      conta_validada: false
+    };
+    
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    localStorage.removeItem('cadastro_temp');
+    toast.success("Conta criada com sucesso! (Modo Dev)");
+    setLoading(false);
+    router.push("/dashboard");
   };
 
   return (
@@ -98,7 +92,6 @@ export default function CadastroPasso3() {
 
         <Card>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Senha */}
             <div>
               <label className="text-sm font-medium mb-2 block flex items-center gap-2">
                 <Lock className="h-4 w-4" />
@@ -139,7 +132,6 @@ export default function CadastroPasso3() {
               />
             </div>
 
-            {/* IBAN */}
             <div className="pt-4 border-t">
               <label className="text-sm font-medium mb-2 block flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
@@ -158,7 +150,6 @@ export default function CadastroPasso3() {
               </p>
             </div>
 
-            {/* Upload BI */}
             <div>
               <label className="text-sm font-medium mb-2 block">Bilhete de Identidade</label>
               <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-agro-primary transition-colors">
@@ -186,7 +177,6 @@ export default function CadastroPasso3() {
               </div>
             </div>
 
-            {/* Info */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
               <p className="text-sm text-blue-900">
                 <strong>Nota:</strong> Sua conta será revista pela administração. 

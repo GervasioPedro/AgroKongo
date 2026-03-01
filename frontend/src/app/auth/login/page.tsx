@@ -21,34 +21,49 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.telemovel || !formData.senha) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    
     setLoading(true);
 
-    try {
-      const res = await http.post("/auth/login", {
-        telemovel: formData.telemovel,
-        senha: formData.senha,
-      });
-
-      if (res.data?.ok) {
-        toast.success("Login efetuado com sucesso!");
-        
-        // Redirecionar baseado no tipo de usuário
-        const userType = res.data?.user?.tipo;
-        if (userType === "admin") {
-          router.push("/admin");
-        } else if (userType === "comprador") {
-          router.push("/comprador");
-        } else {
-          router.push("/dashboard");
-        }
-      } else {
-        toast.error(res.data?.message || "Erro ao fazer login");
-      }
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || "Credenciais inválidas. Verifica os dados.";
-      toast.error(msg);
-    } finally {
-      setLoading(false);
+    // MODO DESENVOLVIMENTO: Login simplificado
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Criar usuário mock baseado no telefone
+    const mockUser = {
+      id: Math.floor(Math.random() * 1000),
+      nome: "Usuário Teste",
+      tipo: "produtor",
+      telemovel: formData.telemovel,
+      conta_validada: true
+    };
+    
+    // Detectar tipo baseado no telefone
+    if (formData.telemovel.includes("945") || formData.senha === "admin") {
+      mockUser.tipo = "admin";
+      mockUser.nome = "Admin Sistema";
+    } else if (formData.telemovel.includes("934")) {
+      mockUser.tipo = "comprador";
+      mockUser.nome = "Comprador Teste";
+    } else {
+      mockUser.nome = "Produtor Teste";
+    }
+    
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    toast.success(`Bem-vindo, ${mockUser.nome}!`);
+    
+    setLoading(false);
+    
+    // Redirecionar baseado no tipo
+    if (mockUser.tipo === "admin") {
+      router.push("/admin");
+    } else if (mockUser.tipo === "comprador") {
+      router.push("/comprador");
+    } else {
+      router.push("/dashboard");
     }
   };
 
@@ -144,6 +159,22 @@ export default function LoginPage() {
 
         {/* Info */}
         <div className="mt-8 text-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+            <p className="text-sm font-semibold text-blue-900 mb-2">🛠️ Modo Desenvolvimento</p>
+            <p className="text-xs text-blue-800 mb-2">Qualquer telefone e senha funcionam!</p>
+            <div className="space-y-1 text-xs text-left text-blue-900">
+              <div className="bg-white/50 rounded px-2 py-1">
+                <strong>Produtor:</strong> Qualquer número (ex: 923456789)
+              </div>
+              <div className="bg-white/50 rounded px-2 py-1">
+                <strong>Comprador:</strong> Número com 934 (ex: 934567890)
+              </div>
+              <div className="bg-white/50 rounded px-2 py-1">
+                <strong>Admin:</strong> Número com 945 ou senha "admin"
+              </div>
+            </div>
+          </div>
+          
           <p className="text-sm text-slate-600 mb-4">Ao entrar, terás acesso a:</p>
           <div className="flex flex-wrap justify-center gap-3">
             <div className="bg-white rounded-lg px-4 py-2 text-sm border">
