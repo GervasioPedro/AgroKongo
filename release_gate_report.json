@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-02-28T13:47:38.490448",
+  "release_gate_results": [
+    {
+      "check": "Cobertura de Testes > 80%",
+      "passed": false,
+      "coverage": 0,
+      "execution_time": 42.23318314552307
+    },
+    {
+      "check": "Zero Vulnerabilidades Altas",
+      "passed": false,
+      "execution_time": 0.29372692108154297
+    },
+    {
+      "check": "Peer Review Financeiro",
+      "passed": false,
+      "execution_time": 5.444814205169678
+    },
+    {
+      "check": "Teste Fim de Ciclo",
+      "passed": false,
+      "execution_time": 5.841693639755249
+    },
+    {
+      "check": "Database Migrations",
+      "passed": true,
+      "execution_time": 0.0009560585021972656
+    },
+    {
+      "check": "Configuration Files",
+      "passed": true,
+      "execution_time": 0.00031876564025878906
+    }
+  ],
+  "summary": {
+    "total_checks": 6,
+    "passed_checks": 2,
+    "failed_checks": 4,
+    "coverage_percentage": 0
+  }
+}

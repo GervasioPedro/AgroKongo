@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Conta como Produtor - AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-seedling"></i>
+                        Criar Conta como Produtor
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 20%">
+                                1/5 - Contato
+                            </div>
+                        </div>
+                        <small class="text-muted">Passo 1 de 5: Validação de Contato</small>
+                    </div>
+
+                    <form method="POST">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-mobile-alt fa-3x text-success mb-3"></i>
+                            <h5>Validação de Contato</h5>
+                            <p class="text-muted">Insira seu número de telemóvel para recebermos o código de verificação.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telemovel" class="font-weight-bold">
+                                <i class="fas fa-phone"></i> Número de Telemóvel
+                            </label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">+244</span>
+                                </div>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="telemovel" 
+                                       name="telemovel" 
+                                       placeholder="9xxxxxxxx" 
+                                       pattern="9\d{8}" 
+                                       maxlength="9"
+                                       required>
+                            </div>
+                            <small class="form-text text-muted">
+                                RN01: Número deve começar com 9 e ter exatamente 9 dígitos
+                            </small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Importante:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Vamos enviar um código de 6 dígitos via WhatsApp</li>
+                                <li>O código tem validade de 10 minutos</li>
+                                <li>Você tem 3 tentativas para acertar o código</li>
+                            </ul>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="termos" required>
+                                <label class="form-check-label" for="termos">
+                                    Li e aceito os <a href="#" class="text-success">Termos de Uso</a> e 
+                                    <a href="#" class="text-success">Política de Privacidade</a> da AgroKongo
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success btn-lg btn-block">
+                                <i class="fas fa-arrow-right"></i> Continuar
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Já tem conta? 
+                            <a href="{{ url_for('auth.login') }}" class="text-success">Faça login</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validação de telemóvel em tempo real
+document.getElementById('telemovel').addEventListener('input', function(e) {
+    // Remove caracteres não numéricos
+    e.target.value = e.target.value.replace(/\D/g, '');
+    
+    // Limita a 9 dígitos
+    if (e.target.value.length > 9) {
+        e.target.value = e.target.value.slice(0, 9);
+    }
+    
+    // Valida se começa com 9
+    if (e.target.value.length > 0 && !e.target.value.startsWith('9')) {
+        e.target.setCustomValidity('O número deve começar com 9');
+    } else if (e.target.value.length === 9) {
+        e.target.setCustomValidity('');
+    } else {
+        e.target.setCustomValidity('Por favor, preencha todos os 9 dígitos');
+    }
+});
+
+// Formatação visual
+document.getElementById('telemovel').addEventListener('focus', function(e) {
+    if (e.target.value === '') {
+        e.target.placeholder = '9 1234 5678';
+    }
+});
+
+document.getElementById('telemovel').addEventListener('blur', function(e) {
+    e.target.placeholder = '9xxxxxxxx';
+});
+</script>
+{% endblock %}
