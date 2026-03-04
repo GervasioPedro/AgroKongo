@@ -14,7 +14,12 @@ mercado_bp = Blueprint('mercado', __name__)
 @mercado_bp.route('/api/validar-fatura/<code>', methods=['GET'])
 def api_validar_fatura(code):
     """Verifica a autenticidade de uma fatura via QR Code e retorna JSON."""
-    venda = Transacao.query.filter(Transacao.fatura_ref == code).first()
+    query = Transacao.query.options(
+        joinedload(Transacao.safra),
+        joinedload(Transacao.vendedor),
+        joinedload(Transacao.comprador)
+    )
+    venda = query.filter(Transacao.fatura_ref == code).first()
 
     if not venda:
         return jsonify({'ok': False, 'message': 'Fatura não encontrada.'}), 404

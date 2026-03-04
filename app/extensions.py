@@ -2,7 +2,6 @@
 Extensões do Flask para AgroKongo.
 
 Inclui: Database, Migration, CSRF, Login, Mail, Cache, Limiter.
-(Celery com import lazy para evitar dependência de Kerberos no Windows)
 """
 import os
 import logging
@@ -27,57 +26,6 @@ login_manager = LoginManager()
 mail = Mail()
 limiter = Limiter(key_func=get_remote_address, default_limits=["200 per day", "50 per hour"])
 cache = Cache()
-
-# Celery - inicialização tardia (lazy) para evitar erro de Kerberos no Windows
-celery = None
-_celery_app = None
-
-
-def get_celery():
-    """Retorna instância do Celery (lazy loading para evitar erro gssapi/Kerberos)"""
-    global _celery_app
-    if _celery_app is None:
-        try:
-            from celery import Celery
-            _celery_app = Celery(
-                'agrokongo',
-                broker=os.environ.get('REDIS_URL', 'redis://localhost:6379/0'),
-                backend=os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-            )
-        except OSError as e:
-            # Se não conseguir importar (erro Kerberos), retorna None
-            logging.warning(f"Celery não disponível: {e}")
-            return None
-    return _celery_app
-
-
-def make_celery(app: Flask):
-    """Configura Celery com contexto Flask"""
-    celery_app = get_celery()
-    if celery_app is None:
-        return None
-    
-    celery_app.conf.update(
-        broker_url=app.config.get('REDIS_URL'),
-        result_backend=app.config.get('REDIS_URL'),
-        task_serializer='json',
-        accept_content=['json'],
-        result_serializer='json',
-        timezone='Africa/Luanda',
-        enable_utc=True,
-        task_track_started=True,
-        task_time_limit=30 * 60,  # 30 minutos
-        task_soft_time_limit=25 * 60,
-    )
-
-    class ContextTask(celery_app.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery_app.Task = ContextTask
-    return celery_app
-
 
 def setup_extensions(app: Flask):
     """Configura todas as extensões com a aplicação Flask"""
@@ -126,9 +74,6 @@ def setup_extensions(app: Flask):
         'CACHE_KEY_PREFIX': 'agrokongo_',
     }
     cache.init_app(app, config=cache_config)
-    
-    # Celery
-    # make_celery(app)  <-- COMENTADO
     
     # Logging
     if not app.debug:

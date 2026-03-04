@@ -3,7 +3,7 @@ Blueprint para API v1 com Versionamento
 遵循 RESTful API best practices para AgroKongo
 """
 from flask import Blueprint, jsonify, request, current_app
-from app.extensions import cache
+from app.extensions import cache, db
 from app.models import Usuario, Transacao, Safra, Produto
 from flask_login import login_required, current_user
 from datetime import datetime, timezone

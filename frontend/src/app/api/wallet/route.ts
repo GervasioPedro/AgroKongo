@@ -51,37 +51,11 @@ export async function GET() {
 
     const data = (await res.json()) as WalletPayload;
     return Response.json(data);
-  } catch {
-    // Fallback DEV (backend offline)
-    return Response.json({
-      resumo: {
-        saldoDisponivelKz: 125000,
-        saldoEscrowKz: 35000,
-        pendentes: 2
-      },
-      movimentos: [
-        {
-          id: "m1",
-          tipo: "credito",
-          valorKz: 50000,
-          descricao: "Pagamento recebido (Escrow)",
-          createdAtISO: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
-        },
-        {
-          id: "m2",
-          tipo: "escrow",
-          valorKz: 35000,
-          descricao: "Valor em escrow (dinheiro seguro)",
-          createdAtISO: new Date(Date.now() - 1000 * 60 * 60 * 20).toISOString()
-        },
-        {
-          id: "m3",
-          tipo: "debito",
-          valorKz: 15000,
-          descricao: "Retirada para IBAN",
-          createdAtISO: new Date(Date.now() - 1000 * 60 * 60 * 30).toISOString()
-        }
-      ]
-    } satisfies WalletPayload);
+  } catch (error) {
+    console.error('Erro ao carregar dados da carteira:', error);
+    return Response.json(
+      { error: 'Erro ao carregar dados da carteira' },
+      { status: 500 }
+    );
   }
 }

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
 
-  let url = `${BACKEND_BASE_URL}/api/produtor/minhas-vendas`;
+  let url = `${BACKEND_BASE_URL}/minhas-compras`;
   if (status) {
     url += `?status=${status}`;
   }
@@ -40,9 +40,9 @@ export async function GET(request: Request) {
     const data = await res.json();
     return Response.json(data);
   } catch (error) {
-    console.error("Erro ao carregar vendas do produtor:", error);
+    console.error("Erro ao carregar compras do comprador:", error);
     return Response.json(
-      { ok: false, message: "Erro ao carregar vendas" },
+      { ok: false, message: "Erro ao carregar compras" },
       { status: 500 }
     );
   }

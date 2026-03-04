@@ -101,11 +101,11 @@ export default function DashboardPage() {
                 ? "A carregar..."
                 : data?.perfil.conta_validada
                   ? "Conta validada. Podes publicar e vender."
-                  : "Conta por validar. O admin esta a rever os teus documentos."}
+                  : "Conta por validar. O admin está a rever os teus documentos."}
             </p>
           </div>
           <Badge variant={data?.perfil.conta_validada ? "default" : "alert"}>
-            {isLoading ? "..." : data?.perfil.conta_validada ? "Verificada" : "Em validacao"}
+            {isLoading ? "..." : data?.perfil.conta_validada ? "Verificada" : "Em validação"}
           </Badge>
         </div>
       </Card>

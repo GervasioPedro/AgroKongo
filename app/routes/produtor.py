@@ -4,10 +4,11 @@ from app.models import Safra, Produto, Transacao, Notificacao, TransactionStatus
 from app.extensions import db
 from app.utils.helpers import salvar_ficheiro
 from functools import wraps
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 from sqlalchemy import func, case
 from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 produtor_bp = Blueprint('produtor', __name__)
 
@@ -29,6 +30,7 @@ def produtor_required(f):
 @login_required
 @produtor_required
 def api_dashboard_produtor():
+    # ... (código existente sem alterações)
     stats = db.session.query(
         func.sum(case((Transacao.status == TransactionStatus.FINALIZADO, Transacao.valor_liquido_vendedor), else_=0)),
         func.sum(case((Transacao.status.in_([TransactionStatus.ESCROW, TransactionStatus.ENVIADO]),
@@ -36,19 +38,21 @@ def api_dashboard_produtor():
         func.sum(case((Transacao.status == TransactionStatus.ENTREGUE, Transacao.valor_liquido_vendedor), else_=0))
     ).filter(Transacao.vendedor_id == current_user.id).first()
 
-    query = Transacao.query.filter_by(vendedor_id=current_user.id)
+    base_query = Transacao.query.options(
+        joinedload(Transacao.safra).joinedload(Safra.produto)
+    ).filter(Transacao.vendedor_id == current_user.id)
 
-    reservas = query.filter_by(status=TransactionStatus.PENDENTE) \
+    reservas = base_query.filter(Transacao.status == TransactionStatus.PENDENTE) \
         .order_by(Transacao.data_criacao.desc()).limit(20).all()
 
-    vendas = query.filter(Transacao.status.in_([
+    vendas = base_query.filter(Transacao.status.in_([
         TransactionStatus.AGUARDANDO_PAGAMENTO,
         TransactionStatus.ANALISE,
         TransactionStatus.ESCROW,
         TransactionStatus.ENVIADO
     ])).order_by(Transacao.data_criacao.desc()).limit(20).all()
 
-    historico = query.filter(Transacao.status.in_([
+    historico = base_query.filter(Transacao.status.in_([
         TransactionStatus.ENTREGUE,
         TransactionStatus.FINALIZADO,
         TransactionStatus.CANCELADO
@@ -59,7 +63,7 @@ def api_dashboard_produtor():
             'id': t.id,
             'fatura_ref': t.fatura_ref,
             'status': t.status,
-            'produto': getattr(getattr(getattr(t, 'safra', None), 'produto', None), 'nome', None),
+            'produto': getattr(getattr(t.safra, 'produto', None), 'nome', None),
             'quantidade': float(t.quantidade_comprada) if t.quantidade_comprada is not None else None,
             'valor': float(t.valor_total_pago) if t.valor_total_pago is not None else None,
             'data': t.data_criacao.isoformat() if getattr(t, 'data_criacao', None) else None
@@ -83,12 +87,32 @@ def api_dashboard_produtor():
         }
     })
 
+
 @produtor_bp.route('/api/produtor/minhas-safras', methods=['GET'])
 @login_required
 @produtor_required
 def api_minhas_safras():
-    safras = Safra.query.filter_by(produtor_id=current_user.id).order_by(Safra.id.desc()).all()
-    return jsonify({'ok': True, 'safras': [s.to_dict() for s in safras]})
+    page = request.args.get('page', 1, type=int)
+    per_page = current_app.config.get('ITEMS_PER_PAGE', 10)
+    
+    query = Safra.query.options(
+        joinedload(Safra.produto),
+        joinedload(Safra.produtor)
+    ).filter_by(produtor_id=current_user.id).order_by(Safra.id.desc())
+    
+    paginated_safras = query.paginate(page=page, per_page=per_page, error_out=False)
+    safras = paginated_safras.items
+    
+    return jsonify({
+        'ok': True, 
+        'safras': [s.to_dict() for s in safras],
+        'pagination': {
+            'page': paginated_safras.page,
+            'per_page': paginated_safras.per_page,
+            'total_pages': paginated_safras.pages,
+            'total_items': paginated_safras.total
+        }
+    })
 
 @produtor_bp.route('/api/produtor/minhas-safras', methods=['POST'])
 @login_required
@@ -116,10 +140,23 @@ def api_criar_safra():
         db.session.add(nova_safra)
         db.session.commit()
         return jsonify({'ok': True, 'safra': nova_safra.to_dict(), 'message': 'Safra criada com sucesso!'}), 201
+    except (ValueError, TypeError, InvalidOperation) as e:
+        db.session.rollback()
+        current_app.logger.warning(f"API Criar Safra - Dados inválidos: {e}")
+        return jsonify({'ok': False, 'message': 'Dados de formulário inválidos.'}), 400
+    except IntegrityError as e:
+        db.session.rollback()
+        current_app.logger.error(f"API Criar Safra - Erro de integridade: {e}")
+        return jsonify({'ok': False, 'message': 'Erro ao guardar dados. Verifique se o produto existe.'}), 409
+    except OperationalError as e:
+        db.session.rollback()
+        current_app.logger.critical(f"API Criar Safra - Erro de DB: {e}")
+        return jsonify({'ok': False, 'message': 'Erro de comunicação com a base de dados.'}), 503
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Erro na API de criar safra: {e}")
-        return jsonify({'ok': False, 'message': 'Erro ao criar safra.'}), 500
+        current_app.logger.error(f"API Criar Safra - Erro inesperado: {e}")
+        return jsonify({'ok': False, 'message': 'Ocorreu um erro inesperado.'}), 500
+
 
 @produtor_bp.route('/api/produtor/minhas-safras/<int:id>', methods=['PUT'])
 @login_required
@@ -142,10 +179,18 @@ def api_atualizar_safra(id):
 
         db.session.commit()
         return jsonify({'ok': True, 'safra': safra.to_dict(), 'message': 'Safra atualizada com sucesso!'})
+    except (ValueError, TypeError, InvalidOperation) as e:
+        db.session.rollback()
+        current_app.logger.warning(f"API Atualizar Safra - Dados inválidos: {e}")
+        return jsonify({'ok': False, 'message': 'Dados de formulário inválidos.'}), 400
+    except IntegrityError as e:
+        db.session.rollback()
+        current_app.logger.error(f"API Atualizar Safra - Erro de integridade: {e}")
+        return jsonify({'ok': False, 'message': 'Erro ao guardar dados.'}), 409
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Erro na API de atualizar safra {id}: {e}")
-        return jsonify({'ok': False, 'message': 'Erro ao atualizar safra.'}), 500
+        current_app.logger.error(f"API Atualizar Safra {id} - Erro inesperado: {e}")
+        return jsonify({'ok': False, 'message': 'Ocorreu um erro inesperado.'}), 500
 
 @produtor_bp.route('/api/produtor/minhas-safras/<int:id>', methods=['DELETE'])
 @login_required
@@ -161,21 +206,29 @@ def api_eliminar_safra(id):
         db.session.delete(safra)
         db.session.commit()
         return jsonify({'ok': True, 'message': 'Safra eliminada com sucesso.'})
+    except IntegrityError as e:
+        db.session.rollback()
+        current_app.logger.error(f"API Eliminar Safra - Erro de integridade: {e}")
+        return jsonify({'ok': False, 'message': 'Não foi possível eliminar. Verifique as dependências.'}), 409
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Erro na API de eliminar safra {id}: {e}")
-        return jsonify({'ok': False, 'message': 'Erro ao eliminar safra.'}), 500
+        current_app.logger.error(f"API Eliminar Safra {id} - Erro inesperado: {e}")
+        return jsonify({'ok': False, 'message': 'Ocorreu um erro inesperado.'}), 500
 
 @produtor_bp.route('/api/produtor/aceitar-reserva/<int:trans_id>', methods=['POST'])
 @login_required
 @produtor_required
 def api_aceitar_reserva(trans_id):
-    venda = Transacao.query.with_for_update().get_or_404(trans_id)
-    if venda.vendedor_id != current_user.id:
-        return jsonify({'ok': False, 'message': 'Acesso não permitido.'}), 403
-    if venda.status != TransactionStatus.PENDENTE:
-        return jsonify({'ok': False, 'message': 'Esta reserva já foi processada.'}), 409
     try:
+        venda = Transacao.query.options(
+            joinedload(Transacao.safra).joinedload(Safra.produto)
+        ).filter_by(id=trans_id).with_for_update().first_or_404()
+
+        if venda.vendedor_id != current_user.id:
+            return jsonify({'ok': False, 'message': 'Acesso não permitido.'}), 403
+        if venda.status != TransactionStatus.PENDENTE:
+            return jsonify({'ok': False, 'message': 'Esta reserva já foi processada.'}), 409
+        
         venda.status = TransactionStatus.AGUARDANDO_PAGAMENTO
         db.session.add(Notificacao(
             usuario_id=venda.comprador_id,
@@ -193,12 +246,16 @@ def api_aceitar_reserva(trans_id):
 @login_required
 @produtor_required
 def api_recusar_reserva(trans_id):
-    venda = Transacao.query.with_for_update().get_or_404(trans_id)
-    if venda.vendedor_id != current_user.id:
-        return jsonify({'ok': False, 'message': 'Acesso não permitido.'}), 403
-    if venda.status != TransactionStatus.PENDENTE:
-        return jsonify({'ok': False, 'message': 'Esta reserva já foi processada.'}), 409
     try:
+        venda = Transacao.query.options(
+            joinedload(Transacao.safra).joinedload(Safra.produto)
+        ).filter_by(id=trans_id).with_for_update().first_or_404()
+
+        if venda.vendedor_id != current_user.id:
+            return jsonify({'ok': False, 'message': 'Acesso não permitido.'}), 403
+        if venda.status != TransactionStatus.PENDENTE:
+            return jsonify({'ok': False, 'message': 'Esta reserva já foi processada.'}), 409
+        
         venda.safra.quantidade_disponivel += venda.quantidade_comprada # Devolve stock
         venda.status = TransactionStatus.CANCELADO
         db.session.add(Notificacao(
@@ -217,9 +274,11 @@ def api_recusar_reserva(trans_id):
 @login_required
 @produtor_required
 def api_minhas_vendas():
-    """Endpoint de API para listar as vendas do produtor autenticado."""
+    page = request.args.get('page', 1, type=int)
+    per_page = current_app.config.get('ITEMS_PER_PAGE', 10)
+    status_filter = request.args.get('status')
+
     try:
-        status_filter = request.args.get('status')
         query = Transacao.query.options(
             joinedload(Transacao.safra).joinedload(Safra.produto),
             joinedload(Transacao.comprador)
@@ -229,8 +288,19 @@ def api_minhas_vendas():
             statuses = status_filter.split(',')
             query = query.filter(Transacao.status.in_(statuses))
 
-        vendas = query.order_by(Transacao.data_criacao.desc()).all()
-        return jsonify({'ok': True, 'vendas': [v.to_dict() for v in vendas]})
+        paginated_vendas = query.order_by(Transacao.data_criacao.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        vendas = paginated_vendas.items
+        
+        return jsonify({
+            'ok': True, 
+            'vendas': [v.to_dict() for v in vendas],
+            'pagination': {
+                'page': paginated_vendas.page,
+                'per_page': paginated_vendas.per_page,
+                'total_pages': paginated_vendas.pages,
+                'total_items': paginated_vendas.total
+            }
+        })
     except Exception as e:
         current_app.logger.error(f"Erro na API de minhas vendas: {e}")
         return jsonify({'ok': False, 'message': 'Erro ao buscar vendas.'}), 500
@@ -239,21 +309,23 @@ def api_minhas_vendas():
 @login_required
 @produtor_required
 def api_detalhes_venda(id):
-    """Retorna os detalhes de uma venda específica para o produtor."""
-    venda = Transacao.query.filter_by(id=id, vendedor_id=current_user.id).first_or_404()
+    venda = Transacao.query.options(
+        joinedload(Transacao.safra).joinedload(Safra.produto),
+        joinedload(Transacao.comprador)
+    ).filter_by(id=id, vendedor_id=current_user.id).first_or_404()
     return jsonify({'ok': True, 'venda': venda.to_dict()})
 
 @produtor_bp.route('/api/produtor/confirmar-envio/<int:id>', methods=['POST'])
 @login_required
 @produtor_required
 def api_confirmar_envio(id):
-    """Marca uma transação como enviada."""
-    transacao = Transacao.query.with_for_update().get_or_404(id)
-    if transacao.vendedor_id != current_user.id:
-        return jsonify({'ok': False, 'message': 'Acesso não permitido.'}), 403
-    if transacao.status != TransactionStatus.ESCROW:
-        return jsonify({'ok': False, 'message': 'Ação inválida. O pagamento deve ser confirmado primeiro.'}), 409
     try:
+        transacao = Transacao.query.with_for_update().get_or_404(id)
+        if transacao.vendedor_id != current_user.id:
+            return jsonify({'ok': False, 'message': 'Acesso não permitido.'}), 403
+        if transacao.status != TransactionStatus.ESCROW:
+            return jsonify({'ok': False, 'message': 'Ação inválida. O pagamento deve ser confirmado primeiro.'}), 409
+
         transacao.status = TransactionStatus.ENVIADO
         transacao.data_envio = datetime.now(timezone.utc)
         if hasattr(transacao, 'calcular_janela_logistica'):

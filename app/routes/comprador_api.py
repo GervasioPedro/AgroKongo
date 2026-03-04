@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload # Importar joinedload
 
 comprador_api_bp = Blueprint('comprador_api', __name__, url_prefix='/api/comprador')
 
@@ -9,9 +10,13 @@ comprador_api_bp = Blueprint('comprador_api', __name__, url_prefix='/api/comprad
 def dashboard():
     """Retorna dados mínimos esperados pelo frontend do dashboard do comprador."""
     try:
-        from app.models import Transacao
-        # Busca últimas 20 transações do comprador atual, se o modelo existir
+        from app.models import Transacao, Safra, Produto, Usuario
+        # Otimização: Usar joinedload para evitar N+1 queries
         txs = (Transacao.query
+               .options(
+                   joinedload(Transacao.safra).joinedload(Safra.produto),
+                   joinedload(Transacao.vendedor)
+               )
                .filter_by(comprador_id=current_user.id)
                .order_by(Transacao.data_criacao.desc())
                .limit(20)
@@ -23,11 +28,10 @@ def dashboard():
                 'fatura_ref': getattr(t, 'fatura_ref', None),
                 'status': (getattr(getattr(t, 'status', None), 'name', None) or 'pendente').lower(),
                 'safra': {
-                    'produto': getattr(getattr(getattr(t, 'safra', None), 'produto', None), 'nome', None)
-                             or getattr(getattr(t, 'safra', None), 'produto_nome', None)
+                    'produto': getattr(getattr(t.safra, 'produto', None), 'nome', None)
                 },
-                'quantidade_comprada': int(getattr(t, 'quantidade', 0) or 0),
-                'valor_total_pago': float(getattr(t, 'valor_total', 0) or 0),
+                'quantidade_comprada': int(getattr(t, 'quantidade_comprada', 0) or 0),
+                'valor_total_pago': float(getattr(t, 'valor_total_pago', 0) or 0),
                 'data_criacao': getattr(getattr(t, 'data_criacao', None), 'isoformat', lambda: None)(),
                 'vendedor': {
                     'nome': getattr(getattr(t, 'vendedor', None), 'nome', None)

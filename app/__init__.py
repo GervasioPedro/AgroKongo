@@ -2,12 +2,12 @@ import os
 from flask import Flask, send_from_directory, abort
 from flask_login import login_required, current_user
 from flask_apscheduler import APScheduler
-from flask_cors import CORS
 from datetime import datetime, timezone, timedelta
 from flask_talisman import Talisman
 from app.extensions import db, setup_extensions
 from app.models import Transacao, TransactionStatus
 from config import config_dict
+from app.middleware import ProxyFix
 
 scheduler = APScheduler()
 
@@ -33,7 +33,9 @@ def create_app(config_name='dev'):
     app.config.from_object(config_dict[config_name])
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-    CORS(app, resources={r"/api/*": {"origins": app.config.get('CORS_ORIGINS', '*')}}, supports_credentials=True)
+    # Aplicar ProxyFix em produção
+    if not app.debug:
+        app.wsgi_app = ProxyFix(app.wsgi_app)
 
     setup_extensions(app)
 
@@ -51,12 +53,13 @@ def create_app(config_name='dev'):
     if not app.debug:
         csp = {
             'default-src': ["'self'"],
-            'script-src': ["'self'", "'unsafe-inline'"],
-            'style-src': ["'self'", "'unsafe-inline'"],
+            'script-src': ["'self'"], # Removido 'unsafe-inline'
+            'style-src': ["'self'"],  # Removido 'unsafe-inline'
             'img-src': ["'self'", 'data:', 'https:'],
             'connect-src': ["'self'", *app.config.get('CORS_ORIGINS', [])],
             'font-src': ["'self'", 'data:'],
             'frame-ancestors': ["'self'"],
+            'object-src': ["'none'"], # Adicionado para bloquear plugins
         }
         Talisman(
             app,
@@ -79,6 +82,7 @@ def create_app(config_name='dev'):
 
 def _registrar_blueprints(app):
     """Registra todos os blueprints da aplicação."""
+    from app.routes.main_fixed import main_bp
     from app.routes.auth import auth_bp
     from app.routes.produtor import produtor_bp
     from app.routes.mercado import mercado_bp
@@ -87,6 +91,7 @@ def _registrar_blueprints(app):
     from app.routes.api_public import api_public_bp
     from app.routes.api_cadastro import api_cadastro_bp
     from app.routes.geografia import geografia_bp
+    from app.routes.api_v1 import api_v1_bp
     # Novos blueprints API JSON
     try:
         from app.routes.mercado_api import mercado_api_bp
@@ -108,6 +113,7 @@ def _registrar_blueprints(app):
     except Exception:
         errors_bp = None
 
+    app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(produtor_bp)
     app.register_blueprint(mercado_bp)
@@ -116,6 +122,7 @@ def _registrar_blueprints(app):
     app.register_blueprint(api_public_bp)
     app.register_blueprint(api_cadastro_bp)
     app.register_blueprint(geografia_bp)
+    app.register_blueprint(api_v1_bp)
     if mercado_api_bp:
         app.register_blueprint(mercado_api_bp)
     if comprador_api_bp:

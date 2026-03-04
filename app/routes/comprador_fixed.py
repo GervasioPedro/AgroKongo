@@ -13,6 +13,7 @@ from flask_login import login_required, current_user
 from flask_wtf.csrf import validate_csrf
 from wtforms import ValidationError
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload # Importar joinedload
 from markupsafe import escape
 
 from app.extensions import db
@@ -28,20 +29,23 @@ comprador_bp = Blueprint('comprador', __name__)
 @comprador_bp.route('/dashboard')
 @login_required
 def dashboard():
-    query = Transacao.query.filter_by(comprador_id=current_user.id)
+    base_query = Transacao.query.options(
+        joinedload(Transacao.safra).joinedload(Safra.produto),
+        joinedload(Transacao.vendedor)
+    ).filter(Transacao.comprador_id == current_user.id)
 
-    pendentes = query.filter(Transacao.status.in_([
+    pendentes = base_query.filter(Transacao.status.in_([
         TransactionStatus.PENDENTE,
         TransactionStatus.AGUARDANDO_PAGAMENTO
     ])).all()
 
-    em_transito = query.filter(Transacao.status.in_([
+    em_transito = base_query.filter(Transacao.status.in_([
         TransactionStatus.ANALISE,
         TransactionStatus.ESCROW,
         TransactionStatus.ENVIADO
     ])).order_by(Transacao.data_envio.desc()).all()
 
-    historico = query.filter(Transacao.status.in_([
+    historico = base_query.filter(Transacao.status.in_([
         TransactionStatus.ENTREGUE,
         TransactionStatus.FINALIZADO,
         TransactionStatus.CANCELADO
@@ -52,7 +56,7 @@ def dashboard():
         Transacao.status.in_([TransactionStatus.ENTREGUE, TransactionStatus.FINALIZADO])
     ).scalar() or 0
 
-    compras_ativas = query.filter(Transacao.status != TransactionStatus.FINALIZADO).count()
+    compras_ativas = base_query.filter(Transacao.status != TransactionStatus.FINALIZADO).count()
 
     return render_template('painel/comprador.html',
                            pendentes=pendentes,
@@ -65,7 +69,10 @@ def dashboard():
 @comprador_bp.route('/minhas-reservas')
 @login_required
 def minhas_reservas():
-    transacoes = Transacao.query.filter(
+    transacoes = Transacao.query.options(
+        joinedload(Transacao.safra).joinedload(Safra.produto),
+        joinedload(Transacao.vendedor)
+    ).filter(
         Transacao.comprador_id == current_user.id,
         Transacao.status.in_([TransactionStatus.PENDENTE, TransactionStatus.AGUARDANDO_PAGAMENTO])
     ).order_by(Transacao.data_criacao.desc()).all()
@@ -75,7 +82,10 @@ def minhas_reservas():
 @comprador_bp.route('/pagar-reserva/<int:trans_id>')
 @login_required
 def pagar_reserva(trans_id):
-    venda = Transacao.query.get_or_404(trans_id)
+    venda = Transacao.query.options(
+        joinedload(Transacao.safra).joinedload(Safra.produto),
+        joinedload(Transacao.vendedor)
+    ).get_or_404(trans_id)
 
     if venda.comprador_id != current_user.id:
         abort(403)
@@ -142,7 +152,10 @@ def minhas_compras():
         TransactionStatus.ENVIADO, TransactionStatus.ENTREGUE,
         TransactionStatus.FINALIZADO, TransactionStatus.DISPUTA
     ]
-    compras = Transacao.query.filter(
+    compras = Transacao.query.options(
+        joinedload(Transacao.safra).joinedload(Safra.produto),
+        joinedload(Transacao.vendedor)
+    ).filter(
         Transacao.comprador_id == current_user.id,
         Transacao.status.in_(status_compras)
     ).order_by(Transacao.data_criacao.desc()).all()
@@ -158,7 +171,9 @@ def confirmar_recebimento(trans_id):
     except ValidationError:
         abort(403)
 
-    transacao = Transacao.query.with_for_update().get_or_404(trans_id)
+    transacao = Transacao.query.options(
+        joinedload(Transacao.vendedor)
+    ).with_for_update().get_or_404(trans_id)
 
     if transacao.comprador_id != current_user.id:
         abort(403)
@@ -200,7 +215,9 @@ def avaliar_venda(trans_id):
     except ValidationError:
         abort(403)
     
-    venda = Transacao.query.get_or_404(trans_id)
+    venda = Transacao.query.options(
+        joinedload(Transacao.vendedor)
+    ).get_or_404(trans_id)
     if venda.comprador_id != current_user.id:
         flash("Acao nao permitida.", "danger")
         return redirect(url_for('comprador.minhas_compras'))
@@ -252,7 +269,11 @@ def abrir_disputa(trans_id):
 @comprador_bp.route('/compra/<int:trans_id>')
 @login_required
 def detalhes_compra(trans_id):
-    compra = Transacao.query.get_or_404(trans_id)
+    compra = Transacao.query.options(
+        joinedload(Transacao.safra).joinedload(Safra.produto),
+        joinedload(Transacao.vendedor),
+        joinedload(Transacao.comprador)
+    ).get_or_404(trans_id)
     
     if compra.comprador_id != current_user.id and current_user.tipo != 'admin':
         abort(403)
