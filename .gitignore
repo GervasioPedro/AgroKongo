@@ -75,4 +75,4 @@ static/uploads/
 # migrations/versions/*.py
 
 # Release
-release_gate_report.json
+release_gate_report.json-e "\n# Next.js cache\nfrontend/.next/"  
