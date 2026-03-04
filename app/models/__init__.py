@@ -15,6 +15,9 @@ from app.models.produto import Produto, Safra
 # Transação
 from app.models.transacao import Transacao, HistoricoStatus
 
+# Avaliação
+from app.models.avaliacao import Avaliacao # <-- ADICIONADO
+
 # Financeiro
 from app.models.financeiro import Carteira, MovimentacaoFinanceira
 
@@ -26,6 +29,9 @@ from app.models.disputa import Disputa
 
 # Auditoria
 from app.models.auditoria import LogAuditoria, ConfiguracaoSistema
+
+# LGPD - Conformidade com Lei de Proteção de Dados de Angola
+from app.models.lgpd import ConsentimentoLGPD, RegistroAnonimizacao
 
 __all__ = [
     # Base
@@ -42,6 +48,8 @@ __all__ = [
     # Transação
     'Transacao',
     'HistoricoStatus',
+    # Avaliação
+    'Avaliacao', # <-- ADICIONADO
     # Financeiro
     'Carteira',
     'MovimentacaoFinanceira',
@@ -53,4 +61,7 @@ __all__ = [
     # Auditoria
     'LogAuditoria',
     'ConfiguracaoSistema',
+    # LGPD
+    'ConsentimentoLGPD',
+    'RegistroAnonimizacao',
 ]

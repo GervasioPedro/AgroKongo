@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
@@ -9,8 +9,14 @@ import { Sprout, ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
 import { http } from "@/services/http";
 import toast from "react-hot-toast";
 
+import { redirect } from "next/navigation";
+
 export default function CadastroPasso4() {
   const router = useRouter();
+  // Redireciona automaticamente para o passo-3 (fluxo consolidado em 3 passos)
+  useEffect(() => {
+    router.replace('/auth/cadastro/passo-3');
+  }, [router]);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({

@@ -1,0 +1,123 @@
+import { useState, useEffect } from 'react';
+import AdminLayout from '../../components/AdminLayout';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import toast from 'react-hot-toast';
+import StatusBadge from '../../components/StatusBadge';
+
+function AdminTransacoesPage() {
+  const [transacoes, setTransacoes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('ANALISE');
+
+  useEffect(() => {
+    fetchTransacoes();
+  }, [statusFilter]);
+
+  const fetchTransacoes = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/transacoes?status=${statusFilter}`);
+      const data = await res.json();
+      if (data.ok) {
+        setTransacoes(data.transacoes);
+      } else {
+        toast.error('Falha ao carregar transações.');
+      }
+    } catch (err) {
+      toast.error('Erro de conexão.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAction = async (url, method = 'POST', body = null, successMessage) => {
+    if (!confirm('Tem certeza que deseja executar esta ação?')) return;
+    try {
+      const options = {
+        method,
+        headers: body ? { 'Content-Type': 'application/json' } : {},
+        body: body ? JSON.stringify(body) : null,
+      };
+      const res = await fetch(url, options);
+      const data = await res.json();
+      if (data.ok) {
+        toast.success(successMessage);
+        fetchTransacoes(); // Recarrega a lista
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      toast.error('Erro de conexão.');
+    }
+  };
+
+  return (
+    <AdminLayout title="Gestão de Transações">
+      <h2 className="text-3xl font-semibold text-gray-800 mb-6">Gestão de Transações</h2>
+
+      <div className="mb-4 border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          <button onClick={() => setStatusFilter('ANALISE')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${statusFilter === 'ANALISE' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
+            Pagamentos a Validar
+          </button>
+          <button onClick={() => setStatusFilter('ENTREGUE')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${statusFilter === 'ENTREGUE' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
+            Pagamentos a Liquidar
+          </button>
+          <button onClick={() => setStatusFilter('DISPUTA')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${statusFilter === 'DISPUTA' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
+            Disputas
+          </button>
+        </nav>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-10">Carregando...</div>
+      ) : transacoes.length === 0 ? (
+        <div className="text-center py-10 bg-white rounded-lg shadow">
+          <h3 className="text-xl font-medium text-gray-900">Nenhuma transação encontrada</h3>
+          <p className="mt-1 text-gray-500">Não há transações nesta categoria.</p>
+        </div>
+      ) : (
+        <div className="bg-white shadow overflow-x-auto sm:rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            {/* ... (cabeçalho da tabela) ... */}
+            <tbody className="bg-white divide-y divide-gray-200">
+              {transacoes.map((t) => (
+                <tr key={t.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{t.fatura_ref}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{t.safra.produto.nome}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(t.valor_total_pago)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={t.status} /></td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    {statusFilter === 'ANALISE' && (
+                      <>
+                        <button onClick={() => handleAction(`/api/admin/validar-pagamento/${t.id}`, 'POST', null, 'Pagamento validado!')} className="text-green-600 hover:text-green-900 mr-4">Validar</button>
+                        <button onClick={() => handleAction(`/api/admin/rejeitar-pagamento/${t.id}`, 'POST', { motivo: 'Comprovativo inválido' }, 'Pagamento rejeitado.')} className="text-red-600 hover:text-red-900">Rejeitar</button>
+                      </>
+                    )}
+                    {statusFilter === 'ENTREGUE' && (
+                      <button onClick={() => handleAction(`/api/admin/confirmar-transferencia/${t.id}`, 'POST', null, 'Transferência confirmada!')} className="text-blue-600 hover:text-blue-900">Liquidar</button>
+                    )}
+                    {statusFilter === 'DISPUTA' && (
+                      <>
+                        <button onClick={() => handleAction(`/api/admin/resolver-disputa/${t.id}`, 'POST', { decisao: 'libertar' }, 'Disputa resolvida.')} className="text-green-600 hover:text-green-900 mr-4">Liberar p/ Produtor</button>
+                        <button onClick={() => handleAction(`/api/admin/resolver-disputa/${t.id}`, 'POST', { decisao: 'reembolsar' }, 'Disputa resolvida.')} className="text-red-600 hover:text-red-900">Reembolsar Comprador</button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </AdminLayout>
+  );
+}
+
+export default function AdminTransacoes() {
+  return (
+    <ProtectedRoute>
+      <AdminTransacoesPage />
+    </ProtectedRoute>
+  );
+}

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sprout, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { http } from "@/services/http";
+import { mutate } from "swr";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,41 +30,37 @@ export default function LoginPage() {
     
     setLoading(true);
 
-    // MODO DESENVOLVIMENTO: Login simplificado
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Criar usuário mock baseado no telefone
-    const mockUser = {
-      id: Math.floor(Math.random() * 1000),
-      nome: "Usuário Teste",
-      tipo: "produtor",
-      telemovel: formData.telemovel,
-      conta_validada: true
-    };
-    
-    // Detectar tipo baseado no telefone
-    if (formData.telemovel.includes("945") || formData.senha === "admin") {
-      mockUser.tipo = "admin";
-      mockUser.nome = "Admin Sistema";
-    } else if (formData.telemovel.includes("934")) {
-      mockUser.tipo = "comprador";
-      mockUser.nome = "Comprador Teste";
-    } else {
-      mockUser.nome = "Produtor Teste";
-    }
-    
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    toast.success(`Bem-vindo, ${mockUser.nome}!`);
-    
-    setLoading(false);
-    
-    // Redirecionar baseado no tipo
-    if (mockUser.tipo === "admin") {
-      router.push("/admin");
-    } else if (mockUser.tipo === "comprador") {
-      router.push("/comprador");
-    } else {
-      router.push("/dashboard");
+    try {
+      const res = await http.post("/auth/login", {
+        telemovel: formData.telemovel,
+        senha: formData.senha,
+      });
+
+      const data = res.data as { ok: boolean; user?: { nome: string; tipo: string } ; message?: string };
+
+      if (!data?.ok || !data?.user) {
+        toast.error(data?.message || "Credenciais inválidas");
+        setLoading(false);
+        return;
+      }
+
+      toast.success(`Bem-vindo, ${data.user.nome}!`);
+      setLoading(false);
+
+      // Sincronizar sessão imediatamente no SWR
+      try { await mutate('/auth/me'); } catch {}
+
+      if (data.user.tipo === "admin") {
+        router.push("/admin");
+      } else if (data.user.tipo === "comprador") {
+        router.push("/comprador");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err: any) {
+      const apiMsg = err?.response?.data?.message || err?.response?.data?.mensagem;
+      toast.error(apiMsg || "Não foi possível iniciar sessão");
+      setLoading(false);
     }
   };
 
@@ -157,37 +154,6 @@ export default function LoginPage() {
           </form>
         </Card>
 
-        {/* Info */}
-        <div className="mt-8 text-center">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-            <p className="text-sm font-semibold text-blue-900 mb-2">🛠️ Modo Desenvolvimento</p>
-            <p className="text-xs text-blue-800 mb-2">Qualquer telefone e senha funcionam!</p>
-            <div className="space-y-1 text-xs text-left text-blue-900">
-              <div className="bg-white/50 rounded px-2 py-1">
-                <strong>Produtor:</strong> Qualquer número (ex: 923456789)
-              </div>
-              <div className="bg-white/50 rounded px-2 py-1">
-                <strong>Comprador:</strong> Número com 934 (ex: 934567890)
-              </div>
-              <div className="bg-white/50 rounded px-2 py-1">
-                <strong>Admin:</strong> Número com 945 ou senha "admin"
-              </div>
-            </div>
-          </div>
-          
-          <p className="text-sm text-slate-600 mb-4">Ao entrar, terás acesso a:</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <div className="bg-white rounded-lg px-4 py-2 text-sm border">
-              🔒 Pagamentos Seguros
-            </div>
-            <div className="bg-white rounded-lg px-4 py-2 text-sm border">
-              📦 Gestão de Pedidos
-            </div>
-            <div className="bg-white rounded-lg px-4 py-2 text-sm border">
-              💰 Carteira Digital
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );

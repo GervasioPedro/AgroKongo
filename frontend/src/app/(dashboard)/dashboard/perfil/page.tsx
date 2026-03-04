@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import toast from "react-hot-toast";
+import { mutate } from "swr";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,8 @@ export default function PerfilPage() {
   async function logout() {
     try {
       await http.post("/auth/logout");
+      // Invalidar cache da sessão imediatamente
+      try { await mutate('/auth/me', null, false); } catch {}
       toast.success("Sessao terminada.");
       router.push("/auth/login");
     } catch {

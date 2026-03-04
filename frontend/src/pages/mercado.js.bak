@@ -1,0 +1,143 @@
+import { useState, useEffect } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useDebounce } from '../hooks/useDebounce'; // Um hook customizado para debounce
+
+export default function Mercado() {
+  const [produtos, setProdutos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState(null);
+
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [provincia, setProvincia] = useState('');
+  const [categoria, setCategoria] = useState('');
+
+  // Listas para os dropdowns
+  const [provincias, setProvincias] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    // Carregar dados para os filtros
+    async function fetchFiltersData() {
+      try {
+        const [provRes, catRes] = await Promise.all([
+          fetch('/api/localizacao/provincias'),
+          fetch('/api/produtos/categorias')
+        ]);
+        const provData = await provRes.json();
+        const catData = await catRes.json();
+        if (provData.ok) setProvincias(provData.provincias);
+        if (catData.ok) setCategorias(catData.categorias);
+      } catch (err) {
+        console.error("Erro ao carregar filtros:", err);
+      }
+    }
+    fetchFiltersData();
+  }, []);
+
+  useEffect(() => {
+    async function fetchProdutos() {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page,
+        per_page: 12,
+        search: debouncedSearchTerm,
+        provincia,
+        categoria,
+      });
+
+      try {
+        const res = await fetch(`/api/mercado/produtos?${params.toString()}`);
+        const data = await res.json();
+
+        if (data.ok) {
+          setProdutos(data.produtos);
+          setTotalPages(data.pagination.total_pages);
+        } else {
+          setError('Falha ao carregar produtos.');
+        }
+      } catch (err) {
+        setError('Erro de conexão.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProdutos();
+  }, [page, debouncedSearchTerm, provincia, categoria]);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Head>
+        <title>Mercado | AgroKongo</title>
+      </Head>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-extrabold text-gray-900">Mercado Agrícola</h1>
+          <p className="mt-2 text-lg text-gray-600">Encontre os melhores produtos diretamente dos produtores de Angola.</p>
+        </div>
+
+        {/* Filtros */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-white rounded-lg shadow">
+          <input
+            type="text"
+            placeholder="Pesquisar por produto..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+          />
+          <select
+            value={provincia}
+            onChange={(e) => setProvincia(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+          >
+            <option value="">Todas as Províncias</option>
+            {provincias.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+          </select>
+          <select
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+          >
+            <option value="">Todas as Categorias</option>
+            {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-600 py-10">{error}</div>
+        ) : produtos.length === 0 ? (
+          <div className="text-center py-10 bg-white rounded-lg shadow">
+            <h3 className="text-xl font-medium text-gray-900">Nenhum produto encontrado</h3>
+            <p className="mt-1 text-gray-500">Tente ajustar os seus filtros ou volte mais tarde.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {produtos.map((safra) => (
+                <div key={safra.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  {/* ... (código do card do produto) ... */}
+                </div>
+              ))}
+            </div>
+
+            {/* Paginação */}
+            <div className="mt-8 flex justify-center space-x-2">
+              {/* ... (código da paginação) ... */}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

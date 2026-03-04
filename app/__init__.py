@@ -1,15 +1,15 @@
 import os
-from flask import Flask, send_from_directory, render_template, abort
+from flask import Flask, send_from_directory, abort
 from flask_login import login_required, current_user
 from flask_apscheduler import APScheduler
+from flask_cors import CORS
 from datetime import datetime, timezone, timedelta
+from flask_talisman import Talisman
 from app.extensions import db, setup_extensions
 from app.models import Transacao, TransactionStatus
 from config import config_dict
 
-# Instância global do scheduler
 scheduler = APScheduler()
-
 
 def processar_monitorizacao_pagamentos(app):
     """Auditoria automática para evitar que transações fiquem 'esquecidas'."""
@@ -17,7 +17,6 @@ def processar_monitorizacao_pagamentos(app):
         agora = datetime.now(timezone.utc)
         limite = agora - timedelta(hours=24)
         try:
-            # Selecionamos apenas IDs e Refs para poupar memória na consulta
             estagnadas = Transacao.query.filter(
                 Transacao.status == TransactionStatus.ANALISE,
                 Transacao.data_criacao <= limite
@@ -25,30 +24,20 @@ def processar_monitorizacao_pagamentos(app):
 
             for t in estagnadas:
                 app.logger.warning(f"AUDITORIA: Fatura {t.fatura_ref} em análise há mais de 24h.")
-                # Aqui poderias disparar um e-mail automático para o Admin
 
         except Exception as e:
             app.logger.error(f"Erro no Scheduler: {e}")
 
-
 def create_app(config_name='dev'):
     app = Flask(__name__)
     app.config.from_object(config_dict[config_name])
-    app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+    CORS(app, resources={r"/api/*": {"origins": app.config.get('CORS_ORIGINS', '*')}}, supports_credentials=True)
 
     setup_extensions(app)
-    _registrar_context_processors(app)
-    _registrar_rotas_arquivos(app)
-    _criar_diretorios(app)
-    _registrar_blueprints(app)
-    _configurar_scheduler(app)
-    _registrar_error_handlers(app)
 
-    return app
-
-
-def _registrar_context_processors(app):
-    """Registra processadores de contexto global."""
+    # Context processors for template variables
     @app.context_processor
     def inject_globals():
         return {
@@ -58,68 +47,95 @@ def _registrar_context_processors(app):
             'timedelta': timedelta
         }
 
+    # Aplicar headers de segurança e HTTPS/HSTS em produção
+    if not app.debug:
+        csp = {
+            'default-src': ["'self'"],
+            'script-src': ["'self'", "'unsafe-inline'"],
+            'style-src': ["'self'", "'unsafe-inline'"],
+            'img-src': ["'self'", 'data:', 'https:'],
+            'connect-src': ["'self'", *app.config.get('CORS_ORIGINS', [])],
+            'font-src': ["'self'", 'data:'],
+            'frame-ancestors': ["'self'"],
+        }
+        Talisman(
+            app,
+            force_https=True,
+            strict_transport_security=True,
+            strict_transport_security_max_age=31536000,
+            strict_transport_security_include_subdomains=True,
+            content_security_policy=csp,
+            session_cookie_secure=True,
+            session_cookie_http_only=True,
+            frame_options='DENY',
+            referrer_policy='no-referrer'
+        )
 
-def _registrar_rotas_arquivos(app):
-    """Registra rotas para servir arquivos públicos e privados."""
-    @app.route('/uploads/safras/<filename>')
-    def serve_safra_image(filename):
-        folder = os.path.join(app.config['UPLOAD_FOLDER_PUBLIC'], 'safras')
-        return send_from_directory(folder, filename)
+    _registrar_blueprints(app)
+    _criar_diretorios(app)
+    _configurar_scheduler(app)
 
-    @app.route('/uploads/comprovativos/<filename>')
-    @login_required
-    def serve_comprovativo(filename):
-        from flask import current_app
-        transacao = Transacao.query.filter_by(comprovativo_path=filename).first_or_404()
-
-        pode_ver = [
-            current_user.tipo == 'admin',
-            current_user.id == transacao.comprador_id,
-            current_user.id == transacao.vendedor_id
-        ]
-
-        if not any(pode_ver):
-            current_app.logger.warning(f"TENTATIVA DE INTRUSÃO: User {current_user.id} tentou ver talão {filename}")
-            abort(403)
-
-        private_folder = os.path.join(current_app.config['UPLOAD_FOLDER_PRIVATE'], 'comprovativos')
-        return send_from_directory(directory=private_folder, path=filename, mimetype='image/jpeg')
-
-
-def _criar_diretorios(app):
-    """Cria diretórios necessários se não existirem."""
-    with app.app_context():
-        pastas = [
-            os.path.join(app.config['UPLOAD_FOLDER_PUBLIC'], 'safras'),
-            os.path.join(app.config['UPLOAD_FOLDER_PUBLIC'], 'perfil'),
-            os.path.join(app.config['UPLOAD_FOLDER_PRIVATE'], 'comprovativos'),
-            os.path.join(app.config['UPLOAD_FOLDER_PRIVATE'], 'documentos')
-        ]
-        for pasta in pastas:
-            os.makedirs(pasta, exist_ok=True)
-
+    return app
 
 def _registrar_blueprints(app):
     """Registra todos os blueprints da aplicação."""
     from app.routes.auth import auth_bp
     from app.routes.produtor import produtor_bp
-    from app.routes.main import main_bp
     from app.routes.mercado import mercado_bp
-    from app.routes.admin import admin_bp
     from app.routes.comprador import comprador_bp
-    from app.routes.health import health_bp
+    from app.routes.admin import admin_bp
+    from app.routes.api_public import api_public_bp
+    from app.routes.api_cadastro import api_cadastro_bp
+    from app.routes.geografia import geografia_bp
+    # Novos blueprints API JSON
+    try:
+        from app.routes.mercado_api import mercado_api_bp
+    except Exception:
+        mercado_api_bp = None
+    try:
+        from app.routes.comprador_api import comprador_api_bp
+    except Exception:
+        comprador_api_bp = None
+    # Redirecionamentos de rotas HTML legadas para o SPA
+    try:
+        from app.routes.legacy_redirects import legacy_redirects_bp
+    except Exception:
+        legacy_redirects_bp = None
 
-    app.register_blueprint(health_bp)  # Health check primeiro
-    app.register_blueprint(main_bp)
-    app.register_blueprint(mercado_bp)
+    # Error handlers blueprint (JSON para /api/*)
+    try:
+        from app.routes.handlers import errors_bp
+    except Exception:
+        errors_bp = None
+
     app.register_blueprint(auth_bp)
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(comprador_bp, url_prefix='/comprador')
-    app.register_blueprint(produtor_bp, url_prefix='/produtor')
+    app.register_blueprint(produtor_bp)
+    app.register_blueprint(mercado_bp)
+    app.register_blueprint(comprador_bp)
+    app.register_blueprint(admin_bp)  # Rotas já incluem /api/admin no arquivo admin.py
+    app.register_blueprint(api_public_bp)
+    app.register_blueprint(api_cadastro_bp)
+    app.register_blueprint(geografia_bp)
+    if mercado_api_bp:
+        app.register_blueprint(mercado_api_bp)
+    if comprador_api_bp:
+        app.register_blueprint(comprador_api_bp)
+    if legacy_redirects_bp:
+        app.register_blueprint(legacy_redirects_bp)
+    if errors_bp:
+        app.register_blueprint(errors_bp)
 
+def _criar_diretorios(app):
+    with app.app_context():
+        pastas = [
+            os.path.join(app.config['UPLOAD_FOLDER_PUBLIC'], 'safras'),
+            os.path.join(app.config['UPLOAD_FOLDER_PUBLIC'], 'perfil'),
+            os.path.join(app.config['UPLOAD_FOLDER_PRIVATE'], 'comprovativos'),
+        ]
+        for pasta in pastas:
+            os.makedirs(pasta, exist_ok=True)
 
 def _configurar_scheduler(app):
-    """Configura e inicia o scheduler de tarefas."""
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         if not scheduler.running:
             scheduler.init_app(app)
@@ -131,11 +147,3 @@ def _configurar_scheduler(app):
                 hours=1
             )
             scheduler.start()
-
-
-def _registrar_error_handlers(app):
-    """Registra handlers de erro."""
-    @app.errorhandler(500)
-    def internal_error(error):
-        db.session.rollback()
-        return render_template('errors/500.html'), 500

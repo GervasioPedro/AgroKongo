@@ -1,1 +1,6 @@
-{}
+{
+  "/page": "app/page.js",
+  "/auth/cadastro/passo-1/page": "app/auth/cadastro/passo-1/page.js",
+  "/auth/cadastro/passo-2/page": "app/auth/cadastro/passo-2/page.js",
+  "/mercado/page": "app/mercado/page.js"
+}

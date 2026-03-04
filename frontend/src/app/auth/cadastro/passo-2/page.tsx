@@ -39,9 +39,9 @@ export default function CadastroPasso2() {
     setLoading(true);
 
     try {
-      const res = await http.post("/cadastro/validar-otp", { otp: codigo });
+      const res = await http.post("/cadastro/passo-2", { codigo });
       
-      if (res.data?.valido) {
+      if (res.data?.sucesso) {
         toast.success("Telefone validado!");
         router.push("/auth/cadastro/passo-3");
       } else {
@@ -57,7 +57,7 @@ export default function CadastroPasso2() {
   const handleReenviar = async () => {
     try {
       await http.post("/cadastro/reenviar-otp");
-      toast.success("Novo código enviado via WhatsApp!");
+      toast.success("Novo código enviado via SMS!");
     } catch (error) {
       toast.error("Erro ao reenviar código");
     }
@@ -85,7 +85,7 @@ export default function CadastroPasso2() {
             <Shield className="h-8 w-8 text-escrow-primary" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Validar Telemóvel</h1>
-          <p className="text-slate-600">Digite o código enviado via WhatsApp</p>
+          <p className="text-slate-600">Digite o código enviado via SMS</p>
         </div>
 
         <Card>
@@ -123,7 +123,7 @@ export default function CadastroPasso2() {
                 size="sm"
                 onClick={handleReenviar}
               >
-                Reenviar via WhatsApp
+                Reenviar via SMS
               </Button>
             </div>
           </form>

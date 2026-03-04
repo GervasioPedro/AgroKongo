@@ -1,0 +1,289 @@
+[
+  {
+    "id": 1,
+    "nome": "Luanda",
+    "slug": "luanda",
+    "municipios": [
+      { "id": 101, "nome": "Luanda", "slug": "luanda" },
+      { "id": 102, "nome": "Belas", "slug": "belas" },
+      { "id": 103, "nome": "Cacuaco", "slug": "cacuaco" },
+      { "id": 104, "nome": "Cazenga", "slug": "cazenga" },
+      { "id": 105, "nome": "Icolo e Bengo", "slug": "icolo-e-bengo" },
+      { "id": 106, "nome": "Quiçama", "slug": "quicama" },
+      { "id": 107, "nome": "Viana", "slug": "viana" }
+    ]
+  },
+  {
+    "id": 2,
+    "nome": "Bengo",
+    "slug": "bengo",
+    "municipios": [
+      { "id": 201, "nome": "Ambriz", "slug": "ambriz" },
+      { "id": 202, "nome": "Bula Atumba", "slug": "bula-atumba" },
+      { "id": 203, "nome": "Dande", "slug": "dande" },
+      { "id": 204, "nome": "Dembos", "slug": "dembos" },
+      { "id": 205, "nome": "Nambuangongo", "slug": "nambuangongo" },
+      { "id": 206, "nome": "Pango Aluquém", "slug": "pango-aluquem" }
+    ]
+  },
+  {
+    "id": 3,
+    "nome": "Benguela",
+    "slug": "benguela",
+    "municipios": [
+      { "id": 301, "nome": "Benguela", "slug": "benguela" },
+      { "id": 302, "nome": "Baía Farta", "slug": "baia-farta" },
+      { "id": 303, "nome": "Balombo", "slug": "balombo" },
+      { "id": 304, "nome": "Bocoio", "slug": "bocoio" },
+      { "id": 305, "nome": "Caimbambo", "slug": "caimbambo" },
+      { "id": 306, "nome": "Catumbela", "slug": "catumbela" },
+      { "id": 307, "nome": "Chongorói", "slug": "chongoroi" },
+      { "id": 308, "nome": "Cubal", "slug": "cubal" },
+      { "id": 309, "nome": "Ganda", "slug": "ganda" },
+      { "id": 310, "nome": "Lobito", "slug": "lobito" }
+    ]
+  },
+  {
+    "id": 4,
+    "nome": "Bié",
+    "slug": "bie",
+    "municipios": [
+      { "id": 401, "nome": "Andulo", "slug": "andulo" },
+      { "id": 402, "nome": "Camacupa", "slug": "camacupa" },
+      { "id": 403, "nome": "Catabola", "slug": "catabola" },
+      { "id": 404, "nome": "Chinguar", "slug": "chinguar" },
+      { "id": 405, "nome": "Chitembo", "slug": "chitembo" },
+      { "id": 406, "nome": "Cuemba", "slug": "cuemba" },
+      { "id": 407, "nome": "Cunhinga", "slug": "cunhinga" },
+      { "id": 408, "nome": "Cuíto", "slug": "cuito" },
+      { "id": 409, "nome": "Nharea", "slug": "nharea" }
+    ]
+  },
+  {
+    "id": 5,
+    "nome": "Cabinda",
+    "slug": "cabinda",
+    "municipios": [
+      { "id": 501, "nome": "Cabinda", "slug": "cabinda" },
+      { "id": 502, "nome": "Belize", "slug": "belize" },
+      { "id": 503, "nome": "Buco-Zau", "slug": "buco-zau" },
+      { "id": 504, "nome": "Cacongo", "slug": "cacongo" }
+    ]
+  },
+  {
+    "id": 6,
+    "nome": "Cuando Cubango",
+    "slug": "cuando-cubango",
+    "municipios": [
+      { "id": 601, "nome": "Calai", "slug": "calai" },
+      { "id": 602, "nome": "Cuangar", "slug": "cuangar" },
+      { "id": 603, "nome": "Cuchi", "slug": "cuchi" },
+      { "id": 604, "nome": "Cuito Cuanavale", "slug": "cuito-cuanavale" },
+      { "id": 605, "nome": "Dirico", "slug": "dirico" },
+      { "id": 606, "nome": "Mavinga", "slug": "mavinga" },
+      { "id": 607, "nome": "Menongue", "slug": "menongue" },
+      { "id": 608, "nome": "Nankova", "slug": "nankova" },
+      { "id": 609, "nome": "Rivungo", "slug": "rivungo" }
+    ]
+  },
+  {
+    "id": 7,
+    "nome": "Cuanza Norte",
+    "slug": "cuanza-norte",
+    "municipios": [
+      { "id": 701, "nome": "Ambaca", "slug": "ambaca" },
+      { "id": 702, "nome": "Banga", "slug": "banga" },
+      { "id": 703, "nome": "Bolongongo", "slug": "bolongongo" },
+      { "id": 704, "nome": "Cambambe", "slug": "cambambe" },
+      { "id": 705, "nome": "Cazengo", "slug": "cazengo" },
+      { "id": 706, "nome": "Golungo Alto", "slug": "golungo-alto" },
+      { "id": 707, "nome": "Gonguembo", "slug": "gonguembo" },
+      { "id": 708, "nome": "Lucala", "slug": "lucala" },
+      { "id": 709, "nome": "Quiculungo", "slug": "quiculungo" },
+      { "id": 710, "nome": "Samba Caju", "slug": "samba-caju" }
+    ]
+  },
+  {
+    "id": 8,
+    "nome": "Cuanza Sul",
+    "slug": "cuanza-sul",
+    "municipios": [
+      { "id": 801, "nome": "Amboim", "slug": "amboim" },
+      { "id": 802, "nome": "Cassongue", "slug": "cassongue" },
+      { "id": 803, "nome": "Cela", "slug": "cela" },
+      { "id": 804, "nome": "Conda", "slug": "conda" },
+      { "id": 805, "nome": "Ebo", "slug": "ebo" },
+      { "id": 806, "nome": "Libolo", "slug": "libolo" },
+      { "id": 807, "nome": "Mussende", "slug": "mussende" },
+      { "id": 808, "nome": "Porto Amboim", "slug": "porto-amboim" },
+      { "id": 809, "nome": "Quibala", "slug": "quibala" },
+      { "id": 810, "nome": "Quilenda", "slug": "quilenda" },
+      { "id": 811, "nome": "Seles", "slug": "seles" },
+      { "id": 812, "nome": "Sumbe", "slug": "sumbe" }
+    ]
+  },
+  {
+    "id": 9,
+    "nome": "Cunene",
+    "slug": "cunene",
+    "municipios": [
+      { "id": 901, "nome": "Cahama", "slug": "cahama" },
+      { "id": 902, "nome": "Cuanhama", "slug": "cuanhama" },
+      { "id": 903, "nome": "Curoca", "slug": "curoca" },
+      { "id": 904, "nome": "Cuvelai", "slug": "cuvelai" },
+      { "id": 905, "nome": "Namacunde", "slug": "namacunde" },
+      { "id": 906, "nome": "Ombadja", "slug": "ombadja" }
+    ]
+  },
+  {
+    "id": 10,
+    "nome": "Huámbo",
+    "slug": "huambo",
+    "municipios": [
+      { "id": 1001, "nome": "Bailundo", "slug": "bailundo" },
+      { "id": 1002, "nome": "Catchiungo", "slug": "catchiungo" },
+      { "id": 1003, "nome": "Caála", "slug": "caala" },
+      { "id": 1004, "nome": "Ecunha", "slug": "ecunha" },
+      { "id": 1005, "nome": "Huambo", "slug": "huambo" },
+      { "id": 1006, "nome": "Londuimbali", "slug": "londuimbali" },
+      { "id": 1007, "nome": "Longonjo", "slug": "longonjo" },
+      { "id": 1008, "nome": "Mungo", "slug": "mungo" },
+      { "id": 1009, "nome": "Chicala-Choloanga", "slug": "chicala-choloanga" },
+      { "id": 1010, "nome": "Chinjenje", "slug": "chinjenje" },
+      { "id": 1011, "nome": "Ucuma", "slug": "ucuma" }
+    ]
+  },
+  {
+    "id": 11,
+    "nome": "Huíla",
+    "slug": "huila",
+    "municipios": [
+      { "id": 1101, "nome": "Caconda", "slug": "caconda" },
+      { "id": 1102, "nome": "Cacula", "slug": "cacula" },
+      { "id": 1103, "nome": "Caluquembe", "slug": "caluquembe" },
+      { "id": 1104, "nome": "Chiange", "slug": "chiange" },
+      { "id": 1105, "nome": "Chibia", "slug": "chibia" },
+      { "id": 1106, "nome": "Chicomba", "slug": "chicomba" },
+      { "id": 1107, "nome": "Chipindo", "slug": "chipindo" },
+      { "id": 1108, "nome": "Cuvango", "slug": "cuvango" },
+      { "id": 1109, "nome": "Humpata", "slug": "humpata" },
+      { "id": 1110, "nome": "Jamba", "slug": "jamba" },
+      { "id": 1111, "nome": "Lubango", "slug": "lubango" },
+      { "id": 1112, "nome": "Matala", "slug": "matala" },
+      { "id": 1113, "nome": "Quilengues", "slug": "quilengues" },
+      { "id": 1114, "nome": "Quipungo", "slug": "quipungo" }
+    ]
+  },
+  {
+    "id": 12,
+    "nome": "Lunda Norte",
+    "slug": "lunda-norte",
+    "municipios": [
+      { "id": 1201, "nome": "Cambulo", "slug": "cambulo" },
+      { "id": 1202, "nome": "Capenda-Camulemba", "slug": "capenda-camulemba" },
+      { "id": 1203, "nome": "Caungula", "slug": "caungula" },
+      { "id": 1204, "nome": "Chitato", "slug": "chitato" },
+      { "id": 1205, "nome": "Cuango", "slug": "cuango" },
+      { "id": 1206, "nome": "Cuílo", "slug": "cuilo" },
+      { "id": 1207, "nome": "Lubalo", "slug": "lubalo" },
+      { "id": 1208, "nome": "Lucapa", "slug": "lucapa" },
+      { "id": 1209, "nome": "Xá-Muteba", "slug": "xa-muteba" }
+    ]
+  },
+  {
+    "id": 13,
+    "nome": "Lunda Sul",
+    "slug": "lunda-sul",
+    "municipios": [
+      { "id": 1301, "nome": "Cacolo", "slug": "cacolo" },
+      { "id": 1302, "nome": "Dala", "slug": "dala" },
+      { "id": 1303, "nome": "Muconda", "slug": "muconda" },
+      { "id": 1304, "nome": "Saurimo", "slug": "saurimo" }
+    ]
+  },
+  {
+    "id": 14,
+    "nome": "Malanje",
+    "slug": "malanje",
+    "municipios": [
+      { "id": 1401, "nome": "Cacuso", "slug": "cacuso" },
+      { "id": 1402, "nome": "Calandula", "slug": "calandula" },
+      { "id": 1403, "nome": "Cambundi-Catembo", "slug": "cambundi-catembo" },
+      { "id": 1404, "nome": "Cangandala", "slug": "cangandala" },
+      { "id": 1405, "nome": "Caombo", "slug": "caombo" },
+      { "id": 1406, "nome": "Cuaba Nzogo", "slug": "cuaba-nzogo" },
+      { "id": 1407, "nome": "Cunda-Dia-Baze", "slug": "cunda-dia-baze" },
+      { "id": 1408, "nome": "Luquembo", "slug": "luquembo" },
+      { "id": 1409, "nome": "Malanje", "slug": "malanje" },
+      { "id": 1410, "nome": "Marimba", "slug": "marimba" },
+      { "id": 1411, "nome": "Massango", "slug": "massango" },
+      { "id": 1412, "nome": "Mucari", "slug": "mucari" },
+      { "id": 1413, "nome": "Quela", "slug": "quela" },
+      { "id": 1414, "nome": "Quirima", "slug": "quirima" }
+    ]
+  },
+  {
+    "id": 15,
+    "nome": "Moxico",
+    "slug": "moxico",
+    "municipios": [
+      { "id": 1501, "nome": "Alto Zambeze", "slug": "alto-zambeze" },
+      { "id": 1502, "nome": "Bundas", "slug": "bundas" },
+      { "id": 1503, "nome": "Camanongue", "slug": "camanongue" },
+      { "id": 1504, "nome": "Cameia", "slug": "cameia" },
+      { "id": 1505, "nome": "Léua", "slug": "leua" },
+      { "id": 1506, "nome": "Luau", "slug": "luau" },
+      { "id": 1507, "nome": "Luacano", "slug": "luacano" },
+      { "id": 1508, "nome": "Luchazes", "slug": "luchazes" },
+      { "id": 1509, "nome": "Moxico", "slug": "moxico" }
+    ]
+  },
+  {
+    "id": 16,
+    "nome": "Namibe",
+    "slug": "namibe",
+    "municipios": [
+      { "id": 1601, "nome": "Bibala", "slug": "bibala" },
+      { "id": 1602, "nome": "Camucuio", "slug": "camucuio" },
+      { "id": 1603, "nome": "Namibe", "slug": "namibe" },
+      { "id": 1604, "nome": "Tômbwa", "slug": "tombwa" },
+      { "id": 1605, "nome": "Virei", "slug": "virei" }
+    ]
+  },
+  {
+    "id": 17,
+    "nome": "Uíge",
+    "slug": "uige",
+    "municipios": [
+      { "id": 1701, "nome": "Alto Cauale", "slug": "alto-cauale" },
+      { "id": 1702, "nome": "Ambuíla", "slug": "ambuilla" },
+      { "id": 1703, "nome": "Bembe", "slug": "bembe" },
+      { "id": 1704, "nome": "Buengas", "slug": "buengas" },
+      { "id": 1705, "nome": "Bungo", "slug": "bungo" },
+      { "id": 1706, "nome": "Damba", "slug": "damba" },
+      { "id": 1707, "nome": "Milunga", "slug": "milunga" },
+      { "id": 1708, "nome": "Mucaba", "slug": "mucaba" },
+      { "id": 1709, "nome": "Negage", "slug": "negage" },
+      { "id": 1710, "nome": "Puri", "slug": "puri" },
+      { "id": 1711, "nome": "Quimbele", "slug": "quimbele" },
+      { "id": 1712, "nome": "Quitexe", "slug": "quitexe" },
+      { "id": 1713, "nome": "Sanza Pombo", "slug": "sanza-pombo" },
+      { "id": 1714, "nome": "Songo", "slug": "songo" },
+      { "id": 1715, "nome": "Uíge", "slug": "uige" },
+      { "id": 1716, "nome": "Zombo", "slug": "zombo" }
+    ]
+  },
+  {
+    "id": 18,
+    "nome": "Zaire",
+    "slug": "zaire",
+    "municipios": [
+      { "id": 1801, "nome": "Cuimba", "slug": "cuimba" },
+      { "id": 1802, "nome": "Mbanza Kongo", "slug": "mbanza-kongo" },
+      { "id": 1803, "nome": "Nóqui", "slug": "noqui" },
+      { "id": 1804, "nome": "Nzeto", "slug": "nzeto" },
+      { "id": 1805, "nome": "Soyo", "slug": "soyo" },
+      { "id": 1806, "nome": "Tomboco", "slug": "tomboco" }
+    ]
+  }
+]

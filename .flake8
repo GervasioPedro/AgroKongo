@@ -1,0 +1,35 @@
+[flake8]
+# --- Configuração Base ---
+# E501: linha muito longa (aumentado para 120, o padrão é 79)
+# W503: quebra de linha antes de operador binário (conflita com black)
+# E203: espaço em branco antes de ':' (conflita com black)
+ignore = E501, W503, E203
+
+# --- Comprimento da Linha ---
+# Um valor mais moderno e prático que o tradicional 79/88.
+max-line-length = 120
+
+# --- Exclusões ---
+# Excluir pastas que não controlamos ou que são geradas automaticamente.
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    venv-dev,
+    migrations,
+    docs,
+    build,
+    dist
+
+# --- Plugins ---
+# Ativa o plugin flake8-bugbear para encontrar mais bugs lógicos.
+# B950: linha muito longa (usamos o max-line-length do flake8)
+per-file-ignores =
+    __init__.py: F401
+    */*/__init__.py: F401
+    tests/*.py: S101 # ignora asserts em testes
+
+[bandit]
+exclude_dirs = tests, venv, .venv
+skips = B101 # ignora asserts

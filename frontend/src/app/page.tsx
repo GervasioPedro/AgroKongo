@@ -103,7 +103,7 @@ export default function HomePage() {
               <p className="text-slate-600 mt-2">Transações</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold text-agro-primary">18</p>
+              <p className="text-4xl font-bold text-agro-primary">21</p>
               <p className="text-slate-600 mt-2">Províncias</p>
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-slate-800 mt-8 pt-8 text-center text-sm text-slate-400">
-            <p>&copy; 2024 AgroKongo. Todos os direitos reservados.</p>
+            <p>&copy; 2026 AgroKongo. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

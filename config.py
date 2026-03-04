@@ -1,94 +1,86 @@
 import os
 from datetime import timedelta
 
+# String de conexão para o PostgreSQL local (usando Docker)
+POSTGRES_LOCAL_URI = 'postgresql://agrokongo_user:agrokongo_pass@localhost:5432/agrokongo_dev'
 
 class Config:
     # --- CAMINHOS E DIRETÓRIOS ---
-    # Caminho absoluto para a raiz do projeto
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-    # Armazenamento: Fora da pasta 'app' para persistência em servidores VPS
     UPLOAD_BASE_PATH = os.environ.get('UPLOAD_PATH') or os.path.join(BASE_DIR, 'data_storage')
     UPLOAD_FOLDER_PUBLIC = os.path.join(UPLOAD_BASE_PATH, 'public')
     UPLOAD_FOLDER_PRIVATE = os.path.join(UPLOAD_BASE_PATH, 'private')
 
+    # --- STORAGE EXTERNO (opcional) ---
+    SUPABASE_URL = os.environ.get('SUPABASE_URL')
+    SUPABASE_SERVICE_ROLE = os.environ.get('SUPABASE_SERVICE_ROLE')  # manter secreto (Render)
+    SUPABASE_BUCKET = os.environ.get('SUPABASE_BUCKET', 'agrokongo-uploads')
+    SUPABASE_PUBLIC_URL = os.environ.get('SUPABASE_PUBLIC_URL')  # ex: https://<proj>.supabase.co/storage/v1
+
     # --- SEGURANÇA ---
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'agro-kongo-local-dev-key-2024'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    WTF_CSRF_TIME_LIMIT = 3600  # 1 hora para expiração de formulários
+    WTF_CSRF_TIME_LIMIT = 3600
 
-    # --- LIMITES E TIMEOUTS ---
-    # 16MB é generoso, mas cuidado com a RAM do servidor.
-    # O nosso helper 'salvar_ficheiro' já redimensiona, então isto é apenas um teto.
+    # --- LIMITES E NEGÓCIO ---
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    PERMANENT_SESSION_LIFETIME = timedelta(days=7)  # Aumentado para melhor UX em Angola
-
-    # --- NEGÓCIO (Single Source of Truth) ---
+    PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     AGROKONGO_TAXA = 0.05
     ITEMS_PER_PAGE = 12
     TIMEZONE = 'Africa/Luanda'
 
-
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-                              f"sqlite:///{os.path.join(Config.BASE_DIR, 'agrokongo_dev.db')}"
-
-    # Em dev, permitimos cookies sem HTTPS
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-CHANGE-IN-PRODUCTION'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or POSTGRES_LOCAL_URI
     SESSION_COOKIE_SECURE = False
-
+    SESSION_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_DOMAIN = None
 
 class ProductionConfig(Config):
     DEBUG = False
-
-    # Base de Dados Profissional (PostgreSQL recomendado)
     uri = os.environ.get('DATABASE_URL')
     if uri and uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_DATABASE_URI = uri
-
-    # --- CORS PARA NETLIFY ---
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '').split(',') or [
-        'https://agrokongo.netlify.app',
-        'https://www.agrokongo.ao'
-    ]
-
-    # --- REDIS/CELERY ---
+    
+    # CORS: origins explícitas em produção (não usar '*')
+    _origins_env = os.environ.get('CORS_ORIGINS', '').strip()
+    if _origins_env:
+        CORS_ORIGINS = [o.strip() for o in _origins_env.split(',') if o.strip()]
+    else:
+        CORS_ORIGINS = [
+            'https://agrokongo.netlify.app',
+            'https://www.agrokongo.ao'
+        ]
+    
     REDIS_URL = os.environ.get('REDIS_URL')
     CELERY_BROKER_URL = os.environ.get('REDIS_URL')
     CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL')
-
-    # --- CLOUDINARY (Storage de Imagens) ---
-    CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
-    CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
-    CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
-
-    # --- SEGURANÇA DE COOKIES (ESSENCIAL PARA HTTPS/PRODUÇÃO) ---
+    
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
-
-    # --- PERFORMANCE: POOL DE CONEXÕES ---
-    # Evita o erro 'Too many clients' no PostgreSQL
+    # Para Netlify (front) + Render (API) em domínios diferentes
+    SESSION_COOKIE_SAMESITE = 'None'
+    
     SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_size": 10,  # Conexões fixas
-        "max_overflow": 20,  # Conexões extras em pico de tráfego
-        "pool_recycle": 1800,  # Reinicia conexões a cada 30min
-        "pool_pre_ping": True,  # Verifica se a DB está viva antes de cada query
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_recycle": 1800,
+        "pool_pre_ping": True,
     }
 
     @classmethod
     def init_app(cls, app):
-        if not cls.SECRET_KEY or cls.SECRET_KEY == 'agro-kongo-local-dev-key-2024':
+        if not os.environ.get('SECRET_KEY'):
             raise ValueError("ERRO DE SEGURANÇA: SECRET_KEY de produção não configurada!")
-
-
-
-
+        if not os.environ.get('DATABASE_URL'):
+            raise ValueError("ERRO CRÍTICO: DATABASE_URL não configurada em produção.")
 
 config_dict = {
     'dev': DevelopmentConfig,
-    'development': DevelopmentConfig,  # <-- ADICIONA ESTA LINHA
+    'development': DevelopmentConfig,
     'prod': ProductionConfig,
     'production': ProductionConfig
 }

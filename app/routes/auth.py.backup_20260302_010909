@@ -1,0 +1,309 @@
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort
+from flask_login import login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import validate_csrf, CSRFProtect
+from wtforms import ValidationError
+from app.extensions import db, login_manager, csrf, limiter
+from app.models import Usuario, LogAuditoria
+from PIL import Image
+import secrets
+import re
+import os
+
+auth_bp = Blueprint('auth', __name__)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
+
+
+def _autenticar_usuario(telemovel, senha):
+    usuario = Usuario.query.filter_by(telemovel=telemovel).first()
+    if usuario and usuario.verificar_senha(senha):
+        return usuario
+    return None
+
+
+def _registrar_login(usuario_id, detalhes):
+    db.session.add(LogAuditoria(
+        usuario_id=usuario_id,
+        acao="LOGIN_SUCCESS",
+        detalhes=detalhes
+    ))
+    db.session.commit()
+
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.dashboard'))
+
+    if request.method == 'POST':
+        telemovel = re.sub(r'\D', '', request.form.get('telemovel', ''))
+        senha = request.form.get('senha')
+
+        if not telemovel or not senha:
+            flash('Preencha todos os campos.', 'warning')
+            return render_template('auth/login.html')
+
+        usuario = _autenticar_usuario(telemovel, senha)
+
+        if usuario:
+            login_user(usuario, remember=True)
+            _registrar_login(usuario.id, f"Acesso via {request.remote_addr}")
+            flash(f'Bem-vindo ao AgroKongo, {usuario.nome.split()[0]}!', 'success')
+            return redirect(url_for('main.dashboard'))
+
+        flash('Credenciais inválidas. Verifique os dados e tente novamente.', 'danger')
+
+    return render_template('auth/login.html')
+
+
+@auth_bp.route('/api/auth/login', methods=['POST'])
+@csrf.exempt
+@limiter.limit("5 per minute")
+def api_login():
+    if current_user.is_authenticated:
+        return jsonify({'ok': True, 'user': current_user.to_dict()})
+
+    payload = request.get_json(silent=True) or {}
+    telemovel = re.sub(r'\D', '', payload.get('telemovel', ''))
+    senha = payload.get('senha')
+
+    if not telemovel or not senha:
+        return jsonify({'ok': False, 'message': 'Preencha o telemovel e a senha.'}), 400
+
+    usuario = _autenticar_usuario(telemovel, senha)
+
+    if usuario:
+        login_user(usuario, remember=True)
+        _registrar_login(usuario.id, f"Acesso via {request.remote_addr} (API)")
+        return jsonify({'ok': True, 'user': usuario.to_dict()})
+
+    return jsonify({'ok': False, 'message': 'Credenciais invalidas.'}), 401
+
+
+@auth_bp.route('/api/auth/me')
+def api_me():
+    if not current_user.is_authenticated:
+        return jsonify({'ok': False, 'message': 'Nao autenticado.'}), 401
+    return jsonify({'ok': True, 'user': current_user.to_dict()})
+
+
+@auth_bp.route('/api/auth/logout', methods=['POST'])
+@csrf.exempt
+@login_required
+def api_logout():
+    if not current_user.is_authenticated:
+        return jsonify({'ok': False, 'message': 'Não autenticado.'}), 401
+    
+    db.session.add(LogAuditoria(usuario_id=current_user.id, acao="LOGOUT"))
+    db.session.commit()
+    logout_user()
+    return jsonify({'ok': True})
+
+
+def _validar_telemovel_angolano(telemovel):
+    return telemovel.startswith('9') and len(telemovel) == 9
+
+
+def _validar_senha_minima(senha):
+    return len(senha) >= 6
+
+
+def _criar_usuario(nome, telemovel, tipo, senha):
+    novo_usuario = Usuario(
+        nome=nome,
+        telemovel=telemovel,
+        tipo=tipo,
+        perfil_completo=False,
+        conta_validada=False
+    )
+    novo_usuario.set_senha(senha)
+    return novo_usuario
+
+
+@auth_bp.route('/registo', methods=['GET', 'POST'])
+def registo():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.dashboard'))
+
+    if request.method == 'POST':
+        tipo = request.form.get('tipo')
+        if tipo not in ['produtor', 'comprador']:
+            flash('Tipo de conta inválido.', 'danger')
+            abort(403)
+        
+        nome = request.form.get('nome', '').strip().title()
+        telemovel = re.sub(r'\D', '', request.form.get('telemovel', ''))
+        senha = request.form.get('senha')
+
+        if not _validar_telemovel_angolano(telemovel):
+            flash('Insira um número de telemóvel válido (9 dígitos).', 'warning')
+            return redirect(url_for('auth.registo'))
+
+        if Usuario.query.filter_by(telemovel=telemovel).first():
+            flash('Este número já está registado. Tente recuperar a senha.', 'info')
+            return redirect(url_for('auth.login'))
+
+        if not _validar_senha_minima(senha):
+            flash('A senha deve ter no mínimo 6 caracteres.', 'warning')
+            return redirect(url_for('auth.registo'))
+
+        try:
+            novo_usuario = _criar_usuario(nome, telemovel, tipo, senha)
+            db.session.add(novo_usuario)
+            db.session.commit()
+
+            login_user(novo_usuario)
+            flash('Conta criada! Complete o perfil para começar a negociar.', 'success')
+            return redirect(url_for('main.completar_perfil'))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Erro no registo: {str(e)}")
+            flash('Erro técnico ao criar conta. Contacte o suporte.', 'danger')
+
+    return render_template('auth/registo.html')
+
+
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    db.session.add(LogAuditoria(usuario_id=current_user.id, acao="LOGOUT"))
+    db.session.commit()
+    logout_user()
+    flash('Sessão terminada com segurança.', 'info')
+    return redirect(url_for('auth.login'))
+
+
+def _processar_foto_perfil(arquivo, pasta_perfis):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(arquivo.filename)
+    nome_arquivo = random_hex + f_ext
+    caminho_completo = os.path.join(pasta_perfis, nome_arquivo)
+    
+    try:
+        img = Image.open(arquivo)
+        img.thumbnail((300, 300))
+        img.save(caminho_completo)
+    finally:
+        if 'img' in locals():
+            img.close()
+    
+    return nome_arquivo
+
+
+def _remover_foto_antiga(foto_antiga, pasta_perfis):
+    if not foto_antiga or foto_antiga == 'default_user.jpg':
+        return
+    
+    safe_filename = os.path.basename(foto_antiga)
+    
+    if '..' in safe_filename or '/' in safe_filename or '\\' in safe_filename:
+        return
+    
+    pasta_perfis_abs = os.path.abspath(pasta_perfis)
+    caminho_antigo = os.path.join(pasta_perfis_abs, safe_filename)
+    caminho_antigo_abs = os.path.abspath(caminho_antigo)
+    
+    if not caminho_antigo_abs.startswith(pasta_perfis_abs + os.sep):
+        return
+    
+    if os.path.exists(caminho_antigo_abs):
+        os.remove(caminho_antigo_abs)
+
+
+@auth_bp.route('/editar_perfil', methods=['POST'])
+@login_required
+def editar_perfil():
+    try:
+        if 'foto_perfil' in request.files:
+            arquivo = request.files['foto_perfil']
+            if arquivo and arquivo.filename != '':
+                pasta_perfis = os.path.join(current_app.config['UPLOAD_FOLDER_PUBLIC'], 'perfil')
+                os.makedirs(pasta_perfis, exist_ok=True)
+                
+                _remover_foto_antiga(current_user.foto_perfil, pasta_perfis)
+                current_user.foto_perfil = _processar_foto_perfil(arquivo, pasta_perfis)
+
+        novo_telemovel = re.sub(r'\D', '', request.form.get('telemovel', ''))
+        if novo_telemovel:
+            if not novo_telemovel.startswith('9') or len(novo_telemovel) != 9:
+                flash('Número inválido. Use o formato de 9 dígitos (ex: 923...).', 'warning')
+                return redirect(url_for('main.perfil'))
+
+            user_existente = Usuario.query.filter(Usuario.telemovel == novo_telemovel,
+                                                  Usuario.id != current_user.id).first()
+            if user_existente:
+                flash('Este telemóvel já está em uso por outra conta.', 'danger')
+                return redirect(url_for('main.perfil'))
+
+            current_user.telemovel = novo_telemovel
+
+        novo_email = request.form.get('email', '').strip().lower()
+        if novo_email:
+            email_existente = Usuario.query.filter(Usuario.email == novo_email, 
+                                                   Usuario.id != current_user.id).first()
+            if email_existente:
+                flash('Este e-mail já está registado.', 'danger')
+                return redirect(url_for('main.perfil'))
+            current_user.email = novo_email
+
+        if current_user.tipo == 'produtor':
+            novo_iban = request.form.get('iban', '').replace(' ', '').upper()
+            if novo_iban:
+                current_user.iban = novo_iban
+
+        prov_id = request.form.get('provincia_id')
+        mun_id = request.form.get('municipio_id')
+        if prov_id: 
+            current_user.provincia_id = int(prov_id)
+        if mun_id: 
+            current_user.municipio_id = int(mun_id)
+
+        current_user.verificar_e_atualizar_perfil()
+
+        db.session.commit()
+        flash('Perfil atualizado com sucesso!', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"ERRO_EDITAR_PERFIL: {str(e)}")
+        flash('Ocorreu um erro ao processar a atualização.', 'danger')
+
+    return redirect(url_for('main.perfil'))
+
+
+@auth_bp.route('/alterar_senha', methods=['POST'])
+@login_required
+def alterar_senha():
+    try:
+        senha_atual = request.form.get('senha_atual')
+        nova_senha = request.form.get('nova_senha')
+        confirmacao = request.form.get('confirmar_senha')
+
+        if not current_user.verificar_senha(senha_atual):
+            flash('A palavra-passe atual está incorreta.', 'danger')
+            return redirect(url_for('main.perfil'))
+
+        if nova_senha != confirmacao:
+            flash('A nova palavra-passe e a confirmação não coincidem.', 'danger')
+            return redirect(url_for('main.perfil'))
+
+        if len(nova_senha) < 6:
+            flash('A nova palavra-passe deve ter pelo menos 6 caracteres.', 'warning')
+            return redirect(url_for('main.perfil'))
+
+        current_user.senha = nova_senha
+        db.session.commit()
+
+        flash('Palavra-passe atualizada com sucesso!', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"ERRO ALTERAR SENHA: {e}")
+        flash('Ocorreu um erro ao atualizar a palavra-passe.', 'danger')
+
+    return redirect(url_for('main.perfil'))

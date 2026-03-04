@@ -1,0 +1,21 @@
+# --- Ferramentas de Desenvolvimento ---
+-r requirements.in
+
+# --- Testes ---
+pytest
+pytest-flask
+pytest-cov
+coverage
+
+# --- Qualidade de Código (Linting) ---
+flake8
+flake8-bugbear
+black
+isort
+
+# --- Segurança (SAST) ---
+bandit
+safety
+
+# --- Gestão de Dependências ---
+pip-tools

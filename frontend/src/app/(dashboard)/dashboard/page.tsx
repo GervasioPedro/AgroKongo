@@ -43,8 +43,8 @@ type ProdutorDashboardPayload = {
 };
 
 const fetcher = async (url: string) => {
-  // Proteção SSRF: validar URL antes de fazer requisição
-  if (url !== '/produtor/dashboard') {
+  // Proteção SSRF: validar por prefixo e permitir query params
+  if (!url.startsWith('/produtor/dashboard')) {
     throw new Error('URL não permitida');
   }
   const res = await http.get(url);

@@ -5,12 +5,13 @@ from typing import Dict, Any, Optional
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from sqlalchemy import Index
+from sqlalchemy_serializer import SerializerMixin
 
 from app.extensions import db
 from app.models.base import aware_utcnow, TransactionStatus
 
 
-class Transacao(db.Model):
+class Transacao(db.Model, SerializerMixin):
     __tablename__ = 'transacoes'
     __table_args__ = (
         Index('idx_trans_status_comprador', 'status', 'comprador_id'),
@@ -18,6 +19,14 @@ class Transacao(db.Model):
         Index('idx_trans_data_status', 'data_criacao', 'status'),
     )
     
+    # Regras de serialização
+    serialize_rules = (
+        '-historico_status', 
+        'safra.produto', 
+        'vendedor.nome', 
+        'comprador.nome'
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     fatura_ref = db.Column(db.String(50), unique=True, nullable=False, index=True)
     safra_id = db.Column(db.Integer, db.ForeignKey('safras.id', ondelete='CASCADE'), nullable=False)
@@ -51,22 +60,9 @@ class Transacao(db.Model):
     def calcular_janela_logistica(self) -> None:
         if self.data_envio:
             self.previsao_entrega = self.data_envio + timedelta(days=3)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            'id': self.id,
-            'fatura_ref': self.fatura_ref,
-            'status': self.status,
-            'quantidade_comprada': float(self.quantidade_comprada),
-            'valor_total_pago': float(self.valor_total_pago),
-            'comissao_plataforma': float(self.comissao_plataforma),
-            'valor_liquido_vendedor': float(self.valor_liquido_vendedor),
-            'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
-            'previsao_entrega': self.previsao_entrega.isoformat() if self.previsao_entrega else None
-        }
 
 
-class HistoricoStatus(db.Model):
+class HistoricoStatus(db.Model, SerializerMixin):
     __tablename__ = 'historico_status'
     id = db.Column(db.Integer, primary_key=True)
     transacao_id = db.Column(db.Integer, db.ForeignKey('transacoes.id', ondelete='CASCADE'), nullable=False)

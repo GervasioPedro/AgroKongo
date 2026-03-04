@@ -2,5 +2,6 @@ import axios from "axios";
 
 export const http = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "/api",
-  timeout: 20000
+  timeout: 20000,
+  withCredentials: true
 });

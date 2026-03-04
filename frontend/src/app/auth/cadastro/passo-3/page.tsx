@@ -18,8 +18,20 @@ export default function CadastroPasso3() {
     senha: "",
     confirmar_senha: "",
     iban: "",
+    nif: "",
+    tipo_entidade: "singular",
   });
   const [biFile, setBiFile] = useState<File | null>(null);
+  const [tipoUsuario, setTipoUsuario] = useState<string>("produtor");
+
+  // Detectar tipo de usuário do localStorage
+  React.useEffect(() => {
+    const dadosCadastro = localStorage.getItem('cadastro_temp');
+    if (dadosCadastro) {
+      const dados = JSON.parse(dadosCadastro);
+      setTipoUsuario(dados.tipo || "produtor");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,33 +51,64 @@ export default function CadastroPasso3() {
       return;
     }
 
-    if (!formData.iban.startsWith("AO06") || formData.iban.length !== 27) {
-      toast.error("IBAN inválido. Use formato AO06 + 21 dígitos");
-      return;
+    // Validar NIF obrigatório para produtor ou pessoa coletiva
+    if (tipoUsuario === "produtor" || formData.tipo_entidade === "coletiva") {
+      if (!formData.nif || formData.nif.length < 9) {
+        toast.error("NIF obrigatório para produtores e pessoas coletivas");
+        return;
+      }
     }
 
-    if (!biFile) {
-      toast.error("Upload do BI é obrigatório");
-      return;
+    // Validar IBAN apenas para produtor
+    if (tipoUsuario === "produtor") {
+      if (!formData.iban.startsWith("AO06") || formData.iban.length !== 27) {
+        toast.error("IBAN obrigatório para produtor. Use formato AO06 + 21 dígitos");
+        return;
+      }
     }
 
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const dadosCadastro = localStorage.getItem('cadastro_temp');
-    const mockUser = {
-      id: 1,
-      nome: dadosCadastro ? JSON.parse(dadosCadastro).nome : "Produtor Teste",
-      tipo: "produtor",
-      telemovel: dadosCadastro ? JSON.parse(dadosCadastro).telemovel : "912345678",
-      conta_validada: false
-    };
-    
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    localStorage.removeItem('cadastro_temp');
-    toast.success("Conta criada com sucesso! (Modo Dev)");
-    setLoading(false);
-    router.push("/dashboard");
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('pin', formData.senha);
+      formDataToSend.append('tipo_entidade', formData.tipo_entidade);
+      if (formData.nif) formDataToSend.append('nif', formData.nif);
+      if (tipoUsuario === "produtor" && formData.iban) {
+        formDataToSend.append('iban', formData.iban);
+      }
+      if (biFile) formDataToSend.append('bi', biFile);
+
+      const res = await http.post("/cadastro/passo-3", formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (res.data?.sucesso) {
+        // Salvar usuário no localStorage
+        const dadosCadastro = localStorage.getItem('cadastro_temp');
+        const userData = {
+          id: res.data.usuario_id,
+          nome: dadosCadastro ? JSON.parse(dadosCadastro).nome : "Usuário",
+          tipo: res.data.tipo || tipoUsuario,
+          telemovel: dadosCadastro ? JSON.parse(dadosCadastro).telemovel : "",
+          conta_validada: false
+        };
+        
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.removeItem('cadastro_temp');
+        
+        toast.success("Conta criada com sucesso!");
+        router.push("/dashboard");
+      } else {
+        toast.error(res.data?.mensagem || "Erro ao criar conta");
+      }
+    } catch (error: any) {
+      console.error('Erro cadastro:', error);
+      const msg = error?.response?.data?.mensagem || error?.message || "Erro ao processar";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -133,25 +176,77 @@ export default function CadastroPasso3() {
             </div>
 
             <div className="pt-4 border-t">
-              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                IBAN (Conta Bancária)
-              </label>
-              <Input
-                required
-                placeholder="AO06000000000000000000000"
-                value={formData.iban}
-                onChange={(e) => setFormData({...formData, iban: e.target.value.toUpperCase().replace(/\s/g, "")})}
-                maxLength={27}
-                className="h-12 font-mono"
-              />
-              <p className="text-xs text-slate-600 mt-1">
-                Formato: AO06 + 21 dígitos
-              </p>
+              <label className="text-sm font-medium mb-2 block">Tipo de Entidade</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, tipo_entidade: "singular"})}
+                  className={`h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
+                    formData.tipo_entidade === "singular" 
+                      ? "border-agro-primary bg-agro-primary/5 text-agro-primary" 
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="text-sm font-medium">Pessoa Singular</span>
+                  <span className="text-xs text-slate-500">Indivíduo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, tipo_entidade: "coletiva"})}
+                  className={`h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
+                    formData.tipo_entidade === "coletiva" 
+                      ? "border-agro-primary bg-agro-primary/5 text-agro-primary" 
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="text-sm font-medium">Pessoa Coletiva</span>
+                  <span className="text-xs text-slate-500">Empresa/Cooperativa</span>
+                </button>
+              </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Bilhete de Identidade</label>
+              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                NIF {(tipoUsuario === "produtor" || formData.tipo_entidade === "coletiva") && "*"}
+              </label>
+              <Input
+                required={tipoUsuario === "produtor" || formData.tipo_entidade === "coletiva"}
+                placeholder="Ex: 501234400001"
+                value={formData.nif}
+                onChange={(e) => setFormData({...formData, nif: e.target.value.replace(/\D/g, "")})}
+                maxLength={14}
+                className="h-12"
+              />
+              <p className="text-xs text-slate-600 mt-1">
+                {(tipoUsuario === "produtor" || formData.tipo_entidade === "coletiva") 
+                  ? "Obrigatório para produtores e pessoas coletivas" 
+                  : "Opcional para pessoas singulares"}
+              </p>
+            </div>
+
+            {tipoUsuario === "produtor" && (
+              <div>
+                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  IBAN (Conta Bancária) *
+                </label>
+                <Input
+                  required
+                  placeholder="AO06000000000000000000000"
+                  value={formData.iban}
+                  onChange={(e) => setFormData({...formData, iban: e.target.value.toUpperCase().replace(/\s/g, "")})}
+                  maxLength={27}
+                  className="h-12 font-mono"
+                />
+                <p className="text-xs text-slate-600 mt-1">
+                  Formato: AO06 + 21 dígitos (obrigatório para receber pagamentos)
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Bilhete de Identidade (Opcional)</label>
               <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-agro-primary transition-colors">
                 <input
                   type="file"

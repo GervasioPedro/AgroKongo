@@ -1,0 +1,108 @@
+import Head from 'next/head';
+import Link from 'next/link';
+import { useAuth } from '../hooks/useAuth';
+
+export default function Home() {
+  const { isAuthenticated, user } = useAuth();
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Head>
+        <title>AgroKongo - Conectando Produtores e Compradores</title>
+        <meta name="description" content="Plataforma de comércio agrícola em Angola." />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      {/* Navbar */}
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex-shrink-0 flex items-center">
+              <Link href="/" className="text-2xl font-bold text-green-600">
+                AgroKongo
+              </Link>
+            </div>
+            <div className="flex items-center">
+              <Link href="/mercado" className="text-gray-600 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
+                Mercado
+              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href={user.tipo === 'produtor' ? '/produtor/dashboard' : '/comprador/dashboard'} className="text-gray-600 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
+                    Dashboard
+                  </Link>
+                  <Link href="/profile" className="text-gray-600 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
+                    Perfil
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="text-gray-600 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium">
+                    Login
+                  </Link>
+                  <Link href="/register" className="ml-4 inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700">
+                    Registar
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <header className="bg-green-700 text-white py-20 text-center">
+        <div className="max-w-4xl mx-auto px-4">
+          <h1 className="text-5xl font-extrabold leading-tight mb-4">
+            Conectando o Campo à Sua Mesa em Angola
+          </h1>
+          <p className="text-xl mb-8">
+            A plataforma AgroKongo facilita a compra e venda de produtos agrícolas frescos e de qualidade, diretamente dos produtores angolanos.
+          </p>
+          <Link href="/mercado" className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-gray-100">
+            Explorar Produtos
+          </Link>
+        </div>
+      </header>
+
+      {/* Features Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-12">Porquê escolher a AgroKongo?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-6 shadow-lg rounded-lg">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Direto do Produtor</h3>
+              <p className="text-gray-600">Compre produtos frescos e de qualidade, sem intermediários.</p>
+            </div>
+            <div className="p-6 shadow-lg rounded-lg">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Preços Justos</h3>
+              <p className="text-gray-600">Beneficie de preços competitivos e apoie a economia local.</p>
+            </div>
+            <div className="p-6 shadow-lg rounded-lg">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Transações Seguras</h3>
+              <p className="text-gray-600">Sistema de pagamento seguro e acompanhamento de encomendas.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="bg-green-600 text-white py-16 text-center">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-3xl font-bold mb-4">Junte-se à Comunidade AgroKongo</h2>
+          <p className="text-lg mb-8">
+            Seja você um produtor querendo vender seus produtos ou um comprador em busca de qualidade.
+          </p>
+          <Link href="/register" className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-gray-100">
+            Registar Agora
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-8 text-center">
+        <p>&copy; {new Date().getFullYear()} AgroKongo. Todos os direitos reservados.</p>
+      </footer>
+    </div>
+  );
+}

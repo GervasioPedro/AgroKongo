@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,10 @@ import toast from "react-hot-toast";
 
 export default function CadastroPasso5() {
   const router = useRouter();
+  // Fluxo consolidado em 3 passos: redireciona automaticamente
+  useEffect(() => {
+    router.replace('/auth/cadastro/passo-3');
+  }, [router]);
   const [loading, setLoading] = useState(false);
   const [iban, setIban] = useState("");
   const [biFile, setBiFile] = useState<File | null>(null);

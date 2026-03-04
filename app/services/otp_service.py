@@ -64,7 +64,7 @@ class OTPService:
             usuario_id=None,  # Sistema
             acao="OTP_GERADO",
             detalhes=f"OTP gerado para telemovel {telemovel[-4:]} IP: {ip_address}",
-            ip=ip_address
+            ip_address=ip_address
         ))
         db.session.commit()
         
@@ -208,7 +208,7 @@ class OTPService:
                 usuario_id=None,  # Sistema
                 acao="OTP_VALIDADO",
                 detalhes=f"OTP validado para telemovel {telemovel[-4:]} IP: {ip_address}",
-                ip=ip_address
+                ip_address=ip_address
             ))
             db.session.commit()
             
@@ -226,7 +226,7 @@ class OTPService:
                 usuario_id=None,  # Sistema
                 acao="OTP_INVALIDO",
                 detalhes=f"Tentativa {otp_data['tentativas']} inválida para {telemovel[-4:]} IP: {ip_address}",
-                ip=ip_address
+                ip_address=ip_address
             ))
             db.session.commit()
             

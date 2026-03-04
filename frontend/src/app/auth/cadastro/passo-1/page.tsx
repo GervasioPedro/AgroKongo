@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
@@ -10,15 +10,41 @@ import { Sprout, ArrowRight, User, Phone, MapPin } from "lucide-react";
 import { http } from "@/services/http";
 import toast from "react-hot-toast";
 
+const MUNICIPIOS_POR_PROVINCIA: Record<string, string[]> = {
+  "1": ["Luanda", "Belas", "Cacuaco", "Cazenga", "Icolo e Bengo", "Quiçama", "Viana"],
+  "2": ["Ambriz", "Bula Atumba", "Dande", "Dembos", "Nambuangongo", "Pango Aluquém"],
+  "3": ["Benguela", "Baía Farta", "Balombo", "Bocoio", "Caimbambo", "Catumbela", "Chongorói", "Cubal", "Ganda", "Lobito"],
+  "4": ["Andulo", "Camacupa", "Catabola", "Chinguar", "Chitembo", "Cuemba", "Cunhinga", "Cuíto", "Nharea"],
+  "5": ["Cabinda", "Belize", "Buco-Zau", "Cacongo"],
+  "6": ["Calai", "Cuangar", "Cuchi", "Cuito Cuanavale", "Dirico", "Mavinga", "Menongue", "Nankova", "Rivungo"],
+  "7": ["Ambaca", "Banga", "Bolongongo", "Cambambe", "Cazengo", "Golungo Alto", "Gonguembo", "Lucala", "Quiculungo", "Samba Caju"],
+  "8": ["Amboim", "Cassongue", "Cela", "Conda", "Ebo", "Libolo", "Mussende", "Porto Amboim", "Quibala", "Quilenda", "Seles", "Sumbe"],
+  "9": ["Cahama", "Cuanhama", "Curoca", "Cuvelai", "Namacunde", "Ombadja"],
+  "10": ["Bailundo", "Catchiungo", "Caála", "Ecunha", "Huambo", "Londuimbali", "Longonjo", "Mungo", "Chicala-Choloanga", "Chinjenje", "Ucuma"],
+  "11": ["Caconda", "Cacula", "Caluquembe", "Chiange", "Chibia", "Chicomba", "Chipindo", "Cuvango", "Humpata", "Jamba", "Lubango", "Matala", "Quilengues", "Quipungo"],
+  "12": ["Cambulo", "Capenda-Camulemba", "Caungula", "Chitato", "Cuango", "Cuílo", "Lubalo", "Lucapa", "Xá-Muteba"],
+  "13": ["Cacolo", "Dala", "Muconda", "Saurimo"],
+  "14": ["Cacuso", "Calandula", "Cambundi-Catembo", "Cangandala", "Caombo", "Cuaba Nzogo", "Cunda-Dia-Baze", "Luquembo", "Malanje", "Marimba", "Massango", "Mucari", "Quela", "Quirima"],
+  "15": ["Alto Zambeze", "Bundas", "Camanongue", "Cameia", "Léua", "Luau", "Luacano", "Luchazes", "Moxico"],
+  "16": ["Bibala", "Camucuio", "Namibe", "Tômbwa", "Virei"],
+  "17": ["Alto Cauale", "Ambuíla", "Bembe", "Buengas", "Bungo", "Damba", "Milunga", "Mucaba", "Negage", "Puri", "Quimbele", "Quitexe", "Sanza Pombo", "Songo", "Uíge", "Zombo"],
+  "18": ["Cuimba", "Mbanza Kongo", "Nóqui", "Nzeto", "Soyo", "Tomboco"],
+};
+
 export default function CadastroPasso1() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
     telemovel: "",
+    tipo: "produtor",
     provincia_id: "",
-    municipio_id: "",
+    municipio: "",
   });
+
+  const municipiosDisponiveis = useMemo(() => {
+    return formData.provincia_id ? MUNICIPIOS_POR_PROVINCIA[formData.provincia_id] || [] : [];
+  }, [formData.provincia_id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,13 +59,25 @@ export default function CadastroPasso1() {
       return;
     }
 
+    if (!formData.provincia_id || !formData.municipio) {
+      toast.error("Selecione província e município");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await http.post("/cadastro/passo-1", formData);
       
       if (res.data?.sucesso) {
-        toast.success("Código OTP enviado via WhatsApp!");
+        // Salvar dados temporários para usar no passo-3
+        localStorage.setItem('cadastro_temp', JSON.stringify({
+          nome: formData.nome,
+          telemovel: formData.telemovel,
+          tipo: formData.tipo
+        }));
+        
+        toast.success("Código OTP enviado via SMS!");
         router.push("/auth/cadastro/passo-2");
       } else {
         toast.error(res.data?.mensagem || "Erro ao processar");
@@ -72,12 +110,43 @@ export default function CadastroPasso1() {
           <div className="inline-flex items-center gap-2 bg-agro-primary/10 px-4 py-2 rounded-full mb-4">
             <span className="text-sm font-medium text-agro-primary">Passo 1 de 3</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">Criar Conta Produtor</h1>
-          <p className="text-slate-600">Preencha seus dados básicos</p>
+          <h1 className="text-3xl font-bold mb-2">Criar Conta</h1>
+          <p className="text-slate-600">Escolha o tipo de conta e preencha seus dados</p>
         </div>
 
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Tipo de Conta */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Tipo de Conta</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, tipo: "produtor"})}
+                  className={`h-20 rounded-xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${
+                    formData.tipo === "produtor" 
+                      ? "border-agro-primary bg-agro-primary/5 text-agro-primary" 
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="text-2xl">🌾</span>
+                  <span className="text-sm font-medium">Produtor</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, tipo: "comprador"})}
+                  className={`h-20 rounded-xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${
+                    formData.tipo === "comprador" 
+                      ? "border-agro-primary bg-agro-primary/5 text-agro-primary" 
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="text-2xl">🛍️</span>
+                  <span className="text-sm font-medium">Comprador</span>
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="text-sm font-medium mb-2 block flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -119,7 +188,7 @@ export default function CadastroPasso1() {
               <select
                 required
                 value={formData.provincia_id}
-                onChange={(e) => setFormData({...formData, provincia_id: e.target.value})}
+                onChange={(e) => setFormData({...formData, provincia_id: e.target.value, municipio: ""})}
                 className="w-full h-12 px-4 border rounded-xl focus:ring-2 focus:ring-agro-primary"
               >
                 <option value="">Selecione a província</option>
@@ -148,14 +217,15 @@ export default function CadastroPasso1() {
               <label className="text-sm font-medium mb-2 block">Município</label>
               <select
                 required
-                value={formData.municipio_id}
-                onChange={(e) => setFormData({...formData, municipio_id: e.target.value})}
+                value={formData.municipio}
+                onChange={(e) => setFormData({...formData, municipio: e.target.value})}
                 className="w-full h-12 px-4 border rounded-xl focus:ring-2 focus:ring-agro-primary"
+                disabled={!formData.provincia_id}
               >
-                <option value="">Selecione o município</option>
-                <option value="1">Luanda</option>
-                <option value="2">Viana</option>
-                <option value="3">Cacuaco</option>
+                <option value="">{formData.provincia_id ? "Selecione o município" : "Primeiro selecione a província"}</option>
+                {municipiosDisponiveis.map((municipio) => (
+                  <option key={municipio} value={municipio}>{municipio}</option>
+                ))}
               </select>
             </div>
 
@@ -180,7 +250,6 @@ export default function CadastroPasso1() {
           </form>
         </Card>
 
-        {/* Progresso */}
         <div className="mt-8">
           <div className="flex justify-between text-xs text-slate-600 mb-2">
             <span>Progresso</span>

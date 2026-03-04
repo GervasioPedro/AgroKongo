@@ -1,6 +1,8 @@
 import os
 import uuid
 import re
+import mimetypes
+import requests
 from PIL import Image, ImageOps
 from flask import current_app
 from werkzeug.utils import secure_filename
@@ -54,7 +56,7 @@ def salvar_ficheiro(ficheiro, subpasta='safras', privado=False):
         return None
     
     # Validação whitelist de subpasta
-    subpastas_permitidas = {'safras', 'fotos', 'taloes', 'faturas', 'relatorios', 'perfis'}
+    subpastas_permitidas = {'safras', 'fotos', 'taloes', 'faturas', 'relatorios', 'perfis', 'documentos_bi'}
     if safe_subpasta not in subpastas_permitidas:
         current_app.logger.warning(f"Subpasta inválida: {subpasta}")
         return None

@@ -1,0 +1,40 @@
+# --- Core Framework ---
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Migrate
+Flask-WTF
+Flask-Mail
+Flask-Caching
+Flask-Limiter
+Flask-APScheduler
+Flask-Moment
+Flask-Cors
+
+# --- Servidor & Base de Dados ---
+gunicorn
+psycopg2-binary  # <-- ADICIONADO: Driver para PostgreSQL
+SQLAlchemy
+alembic
+SQLAlchemy-serializer
+
+# --- Utilitários & Processamento ---
+python-dotenv
+python-dateutil
+pytz
+requests
+Pillow
+openpyxl
+xlsxwriter
+weasyprint
+xhtml2pdf
+email-validator
+
+# --- Segurança ---
+cryptography
+bcrypt
+bleach
+
+# --- Redis & Celery (Assíncrono) ---
+redis
+celery

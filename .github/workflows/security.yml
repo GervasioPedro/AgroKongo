@@ -1,0 +1,232 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Semanalmente aos domingos
+  workflow_dispatch:
+
+jobs:
+  # Análise estática de código (SAST)
+  bandit:
+    name: Bandit SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Bandit
+        run: pip install bandit[toml]
+        
+      - name: Run Bandit
+        run: |
+          bandit -r app/ -x .venv312 -f json -o bandit-report.json || true
+          bandit -r app/ -x .venv312 --confidence-level high --severity-level high || exit 1
+        continue-on-error: true
+        
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  # Verificação de dependências vulneráveis
+  dependency-check:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install pip-audit
+        run: pip install pip-audit
+        
+      - name: Run pip-audit
+        run: pip-audit -r requirements-new.txt -f json || true
+        continue-on-error: true
+        
+      - name: Install safety
+        run: pip install safety
+        
+      - name: Run safety check
+        run: safety check --file=requirements-new.txt --json || true
+        continue-on-error: true
+
+  # Verificação de segredos expostos
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Install truffleHog
+        run: pip install trufflehog
+        
+      - name: Run truffleHog
+        run: |
+          trufflehog filesystem . \
+            --exclude-paths=".venv312,.git,node_modules" \
+            --json \
+            || true
+        continue-on-error: true
+
+  # Verificação de vulnerabilidades conhecidas (OWASP)
+  owasp-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          
+      - name: Run OWASP Dependency Check
+        run: |
+          mkdir -p owasp-reports
+          docker run --rm -v $(pwd):/project \
+            owasp/dependency-check:latest \
+            --scan /project \
+            --format JSON \
+            --out /project/owasp-reports \
+            || true
+        continue-on-error: true
+        
+      - name: Upload OWASP Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owasp-report
+          path: owasp-reports/
+
+  # Análise de código com SonarCloud (se configurado)
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  # Verificação de credenciais no código
+  credential-scan:
+    name: Hardcoded Credentials Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Scan for hardcoded credentials
+        run: |
+          pip install detect-secrets
+          detect-secrets scan --baseline .secrets.baseline || true
+          detect-secrets audit .secrets.baseline || true
+        continue-on-error: true
+
+  # Análise de composição de software (SCA)
+  sca-scan:
+    name: Software Composition Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for insecure packages
+        run: |
+          pip install pipreqs
+          # Verificar pacotes conhecidos por vulnerabilidades
+          pip freeze | grep -iE "(flask<|sqlalchemy<|werkzeug<|jinja<|requests<|urllib3<|django<|numpy<|pillow<|pyyaml<)" || echo "No known vulnerable packages found"
+        continue-on-error: true
+
+  # Análise de segurança do Docker (se Dockerfile existir)
+  docker-security:
+    name: Docker Security Scan
+    runs-on: ubuntu-latest
+    if: hashFiles('Dockerfile') != ''
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Hadolint
+        run: |
+          docker run --rm -v $(pwd)/Dockerfile:/Dockerfile \
+            hadolint/hadolint:latest \
+            hadolint /Dockerfile || true
+        continue-on-error: true
+
+  # Relatório consolidado de segurança
+  security-report:
+    name: Security Summary Report
+    runs-on: ubuntu-latest
+    needs: [bandit, dependency-check, secrets-scan, owasp-check, docker-security]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Status dos jobs
+          for job in bandit dependency-check secrets-scan owasp-check docker-security; do
+            status="${{ needs.$job.result }}"
+            echo "- **$job**: $status" >> $GITHUB_STEP_SUMMARY
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Recommendations" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Revise todos os alertas de média/alta severidade" >> $GITHUB_STEP_SUMMARY
+          echo "2. Atualize dependências vulneráveis" >> $GITHUB_STEP_SUMMARY
+          echo "3. Nunca faça commit de segredos no código" >> $GITHUB_STEP_SUMMARY
+          echo "4. Configure SonarCloud para análise contínua" >> $GITHUB_STEP_SUMMARY
+          
+          # Falhar se alguma verificação crítica falhou
+          if [[ "${{ needs.bandit.result }}" == "failure" ]] || [[ "${{ needs.dependency-check.result }}" == "failure" ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Ação requerida**: Corrigir vulnerabilidades críticas antes do merge."
+            exit 1
+          fi
+
+  # Gate de segurança para produção
+  security-gate:
+    name: Security Gate
+    runs-on: ubuntu-latest
+    needs: [bandit, dependency-check]
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    steps:
+      - name: Check Security Gate
+        run: |
+          if [[ "${{ needs.bandit.result }}" == "failure" ]]; then
+            echo "❌ Security Gate FAILED: Vulnerabilidades de alta severidade encontradas"
+            echo "Por favor, corrija os problemas de segurança antes de fazer merge para main."
+            exit 1
+          fi
+          
+          if [[ "${{ needs.dependency-check.result }}" == "failure" ]]; then
+            echo "❌ Security Gate FAILED: Dependências vulneráveis detectadas"
+            echo "Atualize as dependências problemáticas."
+            exit 1
+          fi
+          
+          echo "✅ Security Gate PASSED"

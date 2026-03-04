@@ -5,7 +5,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 2. Definição de Ambiente com Fallback Seguro
-env_config = os.environ.get('FLASK_ENV', 'development')
+# NOTE: alguns ambientes/terminais podem injetar espaços acidentais (ex: "development ").
+# Isso quebra o lookup em `config_dict` dentro de `create_app()`.
+env_config = (os.environ.get('FLASK_ENV', 'development') or 'development').strip()
 
 from app import create_app, db
 
@@ -15,7 +17,8 @@ app = create_app(env_config)
 # 4. Hook de Inicialização (Útil para logs de arranque)
 with app.app_context():
     # Log de verificação (visível nos logs do servidor)
-    print(f"🚀 AgroKongo em modo: {env_config.upper()}")
+    # Evitar UnicodeEncodeError em terminais Windows (cp1252) durante CLI/migrações
+    print(f"AgroKongo em modo: {env_config.upper()}")
     # Se quiseres auto-criar as tabelas em ambientes simples (como Render):
     # db.create_all()
 

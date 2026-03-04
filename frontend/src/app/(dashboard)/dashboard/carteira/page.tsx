@@ -30,8 +30,8 @@ type WalletPayload = {
 };
 
 const fetcher = async (url: string) => {
-  // Proteção SSRF: validar URL antes de fazer requisição
-  if (url !== '/wallet') {
+  // Proteção SSRF: validar URL por prefixo e permitir query params
+  if (!url.startsWith('/wallet')) {
     throw new Error('URL não permitida');
   }
   const res = await http.get(url);
