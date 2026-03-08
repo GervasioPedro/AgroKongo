@@ -1,0 +1,14 @@
+# Ignorar backend Python no build do Netlify
+app/
+migrations/
+scripts/
+tests/
+tests_framework/
+*.py
+requirements*.txt
+config.py
+run.py
+celery_worker.py
+
+# Manter apenas frontend
+!frontend/
