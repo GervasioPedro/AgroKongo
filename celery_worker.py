@@ -48,10 +48,11 @@ if __name__ == '__main__':  # ← Corrigido de 'if name == 'main''
         celery.conf.task_routes = {
             'app.tasks.faturas.*': {'queue': 'finance_high'},
             'app.tasks.pagamentos.*': {'queue': 'finance_high'},
-            'app.tasks.relatorios.*': {'queue': 'reports'},  # ← Corrigido 'app.tasks .relatorios'
+            'app.tasks.relatorios.*': {'queue': 'reports'},
             'app.tasks.notificacoes.*': {'queue': 'notifications_medium'},
             'app.tasks.limpeza.*': {'queue': 'maintenance_low'},
-            'app.tasks.monitorar_transacoes_estagnadas': {'queue': 'maintenance_low'}  # ← Corrigido 'a pp.tasks'
+            'app.tasks.monitorar_transacoes_estagnadas': {'queue': 'maintenance_low'},
+            'app.tasks.monitoramento.*': {'queue': 'maintenance_low'}  # Novas tarefas de monitoramento
         }
         celery.conf.task_default_queue = 'default'
 

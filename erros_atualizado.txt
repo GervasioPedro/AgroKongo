@@ -1,0 +1,31 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\Madalena Fernandes\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+metadata: {'Python': '3.13.7', 'Platform': 'Windows-10-10.0.19045-SP0', 'Packages': {'pytest': '9.0.2', 'pluggy': '1.6.0'}, 'Plugins': {'cov': '7.0.0', 'html': '4.2.0', 'metadata': '3.1.1'}}
+rootdir: C:\Users\Madalena Fernandes\Desktop\GSP\agrokongoVS
+configfile: pytest.ini
+plugins: cov-7.0.0, html-4.2.0, metadata-3.1.1
+collecting ... collected 8 items
+
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_gerar_codigo_otp PASSED [ 12%]
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_gerar_hash_otp PASSED [ 25%]
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_armazenar_otp PASSED [ 37%]
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_validar_otp_sucesso PASSED [ 50%]
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_validar_otp_incorreto PASSED [ 62%]
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_validar_otp_inexistente PASSED [ 75%]
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_limpar_otps_expirados PASSED [ 87%]
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_verificar_usuario_existente PASSED [100%]
+
+============================== warnings summary ===============================
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_gerar_hash_otp
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_armazenar_otp
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_validar_otp_sucesso
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_validar_otp_incorreto
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_validar_otp_inexistente
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_limpar_otps_expirados
+tests/unit/test_cadastro_produtor.py::TestOTPService::test_verificar_usuario_existente
+  C:\Users\Madalena Fernandes\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_limiter\_extension.py:364: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 8 passed, 7 warnings in 9.41s ========================

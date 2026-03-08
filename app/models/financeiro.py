@@ -2,10 +2,9 @@
 Modelos Financeiros - Carteira e Movimentações
 """
 from decimal import Decimal
+from sqlalchemy import Index
 from app.extensions import db
 from app.models.base import aware_utcnow, StatusConta
-
-
 class Carteira(db.Model):
     __tablename__ = 'carteiras'
     __table_args__ = (
@@ -58,6 +57,28 @@ class Carteira(db.Model):
         db.session.add(movimentacao)
         db.session.commit()
     
+    def bloquear(self, valor: Decimal, motivo: str = None):
+        """Bloqueia valor na carteira (para escrow)"""
+        if valor <= 0:
+            raise ValueError("Valor de bloqueio deve ser positivo")
+        if self.saldo_disponivel < valor:
+            raise ValueError("Saldo disponível insuficiente para bloqueio")
+        self.saldo_disponivel -= valor
+        self.saldo_bloqueado += valor
+        self.data_ultima_atualizacao = aware_utcnow()
+        # Não cria movimentação financeira pois é apenas transferência interna
+    
+    def liberar(self, valor: Decimal, motivo: str = None):
+        """Libera valor bloqueado na carteira"""
+        if valor <= 0:
+            raise ValueError("Valor de liberação deve ser positivo")
+        if self.saldo_bloqueado < valor:
+            raise ValueError("Saldo bloqueado insuficiente para liberação")
+        self.saldo_bloqueado -= valor
+        self.saldo_disponivel += valor
+        self.data_ultima_atualizacao = aware_utcnow()
+        # Não cria movimentação financeira pois é apenas transferência interna
+    
     def get_saldo_total(self):
         return self.saldo_disponivel + self.saldo_bloqueado
     
@@ -71,10 +92,14 @@ class Carteira(db.Model):
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_ultima_atualizacao': self.data_ultima_atualizacao.isoformat() if self.data_ultima_atualizacao else None
         }
-
-
 class MovimentacaoFinanceira(db.Model):
     __tablename__ = 'movimentacoes_financeiras'
+    __table_args__ = (
+        Index('idx_movimentacao_usuario', 'usuario_id'),
+        Index('idx_movimentacao_data', 'data_movimentacao'),
+        Index('idx_movimentacao_tipo', 'tipo'),
+        Index('idx_movimentacao_referencia', 'referencia_transacao'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id', ondelete='CASCADE'), nullable=False)
     valor = db.Column(db.Numeric(14, 2), nullable=False)

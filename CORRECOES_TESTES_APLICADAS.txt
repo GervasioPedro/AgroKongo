@@ -1,0 +1,60 @@
+================================================================================
+CORREÇÕES APLICADAS - TESTES FRAMEWORK
+Data: 2026-03-06
+================================================================================
+
+PROBLEMA RAIZ:
+--------------
+As tabelas do banco SQLite em memória não estavam sendo criadas antes dos testes,
+causando erro "no such table: usuarios" em múltiplos testes.
+
+SOLUÇÕES APLICADAS:
+-------------------
+
+1. CONFTESP.PY - CORREÇÃO DO FIXTURE APP
+   ✓ Removida criação manual de tabelas (model.__table__.create())
+   ✓ Usado db.create_all() que é o método correto para Flask-SQLAlchemy
+   ✓ Imports de modelos feitos UMA ÚNICA VEZ dentro do app_context()
+   ✓ Adicionado cleanup final com db.drop_all() no fim da sessão
+
+2. REMOVIDO FIXTURE DE CLEANUP AUTOMÁTICO
+   ✓ Removido fixture autouse=True que droppava tabelas entre testes
+   ✓ Isso causava recriação constante e falha nas tabelas
+
+3. RUN_TESTS.PY - MELHORIAS
+   ✓ Variável de ambiente definida antes de qualquer importação
+   ✓ Output claro mostrando database e Python path
+   ✓ Execução via subprocess para garantir ambiente isolado
+
+4. ARQUIVOS DE SUPORTE CRIADOS
+   ✓ validate_tables.py - Valida criação das tabelas antes dos testes
+   ✓ run_tests_validados.bat - Script Windows que valida e executa
+
+FLUXO CORRETO AGORA:
+--------------------
+1. Define TEST_DATABASE_URL='sqlite:///:memory:'
+2. Cria app Flask com create_app('dev')
+3. Atualiza config do app com SQLALCHEMY_DATABASE_URI
+4. Entra no app_context()
+5. Importa TODOS os modelos (registra no metadata do SQLAlchemy)
+6. Chama db.create_all() (cria todas as tabelas registradas)
+7. Yield do app para os testes
+8. Ao final da sessão: db.drop_all()
+
+POR QUE FUNCIONA:
+-----------------
+- Flask-SQLAlchemy gerencia o metadata automaticamente
+- db.create_all() cria todas as tabelas conhecidas pelo metadata
+- Imports dentro do app_context() garantem registro correto
+- Session scope mantém banco vivo por todos os testes
+
+PRÓXIMOS PASSOS:
+----------------
+Executar: python run_tests.py
+
+Se ainda houver erros, verificar:
+1. Se todos os modelos estão importados no conftest.py
+2. Se não há imports duplicados fora do app_context()
+3. Se algum teste está tentando usar tabela não mapeada
+
+STATUS: ✅ PRONTO PARA TESTAR

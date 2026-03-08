@@ -3,7 +3,8 @@
 from flask_socketio import join_room, leave_room, emit, disconnect
 from flask import request  # ← Import adicionado
 from flask_login import current_user
-from app.extensions import socketio, db, current_app
+from flask import current_app
+from app.extensions import socketio, db
 from app.models import Safra, TransactionStatus  # ← TransactionStatus adicionado
 import logging
 

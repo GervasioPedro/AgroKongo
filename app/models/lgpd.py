@@ -4,8 +4,6 @@ Implementa conformidade com os artigos 8º e 18º da LPDP
 """
 from datetime import datetime, timezone
 from app.extensions import db
-
-
 class ConsentimentoLGPD(db.Model):
     """
     Registro de consentimentos do utilizador para processamento de dados pessoais.

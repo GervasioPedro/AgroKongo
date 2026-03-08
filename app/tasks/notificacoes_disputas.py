@@ -4,14 +4,16 @@
 from celery import shared_task
 from flask import url_for
 from markupsafe import escape
-from app.tasks.base import AgroKongoTask
-from app.extensions import db, current_app
+from app.tasks.base import AgroKongoTask, AgroKongoTaskBase
+from flask import current_app
+from app.extensions import db
 from app.models import Notificacao, Usuario
 from app.models import Disputa
 from datetime import datetime, timezone
 
 
-@shared_task(bind=True, base=AgroKongoTask, max_retries=3, rate_limit='10/m')
+# Usar AgroKongoTaskBase para evitar conflito de metaclasses
+@shared_task(bind=True, base=AgroKongoTaskBase, max_retries=3, rate_limit='10/m')
 def enviar_notificacao_disputa_async(self, disputa_id, tipo_notificacao, decisao=None, admin_nome=None):
     """
     Task assíncrona para enviar notificações de disputas
@@ -153,7 +155,8 @@ def _notificar_outros_admins_resolucao(disputa, decisao, admin_nome):
         ))
 
 
-@shared_task(bind=True, base=AgroKongoTask, max_retries=2, rate_limit='5/d')
+# Usar AgroKongoTaskBase para evitar conflito de metaclasses
+@shared_task(bind=True, base=AgroKongoTaskBase, max_retries=2, rate_limit='5/d')
 def enviar_lembrete_disputa_pendente(self):
     """
     Task diária para lembrar admins sobre disputas pendentes > 48h

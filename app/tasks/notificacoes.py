@@ -4,14 +4,15 @@ from celery import shared_task
 import requests
 from requests.exceptions import Timeout, RequestException
 from flask import url_for  # ← Import adicionado
-from app.extensions import db, current_app
-from app.tasks.base import AgroKongoTask  # ← Import adicionado
+from flask import current_app
+from app.extensions import db
+from app.tasks.base import AgroKongoTask, AgroKongoTaskBase  # ← Import adicionado
 from app.models import Notificacao, Usuario, LogAuditoria
-from app.utils.helpers import aware_utcnow  # ← Import adicionado
+from app.models.base import aware_utcnow
 import bleach
 
 
-@shared_task(bind=True, base=AgroKongoTask, max_retries=5, rate_limit='50/m')
+@shared_task(bind=True, base=AgroKongoTaskBase, max_retries=5, rate_limit='50/m')
 def enviar_notificacao_externa(self, usuario_id: int, mensagem: str, link: str = None, tipo: str = 'whatsapp'):
     """
     Envio async notificação externa (WhatsApp/SMS futuro) com fallback interna.

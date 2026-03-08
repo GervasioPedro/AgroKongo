@@ -9,18 +9,20 @@ import os
 import hashlib
 from datetime import datetime, timedelta, timezone
 from flask import url_for
-from app.extensions import db, current_app, cache
-from app.tasks.base import AgroKongoTask
+from flask import current_app
+from app.extensions import db, cache
+from app.tasks.base import AgroKongoTask, AgroKongoTaskBase
 from app.models import (
     Usuario, LogAuditoria, Notificacao, Transacao, TransactionStatus,
     Produto, Safra
 )
-from app.utils.helpers import aware_utcnow, formatar_moeda_kz
+from app.models.base import aware_utcnow
+from app.utils.helpers import formatar_moeda_kz
 from sqlalchemy import func
 from decimal import Decimal
 
 
-@shared_task(bind=True, base=AgroKongoTask, max_retries=5, rate_limit='3/h')
+@shared_task(bind=True, base=AgroKongoTaskBase, max_retries=5, rate_limit='3/h')
 def gerar_relatorio_excel_assincrono(self, admin_id: int, periodo: str = None):
     """
     Gera Excel async relatório financeiro completo.

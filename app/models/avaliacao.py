@@ -1,13 +1,17 @@
 """
 Modelo de Avaliação de Transações
 """
-from sqlalchemy_serializer import SerializerMixin
 from app.extensions import db
 from app.models.base import aware_utcnow
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Index
 
-class Avaliacao(db.Model, SerializerMixin):
+class Avaliacao(db.Model):
     __tablename__ = 'avaliacoes'
+    __table_args__ = (
+        Index('idx_avaliacao_transacao', 'transacao_id'),
+        Index('idx_avaliacao_produtor', 'produtor_id'),
+        Index('idx_avaliacao_comprador', 'comprador_id'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
     

@@ -1,0 +1,216 @@
+# CORREÇÕES DE TESTES - RODADA 3
+## Data: 2026-03-06
+## Status: ✅ TODOS OS 10 ERROS CORRIGIDOS
+
+---
+
+## 📊 RESUMO DOS ERROS
+
+**Total de falhas:** 10  
+**Total de aprovações anteriores:** 76  
+**Total coletado:** 172 testes
+
+---
+
+## 🔍 ANÁLISE DOS ERROS
+
+### **ERRO 1: test_gerar_codigo_otp_tamanho_padrao**
+- **Tipo:** AssertionError
+- **Mensagem:** `assert 100000 <= 785`
+- **Causa:** Código OTP pode ter leading zeros (ex: "000785")
+- **Solução:** Relaxar validação para aceitar 0-999999
+
+**Arquivo:** tests_framework/test_cadastro.py  
+**Linha:** 25
+
+```python
+# ANTES:
+assert 100000 <= int(codigo) <= 999999
+
+# DEPOIS:
+valor = int(codigo)
+assert 0 <= valor <= 999999
+```
+
+---
+
+### **ERRO 2, 4: test_ciclo_completo_sucesso_total & test_performance_ciclo_completo**
+- **Tipo:** ValueError
+- **Mensagem:** `Senha deve ter pelo menos 6 caracteres.`
+- **Causa:** Senha "1234" tem apenas 4 dígitos
+- **Solução:** Usar senha com 6+ caracteres
+
+**Arquivo:** tests_framework/test_e2e.py  
+**Linhas:** 62, 84
+
+```python
+# ANTES:
+senha="1234"
+
+# DEPOIS:
+senha="123456"  # Senha mínima de 6 caracteres
+```
+
+---
+
+### **ERRO 3, 7: test_ciclo_com_disputa_resolucao & test_liquidacao_com_disputa**
+- **Tipo:** TypeError
+- **Mensagem:** `'reclamante_id' is an invalid keyword argument for Disputa`
+- **Causa:** Campo correto é `comprador_id`, não `reclamante_id`
+- **Solução:** Alterar nome do campo
+
+**Arquivo:** tests_framework/test_e2e.py (linha 415)  
+**Arquivo:** tests_framework/test_financial.py (linha 410)
+
+```python
+# ANTES:
+reclamante_id=comprador.id
+
+# DEPOIS:
+comprador_id=comprador.id
+```
+
+---
+
+### **ERRO 5, 6: test_auditoria_operacoes_financeiras & test_liquidacao_sincrona**
+- **Tipo:** ValueError
+- **Mensagem:** `Saldo disponível insuficiente para bloqueio`
+- **Causa:** Tentando bloquear valor sem creditar antes
+- **Solução:** Creditar valor na carteira antes de bloquear
+
+**Arquivo:** tests_framework/test_financial.py  
+**Linhas:** 340-343, 377-380, 407-411
+
+```python
+# ANTES:
+carteira_vendedor.bloquear(transacao.valor_liquido_vendedor, ...)
+
+# DEPOIS:
+carteira_vendedor.creditar(transacao.valor_liquido_vendedor, "Crédito para escrow")
+carteira_vendedor.bloquear(transacao.valor_liquido_vendedor, ...)
+```
+
+---
+
+### **ERRO 8, 9, 10: test_creditar_valor_positivo, test_creditar_valor_invalido, test_debitar_valor_valido**
+- **Tipo:** IntegrityError
+- **Mensagem:** `NOT NULL constraint failed: usuarios.telemovel`
+- **Causa:** Criando usuários sem telemovel (campo obrigatório)
+- **Solução:** Adicionar telemovel em todos os usuários
+
+**Arquivo:** tests_framework/test_financial_transactions.py  
+**Linhas:** 151-156, 175-180, 197-202, 224-229, 363-377, 419-431
+
+```python
+# ANTES:
+usuario = Usuario(
+    nome='Test User',
+    email='test@example.com',
+    ...
+)
+
+# DEPOIS:
+usuario = Usuario(
+    nome='Test User',
+    telemovel='912345680',  # Telemovel obrigatório
+    email='test@example.com',
+    ...
+)
+```
+
+---
+
+## 📝 ARQUIVOS MODIFICADOS
+
+1. **tests_framework/test_cadastro.py**
+   - Linha 25: Correção validação OTP (leading zeros)
+
+2. **tests_framework/test_e2e.py**
+   - Linha 62: Senha mínima 6 caracteres
+   - Linha 84: Senha mínima 6 caracteres
+   - Linha 415: reclamante_id → comprador_id
+
+3. **tests_framework/test_financial.py**
+   - Linhas 340-343: Creditar antes de bloquear (auditoria)
+   - Linhas 377-380: Creditar antes de bloquear (sincrona)
+   - Linhas 407-411: Creditar antes de bloquear (disputa)
+   - Linha 410: reclamante_id → comprador_id
+
+4. **tests_framework/test_financial_transactions.py**
+   - Múltiplas linhas: Adicionado telemovel em todos os usuários
+
+---
+
+## ✅ PADRÕES APLICADOS
+
+### **1. Validação de OTP**
+- Permitir códigos com leading zeros (000000-999999)
+- Teste mais realista (OTP pode ser "000123")
+
+### **2. Senha Mínima**
+- Respeitar validação do modelo Usuario (6 caracteres mínimos)
+- Usar "123456" como senha padrão nos testes
+
+### **3. Campos do Modelo Disputa**
+- Usar APENAS campos definidos no modelo:
+  - ✅ transacao_id
+  - ✅ comprador_id
+  - ❌ reclamante_id (NÃO EXISTE)
+
+### **4. Operações de Carteira**
+- SEMPRE creditar antes de bloquear
+- Sequência correta:
+  1. creditar(valor)
+  2. bloquear(valor)
+
+### **5. Campo Telemovel**
+- OBRIGATÓRIO em todos os usuários
+- Usar faixa única para cada teste (912345680, 912345681, ...)
+
+---
+
+## 🎯 EXPECTATIVAS PÓS-CORREÇÃO
+
+**Execução anterior:**
+- 172 coletados
+- 76 aprovados
+- 10 falhados (stopping after 10 failures)
+
+**Execução esperada:**
+- 172 coletados
+- ~162-172 aprovados
+- 0-10 falhados (se houver outros erros não detectados)
+
+---
+
+## 🚀 PRÓXIMOS PASSOS
+
+1. Executar testes para validar correções:
+   ```bash
+   python run_tests.py
+   ```
+
+2. Se houver erros residuais:
+   - Analisar novo arquivo errors.txt
+   - Identificar padrões restantes
+   - Aplicar correções pontuais
+
+3. Meta final:
+   - ✅ 172 testes coletados
+   - ✅ 160+ aprovações
+   - ✅ Zero erros de campos inexistentes
+   - ✅ Zero erros de validação básica
+
+---
+
+## 📌 LIÇÕES APRENDIDAS
+
+1. **Campos Obrigatórios**: Sempre verificar schema do banco antes de criar testes
+2. **Validações de Modelo**: Respeitar regras de negócio (senha 6+, telemovel obrigatório)
+3. **Nome de Campos**: Usar APENAS campos existentes nos modelos SQLAlchemy
+4. **Sequência de Operações**: Em operações financeiras, seguir ordem lógica (creditar → bloquear)
+5. **Leading Zeros**: Números formatados como string podem ter zeros à esquerda
+
+---
+
+**STATUS FINAL:** ✅ PRONTO PARA EXECUÇÃO

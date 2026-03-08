@@ -7,7 +7,8 @@ from datetime import datetime, timezone, timedelta
 import tempfile
 import os
 
-from app.utils.helpers import salvar_ficheiro, aware_utcnow
+from app.utils.helpers import salvar_ficheiro
+from app.models.base import aware_utcnow
 
 
 class TestHelpers:

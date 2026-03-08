@@ -1,9 +1,9 @@
 """
 Modelo de Disputa
 """
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from decimal import Decimal
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, Index
 
 from app.extensions import db
 from app.models.base import aware_utcnow, TransactionStatus
@@ -13,6 +13,8 @@ class Disputa(db.Model):
     __tablename__ = 'disputas'
     __table_args__ = (
         CheckConstraint('motivo IS NOT NULL AND motivo != ""', name='ck_motivo_obrigatorio'),
+        Index('idx_disputa_transacao', 'transacao_id'),
+        Index('idx_disputa_status', 'status'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
@@ -37,7 +39,6 @@ class Disputa(db.Model):
         if not self.transacao.previsao_entrega:
             return False, "Previsão de entrega não definida"
         limite_minimo = self.transacao.previsao_entrega + timedelta(hours=24)
-        from datetime import datetime, timezone
         agora = datetime.now(timezone.utc)
         if agora < limite_minimo:
             return False, "Aguarde 24h após a previsão de entrega"

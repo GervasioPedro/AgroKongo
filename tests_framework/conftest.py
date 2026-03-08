@@ -1,24 +1,54 @@
-# tests_framework/conftest_fixed.py - Configuração completa de testes corrigida
-# Versão corrigida sem referências a StatusConta
+# tests_framework/conftest.py - Configuração corporativa de testes
+# Versão profissional com todos os modelos importados explicitamente
+
+import os
+import sys
+from pathlib import Path
+
+# Adicionar root do projeto ao path
+root_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(root_dir))
 
 import pytest
 import tempfile
-import os
 from decimal import Decimal
 from datetime import datetime, timezone, timedelta
 
-from app import create_app, db
+from app import create_app
+from app.extensions import db
+
+# IMPORTAR TODOS OS MODELOS EXPLICITAMENTE ANTES DE CRIAR TABELAS
+# Isso garante que o SQLAlchemy registre todos os modelos antes do db.create_all()
 from app.models import (
-    Usuario, Safra, Transacao, TransactionStatus,
-    Notificacao, Produto, Provincia, Municipio
+    Usuario,
+    Provincia,
+    Municipio,
+    Produto,
+    Safra,
+    Transacao,
+    HistoricoStatus,
+    TransactionStatus,
+    Avaliacao,
+    Notificacao,
+    AlertaPreferencia,
+    Disputa,
+    LogAuditoria,
+    ConfiguracaoSistema,
+    ConsentimentoLGPD,
+    RegistroAnonimizacao,
 )
-from app.models_carteiras import Carteira
+from app.models.financeiro import Carteira, MovimentacaoFinanceira
 
 
 @pytest.fixture(scope='session')
 def app():
     """Cria aplicação Flask para testes com banco em memória"""
-    app = create_app()
+    # Definir variável de ambiente ANTES de criar o app
+    os.environ['TEST_DATABASE_URL'] = 'sqlite:///:memory:'
+    
+    app = create_app('dev')  # Criar com config de desenvolvimento
+    
+    # Sobrescrever configurações para testes
     app.config.update(
         TESTING=True,
         SQLALCHEMY_DATABASE_URI='sqlite:///:memory:',
@@ -26,12 +56,28 @@ def app():
         WTF_CSRF_ENABLED=False,
         SECRET_KEY='test-secret-key',
         MAIL_SUPPRESS_SEND=True,
-        CELERY_TASK_ALWAYS_EAGER=True
+        CELERY_TASK_ALWAYS_EAGER=True,
+        CELERY_BROKER_URL='memory://'
     )
     
     with app.app_context():
+        # CRÍTICO: Importar todos os modelos para registrar no metadata do SQLAlchemy
+        from app.models import (
+            Usuario, Provincia, Municipio, Produto, Safra,
+            Transacao, HistoricoStatus, Avaliacao, Notificacao,
+            AlertaPreferencia, Disputa, LogAuditoria, ConfiguracaoSistema,
+            ConsentimentoLGPD, RegistroAnonimizacao,
+        )
+        from app.models.financeiro import Carteira, MovimentacaoFinanceira
+        
+        # Usar db.create_all() que é o método correto para Flask-SQLAlchemy
+        # Isso cria todas as tabelas registradas no metadata
         db.create_all()
+        
         yield app
+        
+        # Cleanup no final da sessão de testes
+        db.drop_all()
 
 
 @pytest.fixture(scope='session')
@@ -105,8 +151,8 @@ def produtor_user(session, provincia, municipio):
     session.add(produtor)
     session.commit()
     
-    # Criar carteira
-    carteira = Carteira(usuario_id=produtor.id, saldo_disponivel=Decimal('100000.00'))
+    # Criar carteira com saldo ZERO (para testes de débito/bloqueio)
+    carteira = Carteira(usuario_id=produtor.id, saldo_disponivel=Decimal('0.00'))
     session.add(carteira)
     session.commit()
     
@@ -118,7 +164,7 @@ def comprador_user(session, provincia, municipio):
     """Usuário comprador para testes"""
     comprador = Usuario(
         nome="Comprador Test",
-        telemovel="923456789",
+        telemovel="923456790",  # Alterado para evitar conflito
         email="comprador@test.com",
         senha="123456",
         tipo="comprador",
@@ -155,6 +201,15 @@ def safra_ativa(session, produtor_user):
     session.add(safra)
     session.commit()
     return safra
+
+
+@pytest.fixture
+def produto(session):
+    """Produto para testes"""
+    produto = Produto(nome="Milho", categoria="Grãos")
+    session.add(produto)
+    session.commit()
+    return produto
 
 
 @pytest.fixture
@@ -215,11 +270,26 @@ def transacao_finalizada(session, safra_ativa, comprador_user, produtor_user):
 
 
 @pytest.fixture
+def disputa_ativa(session, transacao_escrow, comprador_user):
+    """Disputa ativa para testes"""
+    from app.models.disputa import Disputa
+    disputa = Disputa(
+        transacao_id=transacao_escrow.id,
+        comprador_id=comprador_user.id,
+        motivo="Produto não conforme",
+        status="aberta"
+    )
+    session.add(disputa)
+    session.commit()
+    return disputa
+
+
+@pytest.fixture
 def admin_user(session, provincia, municipio):
     """Usuário admin para testes"""
     admin = Usuario(
         nome="Admin Test",
-        telemovel="923456789",
+        telemovel="923456791",  # Alterado para evitar conflito
         email="admin@test.com",
         senha="123456",
         tipo="admin",
@@ -233,12 +303,37 @@ def admin_user(session, provincia, municipio):
     return admin
 
 
+# Fixture de cleanup para limpar dados após cada teste
 @pytest.fixture(autouse=True)
-def cleanup_session(session):
-    """Limpa sessão após cada teste"""
+def cleanup_data(session):
+    """Limpa dados criados durante o teste, mantendo estrutura do banco"""
     yield
-    session.remove()
-    db.drop_all()
+    # Rollback para desfazer quaisquer mudanças pendentes
+    session.rollback()
+    # Remover todos os dados criados durante o teste
+    try:
+        # Ordem inversa de dependência
+        from app.models.financeiro import Carteira, MovimentacaoFinanceira
+        from app.models import (
+            Usuario, Provincia, Municipio, Produto, Safra,
+            Transacao, HistoricoStatus, Avaliacao, Notificacao,
+            AlertaPreferencia, Disputa, LogAuditoria, ConfiguracaoSistema,
+            ConsentimentoLGPD, RegistroAnonimizacao,
+        )
+        
+        # Deletar em ordem correta (filhos primeiro)
+        for model in [MovimentacaoFinanceira, Carteira, Notificacao, HistoricoStatus, 
+                      Transacao, Safra, Produto, Avaliacao, AlertaPreferencia, 
+                      Disputa, LogAuditoria, ConsentimentoLGPD, RegistroAnonimizacao,
+                      ConfiguracaoSistema, Usuario, Municipio, Provincia]:
+            try:
+                session.query(model).delete()
+            except Exception:
+                pass  # Tabela pode não existir ou não ter dados
+        
+        session.commit()
+    except Exception:
+        session.rollback()
 
 
 # Marcadores personalizados para organização

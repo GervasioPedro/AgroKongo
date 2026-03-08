@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { useAuth } from '../hooks/useAuth'; // Para o logout
+import { useAuth } from '../../hooks/useAuth'; // Para o logout
 
 const AdminLayout = ({ children, title = "Admin Dashboard" }) => {
   const router = useRouter();

@@ -32,7 +32,10 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-CHANGE-IN-PRODUCTION'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or POSTGRES_LOCAL_URI
+    # Respeitar variável de ambiente de teste antes de usar PostgreSQL
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
+                              os.environ.get('DEV_DATABASE_URL') or \
+                              POSTGRES_LOCAL_URI
     SESSION_COOKIE_SECURE = False
     SESSION_COOKIE_SAMESITE = 'None'
     SESSION_COOKIE_HTTPONLY = True
@@ -45,15 +48,20 @@ class ProductionConfig(Config):
         uri = uri.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_DATABASE_URI = uri
     
-    # CORS: origins explícitas em produção (não usar '*')
-    _origins_env = os.environ.get('CORS_ORIGINS', '').strip()
-    if _origins_env:
-        CORS_ORIGINS = [o.strip() for o in _origins_env.split(',') if o.strip()]
+    # CORS: Apenas domínios explícitos via variável de ambiente
+    # Em produção, usar APENAS o domínio do frontend (Netlify)
+    _cors_allowed = os.environ.get('FRONTEND_URL', '').strip()
+    if _cors_allowed:
+        # Suporta múltiplos domínios separados por vírgula
+        CORS_ORIGINS = [domain.strip() for domain in _cors_allowed.split(',') if domain.strip()]
     else:
-        CORS_ORIGINS = [
-            'https://agrokongo.netlify.app',
-            'https://www.agrokongo.ao'
-        ]
+        # Fallback seguro: apenas domínio principal
+        CORS_ORIGINS = ['https://agrokongo.netlify.app']
+    
+    # Validar se todos os domínios usam HTTPS em produção
+    for origin in CORS_ORIGINS:
+        if not origin.startswith('https://') and 'localhost' not in origin:
+            raise ValueError(f"ERRO DE SEGURANÇA: CORS_ORIGINS deve usar HTTPS. Encontrado: {origin}")
     
     REDIS_URL = os.environ.get('REDIS_URL')
     CELERY_BROKER_URL = os.environ.get('REDIS_URL')

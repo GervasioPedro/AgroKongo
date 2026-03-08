@@ -5,7 +5,7 @@ from flask_login import login_required
 from app.extensions import cache, db
 from app.models import Transacao, Usuario, TransactionStatus, Produto, Safra
 from app.utils.decorators import admin_required
-from app.utils.helpers import aware_utcnow
+from app.models.base import aware_utcnow
 from sqlalchemy import func
 from decimal import Decimal
 from datetime import datetime, timezone, timedelta

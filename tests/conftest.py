@@ -1,276 +1,277 @@
-# tests/conftest.py - Configuração de fixtures e ambiente de testes
-# Setup completo para testes unitários com banco de dados em memória
-
+# tests/conftest.py - Configuração ROBUSTA v4
 import pytest
 import tempfile
 import os
-from datetime import datetime, timezone, timedelta
+import uuid
 from decimal import Decimal
-
+from datetime import datetime, timezone, timedelta # Import adicionado
 from app import create_app, db
 from app.models import (
     Usuario, Safra, Produto, Provincia, Municipio, 
-    Transacao, TransactionStatus, Notificacao
+    Transacao, TransactionStatus, Notificacao, Disputa
 )
-from app.models import Disputa
-from app.models import StatusConta
 
-
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def app():
-    """Cria aplicação Flask para testes com banco em memória"""
-    # Criar banco temporário
+    """
+    Cria uma NOVA aplicação Flask para CADA teste.
+    """
     db_fd, db_path = tempfile.mkstemp()
     
-    # Configuração de testes
     test_config = {
         'TESTING': True,
         'WTF_CSRF_ENABLED': False,
-        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-        'SECRET_KEY': 'test-secret-key',
-        'UPLOAD_FOLDER_PRIVATE': tempfile.mkdtemp(),
-        'UPLOAD_FOLDER_PUBLIC': tempfile.mkdtemp(),
+        'SECRET_KEY': 'test-secret-key-unique',
         'CELERY_BROKER_URL': 'memory://',
-        'CELERY_RESULT_BACKEND': 'memory://'
+        'CELERY_RESULT_BACKEND': 'memory://',
+        'SERVER_NAME': 'localhost.test',  # Necessário para url_for fora de requests
+        'APPLICATION_ROOT': '/',
+        'PREFERRED_URL_SCHEME': 'http',
+        'SUBFOLDERS': {
+            'faturas': '/tmp/faturas'
+        }
     }
     
-    app = create_app(test_config)
+    # Passar test_config_override para o create_app
+    app = create_app('dev', test_config_override=test_config)
     
+    # Contexto de aplicação é essencial
     with app.app_context():
         db.create_all()
         yield app
+        db.session.remove()
         db.drop_all()
     
-    # Limpeza
-    os.close(db_fd)
-    os.unlink(db_path)
-
+    try:
+        os.close(db_fd)
+        os.unlink(db_path)
+    except:
+        pass
 
 @pytest.fixture(scope='function')
 def client(app):
-    """Cliente de teste para requisições HTTP"""
     return app.test_client()
-
-
-@pytest.fixture(scope='function')
-def runner(app):
-    """Runner para comandos CLI"""
-    return app.test_cli_runner()
-
 
 @pytest.fixture(scope='function')
 def session(app):
-    """Sessão de banco de dados isolada para cada teste"""
+    """
+    Retorna a sessão do banco de dados.
+    O contexto da app já está ativo graças à fixture 'app'.
+    """
     with app.app_context():
-        connection = db.engine.connect()
-        transaction = connection.begin()
-        
-        # Usar sessão isolada
-        session = db.session(bind=connection)
-        
-        yield session
-        
-        session.close()
-        transaction.rollback()
-        connection.close()
+        yield db.session
 
+# --- Helpers de Dados ---
 
-@pytest.fixture
-def admin_user(session):
-    """Usuário admin para testes"""
-    admin = Usuario(
-        nome="Admin Test",
-        telemovel="923456789",
-        email="admin@test.com",
-        senha="123456",
-        tipo="admin",
-        conta_validada=True,
-        perfil_completo=True,
-        status_conta=StatusConta.VERIFICADO
-    )
-    session.add(admin)
-    session.commit()
-    return admin
+def gerar_dados_unicos(prefixo):
+    uid = str(uuid.uuid4())[:8]
+    return {
+        'nome': f"{prefixo} {uid}",
+        'email': f"{prefixo.lower()}.{uid}@test.com",
+        'telemovel': f"9{uid[:8].replace('-', '').replace('a', '1').replace('b', '2').replace('c', '3').replace('d', '4').replace('e', '5').replace('f', '6')[:8]}"
+    }
 
+# --- Fixtures de Modelos ---
 
 @pytest.fixture
-def produtor_user(session):
-    """Usuário produtor para testes"""
-    produtor = Usuario(
-        nome="Produtor Test",
-        telemovel="923456788",
-        email="produtor@test.com",
-        senha="123456",
-        tipo="produtor",
-        conta_validada=True,
-        perfil_completo=True,
-        iban="AO0600600000123456789012345",
-        status_conta=StatusConta.VERIFICADO
-    )
-    session.add(produtor)
-    session.commit()
-    return produtor
-
-
-@pytest.fixture
-def comprador_user(session):
-    """Usuário comprador para testes"""
-    comprador = Usuario(
-        nome="Comprador Test",
-        telemovel="923456787",
-        email="comprador@test.com",
-        senha="123456",
-        tipo="comprador",
-        conta_validada=True,
-        perfil_completo=True,
-        status_conta=StatusConta.VERIFICADO
-    )
-    session.add(comprador)
-    session.commit()
-    return comprador
-
+def admin_user(app, session):
+    with app.app_context():
+        dados = gerar_dados_unicos("Admin")
+        admin = Usuario(
+            nome=dados['nome'],
+            telemovel=dados['telemovel'],
+            email=dados['email'],
+            senha="123456",
+            tipo="admin",
+            conta_validada=True,
+            perfil_completo=True
+        )
+        session.add(admin)
+        session.commit()
+        session.refresh(admin)
+        return admin
 
 @pytest.fixture
-def provincia(session):
-    """Província para testes"""
-    prov = Provincia(nome="Luanda")
-    session.add(prov)
-    session.commit()
-    return prov
-
-
-@pytest.fixture
-def municipio(session, provincia):
-    """Município para testes"""
-    mun = Municipio(nome="Luanda", provincia_id=provincia.id)
-    session.add(mun)
-    session.commit()
-    return mun
-
-
-@pytest.fixture
-def produto(session):
-    """Produto para testes"""
-    prod = Produto(nome="Milho", categoria="Cereais")
-    session.add(prod)
-    session.commit()
-    return prod
-
+def produtor_user(app, session):
+    with app.app_context():
+        dados = gerar_dados_unicos("Produtor")
+        produtor = Usuario(
+            nome=dados['nome'],
+            telemovel=dados['telemovel'],
+            email=dados['email'],
+            senha="123456",
+            tipo="produtor",
+            conta_validada=True,
+            perfil_completo=True,
+            iban="AO0600600000123456789012345"
+        )
+        session.add(produtor)
+        session.commit()
+        session.refresh(produtor)
+        return produtor
 
 @pytest.fixture
-def safra_ativa(session, produtor_user, produto):
-    """Safra ativa para testes"""
-    safra = Safra(
-        produtor_id=produtor_user.id,
-        produto_id=produto.id,
-        quantidade_disponivel=Decimal('100.50'),
-        preco_por_unidade=Decimal('1500.75'),
-        status='disponivel',
-        observacoes="Safra de teste"
-    )
-    session.add(safra)
-    session.commit()
-    return safra
-
-
-@pytest.fixture
-def transacao_pendente(session, safra_ativa, comprador_user, produtor_user):
-    """Transação pendente para testes"""
-    transacao = Transacao(
-        safra_id=safra_ativa.id,
-        comprador_id=comprador_user.id,
-        vendedor_id=produtor_user.id,
-        quantidade_comprada=Decimal('10.00'),
-        valor_total_pago=Decimal('15007.50'),
-        status=TransactionStatus.PENDENTE
-    )
-    session.add(transacao)
-    session.commit()
-    return transacao
-
+def comprador_user(app, session):
+    with app.app_context():
+        dados = gerar_dados_unicos("Comprador")
+        comprador = Usuario(
+            nome=dados['nome'],
+            telemovel=dados['telemovel'],
+            email=dados['email'],
+            senha="123456",
+            tipo="comprador",
+            conta_validada=True,
+            perfil_completo=True
+        )
+        session.add(comprador)
+        session.commit()
+        session.refresh(comprador)
+        return comprador
 
 @pytest.fixture
-def transacao_enviada(session, safra_ativa, comprador_user, produtor_user):
-    """Transação enviada para testes de disputas"""
-    transacao = Transacao(
-        safra_id=safra_ativa.id,
-        comprador_id=comprador_user.id,
-        vendedor_id=produtor_user.id,
-        quantidade_comprada=Decimal('5.00'),
-        valor_total_pago=Decimal('7503.75'),
-        status=TransactionStatus.ENVIADO,
-        data_envio=datetime.now(timezone.utc) - timedelta(hours=48),  # 48h atrás
-        previsao_entrega=datetime.now(timezone.utc) - timedelta(hours=24)  # 24h atrás
-    )
-    session.add(transacao)
-    session.commit()
-    return transacao
-
-
-@pytest.fixture
-def disputa_aberta(session, transacao_enviada, comprador_user):
-    """Disputa aberta para testes"""
-    disputa = Disputa(
-        transacao_id=transacao_enviada.id,
-        comprador_id=comprador_user.id,
-        motivo="Produto não entregue na data prevista",
-        status='aberta'
-    )
-    session.add(disputa)
-    session.commit()
-    return disputa
-
-
-# Helper functions para testes
-@pytest.fixture
-def login_comprador(client, comprador_user):
-    """Helper para login de comprador"""
-    with client.session_transaction() as sess:
-        sess['_user_id'] = str(comprador_user.id)
-        sess['_fresh'] = True
-    return client
-
+def outro_usuario(app, session):
+    """Segundo usuário para testes de permissão"""
+    with app.app_context():
+        dados = gerar_dados_unicos("OutroUsuario")
+        usuario = Usuario(
+            nome=dados['nome'],
+            telemovel=dados['telemovel'],
+            email=dados['email'],
+            senha="123456",
+            tipo="comprador",
+            conta_validada=True,
+            perfil_completo=True
+        )
+        session.add(usuario)
+        session.commit()
+        session.refresh(usuario)
+        return usuario
 
 @pytest.fixture
-def login_produtor(client, produtor_user):
-    """Helper para login de produtor"""
-    with client.session_transaction() as sess:
-        sess['_user_id'] = str(produtor_user.id)
-        sess['_fresh'] = True
-    return client
-
+def produto(app, session):
+    with app.app_context():
+        prod = Produto(nome="Milho", categoria="Cereais")
+        session.add(prod)
+        session.commit()
+        session.refresh(prod)
+        return prod
 
 @pytest.fixture
-def login_admin(client, admin_user):
-    """Helper para login de admin"""
+def safra_ativa(app, session, produtor_user, produto):
+    with app.app_context():
+        safra = Safra(
+            produtor_id=produtor_user.id,
+            produto_id=produto.id,
+            quantidade_disponivel=Decimal('100.50'),
+            preco_por_unidade=Decimal('1500.75'),
+            status='disponivel',
+            observacoes="Safra de teste"
+        )
+        session.add(safra)
+        session.commit()
+        session.refresh(safra)
+        return safra
+
+@pytest.fixture
+def transacao_enviada(app, session, safra_ativa, comprador_user, produtor_user):
+    with app.app_context():
+        transacao = Transacao(
+            fatura_ref=f"TRX-{uuid.uuid4()}",
+            safra_id=safra_ativa.id,
+            comprador_id=comprador_user.id,
+            vendedor_id=produtor_user.id,
+            quantidade_comprada=Decimal('5.00'),
+            valor_total_pago=Decimal('7503.75'),
+            status=TransactionStatus.ENVIADO,
+            data_envio=datetime.now(timezone.utc) - timedelta(hours=48),
+            previsao_entrega=datetime.now(timezone.utc) - timedelta(hours=24)
+        )
+        session.add(transacao)
+        session.commit()
+        session.refresh(transacao)
+        return transacao
+
+@pytest.fixture
+def transacao_pendente(app, session, safra_ativa, comprador_user, produtor_user):
+    with app.app_context():
+        transacao = Transacao(
+            fatura_ref=f"TRX-{uuid.uuid4()}",
+            safra_id=safra_ativa.id,
+            comprador_id=comprador_user.id,
+            vendedor_id=produtor_user.id,
+            quantidade_comprada=Decimal('10.00'),
+            valor_total_pago=Decimal('15007.50'),
+            status=TransactionStatus.PENDENTE
+        )
+        session.add(transacao)
+        session.commit()
+        session.refresh(transacao)
+        return transacao
+
+@pytest.fixture
+def disputa_aberta(app, session, transacao_enviada, comprador_user):
+    with app.app_context():
+        disputa = Disputa(
+            transacao_id=transacao_enviada.id,
+            comprador_id=comprador_user.id,
+            motivo="Produto não entregue",
+            status='aberta'
+        )
+        session.add(disputa)
+        session.commit()
+        session.refresh(disputa)
+        return disputa
+
+# --- Auth Helpers ---
+@pytest.fixture
+def auth_client(client, admin_user):
+    """Cliente autenticado como admin"""
     with client.session_transaction() as sess:
         sess['_user_id'] = str(admin_user.id)
         sess['_fresh'] = True
     return client
 
+@pytest.fixture
+def auth_comprador_client(client, comprador_user):
+    """Cliente autenticado como comprador"""
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(comprador_user.id)
+        sess['_fresh'] = True
+    return client
 
-# Mocks para serviços externos
+@pytest.fixture
+def auth_produtor_client(client, produtor_user):
+    """Cliente autenticado como produtor"""
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(produtor_user.id)
+        sess['_fresh'] = True
+    return client
+
+# --- Mocks ---
+@pytest.fixture
+def mock_redis(monkeypatch):
+    class MockRedis:
+        def __init__(self): self.data = {}
+        def set(self, k, v, ex=None): self.data[k] = v
+        def get(self, k): return self.data.get(k)
+        def delete(self, k): self.data.pop(k, None)
+        def exists(self, k): return k in self.data
+    
+    mock = MockRedis()
+    monkeypatch.setattr('redis.Redis', lambda *a, **kw: mock)
+    return mock
+
 @pytest.fixture
 def mock_celery(monkeypatch):
-    """Mock do Celery para testes"""
-    class MockTask:
-        def __init__(self):
-            self.delay_called = False
-            self.args = []
-        
-        def delay(self, *args):
-            self.delay_called = True
-            self.args = args
-            return MockResult()
-    
     class MockResult:
-        def __init__(self):
-            self.id = 'mock-task-id'
-            self.status = 'SUCCESS'
+        id = 'mock-id'
+        status = 'SUCCESS'
     
-    mock_task = MockTask()
-    monkeypatch.setattr('app.tasks.pagamentos.processar_liquidacao', mock_task)
-    monkeypatch.setattr('app.tasks.notificacoes_disputas.enviar_notificacao_disputa_async', mock_task)
-    
-    return mock_task
+    class MockTask:
+        def delay(self, *args, **kwargs): return MockResult()
+        
+    mock = MockTask()
+    monkeypatch.setattr('app.tasks.pagamentos.processar_liquidacao', mock)
+    return mock

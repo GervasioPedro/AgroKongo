@@ -8,6 +8,7 @@ const withPwa = withPWA({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  basePath: '', // Garantir que não há base path
   
   // Permitir origens de desenvolvimento
   allowedDevOrigins: ['10.2.0.2'],

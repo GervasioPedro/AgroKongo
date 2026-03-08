@@ -92,7 +92,7 @@ def api_info():
 # =============================================================================
 
 @api_v1_bp.route('/produtos', methods=['GET'])
-@cache.cached(timeout=300)
+@cache.cached(timeout=3600)  # Cache de 1 hora para produtos
 def listar_produtos():
     """Lista produtos disponíveis"""
     page = request.args.get('page', 1, type=int)
@@ -134,7 +134,7 @@ def detalhes_produto(produto_id):
 # =============================================================================
 
 @api_v1_bp.route('/safras', methods=['GET'])
-@cache.cached(timeout=300)
+@cache.cached(timeout=1800)  # Cache de 30 minutos para safras
 def listar_safras():
     """Lista safras disponíveis no mercado"""
     page = request.args.get('page', 1, type=int)
@@ -176,6 +176,7 @@ def detalhes_safra(safra_id):
 # =============================================================================
 
 @api_v1_bp.route('/produtores', methods=['GET'])
+@cache.cached(timeout=3600)  # Cache de 1 hora para lista de produtores
 def listar_produtores():
     """Lista produtores disponíveis"""
     page = request.args.get('page', 1, type=int)

@@ -6,10 +6,7 @@ from io import BytesIO
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from flask import (
-    Blueprint, render_template, redirect, url_for,
-    flash, request, current_app, abort, make_response, jsonify
-)
+from flask import Blueprint, request, current_app, abort, jsonify, flash, redirect, url_for, render_template
 from flask_login import login_required, current_user
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -21,7 +18,16 @@ from app.models import (
     HistoricoStatus, Notificacao, Avaliacao, TransactionStatus
 )
 from app.utils.helpers import salvar_ficheiro
-from app.tasks.pagamentos import processar_liquidacao
+from app.shared.responses import success_response, error_response, validation_error, forbidden_error, conflict_error
+from app.shared.constants import AUDITORIA_ACOES
+
+# Import condicional para evitar erro do gssapi no Windows
+try:
+    from app.tasks.pagamentos import processar_liquidacao
+    CELERY_ENABLED = True
+except (ImportError, OSError):
+    processar_liquidacao = None
+    CELERY_ENABLED = False
 
 comprador_bp = Blueprint('comprador', __name__)
 
@@ -45,12 +51,20 @@ def confirmar_recebimento(trans_uuid):
         transacao.status = TransactionStatus.ENTREGUE
         transacao.data_entrega = datetime.now(timezone.utc)
         
-        task = processar_liquidacao.delay(transacao.id)
+        # Processar liquidação (assíncrono ou síncrono)
+        if CELERY_ENABLED and processar_liquidacao:
+            task = processar_liquidacao.delay(transacao.id)
+            msg_task = f"Task {task.id} disparada."
+        else:
+            # Fallback síncrono se Celery não disponível
+            from app.tasks.pagamentos import processar_liquidacao_sincrono
+            processar_liquidacao_sincrono(transacao.id)
+            msg_task = "Processado sincronamente."
         
         db.session.add(LogAuditoria(
             usuario_id=current_user.id,
-            acao="CONFIRMACAO_RECEBIMENTO",
-            detalhes=f"Usuário confirmou recebimento da transação {transacao.fatura_ref}. Task {task.id} disparada."
+            acao=AUDITORIA_ACOES['CONFIRMACAO_RECEBIMENTO'] if 'CONFIRMACAO_RECEBIMENTO' in AUDITORIA_ACOES else "CONFIRMACAO_RECEBIMENTO",
+            detalhes=f"Usuário confirmou recebimento da transação {transacao.fatura_ref}. {msg_task}"
         ))
         
         db.session.add(Notificacao(
@@ -128,17 +142,20 @@ def api_avaliar_venda(id):
         ).filter_by(id=id, comprador_id=current_user.id).first_or_404()
         
         if venda.status not in [TransactionStatus.ENTREGUE, TransactionStatus.FINALIZADO]:
-            return jsonify({'ok': False, 'message': 'Só pode avaliar transações concluídas.'}), 409
+            return conflict_error(message='Só pode avaliar transações concluídas.')
 
         payload = request.get_json(silent=True) or {}
         estrelas = payload.get('estrelas')
         comentario = payload.get('comentario', '')
 
         if not estrelas or not isinstance(estrelas, int) or not 1 <= estrelas <= 5:
-            return jsonify({'ok': False, 'message': 'A avaliação em estrelas (1 a 5) é obrigatória.'}), 400
+            return validation_error(
+                field='estrelas',
+                message='A avaliação em estrelas (1 a 5) é obrigatória.'
+            )
 
         if Avaliacao.query.filter_by(transacao_id=venda.id).first():
-            return jsonify({'ok': False, 'message': 'Esta transação já foi avaliada.'}), 409
+            return conflict_error(message='Esta transação já foi avaliada.')
 
         nova_av = Avaliacao(
             transacao_id=venda.id,
@@ -153,15 +170,21 @@ def api_avaliar_venda(id):
             mensagem=f"⭐ Recebeste uma nova avaliação de {estrelas} estrelas na venda {venda.fatura_ref}!"
         ))
         db.session.commit()
-        return jsonify({'ok': True, 'message': 'Obrigado pela sua avaliação!'})
+        return success_response(message='Obrigado pela sua avaliação!')
     except IntegrityError as e:
         db.session.rollback()
         current_app.logger.error(f"ERRO API AVALIAR VENDA - Integridade: {e}")
-        return jsonify({'ok': False, 'message': 'Erro ao guardar a avaliação.'}), 409
+        return error_response(
+            message='Erro ao guardar a avaliação.',
+            status_code=409
+        )
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"ERRO API AVALIAR VENDA: {e}")
-        return jsonify({'ok': False, 'message': 'Erro ao submeter avaliação.'}), 500
+        return error_response(
+            message='Erro ao submeter avaliação.',
+            status_code=500
+        )
 
 
 @comprador_bp.route('/api/comprador/abrir-disputa/<int:id>', methods=['POST'])
@@ -171,13 +194,13 @@ def api_abrir_disputa(id):
     try:
         venda = Transacao.query.with_for_update().get_or_404(id)
         if venda.comprador_id != current_user.id:
-            return jsonify({'ok': False, 'message': 'Acesso não permitido.'}), 403
+            return forbidden_error(message='Acesso não permitido.')
 
         if venda.status in [TransactionStatus.FINALIZADO, TransactionStatus.CANCELADO]:
-            return jsonify({'ok': False, 'message': 'Não é possível abrir disputa para esta transação.'}), 409
+            return conflict_error(message='Não é possível abrir disputa para esta transação.')
 
         if venda.status == TransactionStatus.DISPUTA:
-            return jsonify({'ok': False, 'message': 'Já existe uma disputa aberta.'}), 409
+            return conflict_error(message='Já existe uma disputa aberta.')
 
         venda.status = TransactionStatus.DISPUTA
         db.session.add(LogAuditoria(

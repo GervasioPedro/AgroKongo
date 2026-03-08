@@ -1,7 +1,17 @@
 # app/tasks/__init__.py - Inicialização Celery + schedules centralizadas
 # Versão Corrigida - 26/02/2026
-from celery import Celery
-from celery.schedules import crontab
+
+# Import condicional para evitar erro do gssapi no Windows
+try:
+    from celery import Celery
+    from celery.schedules import crontab
+    CELERY_AVAILABLE = True
+except (ImportError, OSError) as e:
+    # Celery não disponível (Windows sem Kerberos)
+    Celery = None
+    crontab = None
+    CELERY_AVAILABLE = False
+
 from app.tasks.base import AgroKongoTask
 from app.extensions import db, cache
 
@@ -11,6 +21,12 @@ def make_celery(app):
     Cria instância Celery com contexto Flask.
     Todas as tasks herdam AgroKongoTask automaticamente.
     """
+    if not CELERY_AVAILABLE:
+        raise RuntimeError(
+            "Celery não está disponível. Instale Kerberos for Windows ou use modo síncrono.\n"
+            "Download: https://web.mit.edu/KERBEROS/dist"
+        )
+    
     celery = Celery(
         app.import_name,
         backend=app.config.get('REDIS_URL'),
@@ -71,13 +87,37 @@ def make_celery(app):
     return celery
 
 
-# ==================== IMPORTS DE TODAS AS TASKS ====================
-from app.tasks.pagamentos import processar_liquidacao
-from app.tasks.faturas import gerar_pdf_fatura_assincrono
-from app.tasks.relatorios import gerar_relatorio_excel_assincrono
-from app.tasks.notificacoes import enviar_notificacao_externa
-from app.tasks.limpeza import limpar_transacoes_antigas
-from app.tasks.monitorar_transacoes_estagnadas import monitorar_transacoes_estagnadas
+# ==================== IMPORTS DE TODAS AS TASKS (Lazy) ====================
+# Imports lazy para evitar carregamento de gssapi/Kerberos no Windows
+try:
+    from app.tasks.pagamentos import processar_liquidacao
+except ImportError:
+    processar_liquidacao = None
+
+try:
+    from app.tasks.faturas import gerar_pdf_fatura_assincrono
+except ImportError:
+    gerar_pdf_fatura_assincrono = None
+
+try:
+    from app.tasks.relatorios import gerar_relatorio_excel_assincrono
+except ImportError:
+    gerar_relatorio_excel_assincrono = None
+
+try:
+    from app.tasks.notificacoes import enviar_notificacao_externa
+except ImportError:
+    enviar_notificacao_externa = None
+
+try:
+    from app.tasks.limpeza import limpar_transacoes_antigas
+except ImportError:
+    limpar_transacoes_antigas = None
+
+try:
+    from app.tasks.monitorar_transacoes_estagnadas import monitorar_transacoes_estagnadas
+except ImportError:
+    monitorar_transacoes_estagnadas = None
 
 __all__ = [
     'make_celery',

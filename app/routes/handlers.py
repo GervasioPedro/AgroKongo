@@ -6,7 +6,7 @@ from markupsafe import escape
 from sqlalchemy.exc import SQLAlchemyError
 from app.extensions import db, limiter
 from app.models import LogAuditoria
-from app.utils.helpers import aware_utcnow
+from app.models.base import aware_utcnow
 
 errors_bp = Blueprint('errors', __name__)
 
@@ -19,8 +19,8 @@ def log_error(codigo: str, detalhes: str):
             usuario_id=user_id,
             acao=codigo,
             detalhes=f"{escape(detalhes[:500])} | Path: {escape(request.path)} | Method: {escape(request.method)} | UA: {escape(request.user_agent.string[:200])}",
-            ip=request.remote_addr,
-            data_criacao=aware_utcnow()
+            ip_address=request.remote_addr,
+            data_acao=aware_utcnow()
         )
         db.session.add(log)
         db.session.commit()

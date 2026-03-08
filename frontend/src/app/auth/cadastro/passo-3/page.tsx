@@ -1,306 +1,216 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
+import { Sprout, CheckCircle, Loader2, Key, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Sprout, ArrowRight, Lock, CreditCard, Upload, CheckCircle, Eye, EyeOff } from "lucide-react";
-import { http } from "@/services/http";
-import toast from "react-hot-toast";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
-export default function CadastroPasso3() {
+export default function CadastroPasso3Page() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     senha: "",
     confirmar_senha: "",
-    iban: "",
-    nif: "",
-    tipo_entidade: "singular",
+    iban: ""
   });
-  const [biFile, setBiFile] = useState<File | null>(null);
-  const [tipoUsuario, setTipoUsuario] = useState<string>("produtor");
+  
+  const telemovel = searchParams.get("telemovel") || "";
 
-  // Detectar tipo de usuário do localStorage
-  React.useEffect(() => {
-    const dadosCadastro = localStorage.getItem('cadastro_temp');
-    if (dadosCadastro) {
-      const dados = JSON.parse(dadosCadastro);
-      setTipoUsuario(dados.tipo || "produtor");
+  useEffect(() => {
+    if (!telemovel) {
+      router.push("/auth/cadastro/passo-1");
     }
-  }, []);
+  }, [telemovel, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (formData.senha.length < 4 || formData.senha.length > 6) {
-      toast.error("Use um PIN de 4 a 6 dígitos");
-      return;
-    }
-
-    if (!/^\d+$/.test(formData.senha)) {
-      toast.error("Use apenas números no PIN");
+  const handleFinalizarCadastro = async () => {
+    // Validar campos
+    if (!formData.senha || !/^\d{4,6}$/.test(formData.senha)) {
+      toast.error("Senha deve ser um PIN de 4 a 6 dígitos");
       return;
     }
 
     if (formData.senha !== formData.confirmar_senha) {
-      toast.error("As senhas não coincidem");
+      toast.error("Senhas não conferem");
       return;
     }
 
-    // Validar NIF obrigatório para produtor ou pessoa coletiva
-    if (tipoUsuario === "produtor" || formData.tipo_entidade === "coletiva") {
-      if (!formData.nif || formData.nif.length < 9) {
-        toast.error("NIF obrigatório para produtores e pessoas coletivas");
-        return;
-      }
+    if (!formData.iban || !formData.iban.startsWith("AO06") || formData.iban.length !== 27) {
+      toast.error("IBAN inválido. Use formato AO06 + 21 dígitos");
+      return;
     }
 
-    // Validar IBAN apenas para produtor
-    if (tipoUsuario === "produtor") {
-      if (!formData.iban.startsWith("AO06") || formData.iban.length !== 27) {
-        toast.error("IBAN obrigatório para produtor. Use formato AO06 + 21 dígitos");
-        return;
-      }
-    }
-
-    setLoading(true);
+    setIsLoading(true);
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('pin', formData.senha);
-      formDataToSend.append('tipo_entidade', formData.tipo_entidade);
-      if (formData.nif) formDataToSend.append('nif', formData.nif);
-      if (tipoUsuario === "produtor" && formData.iban) {
-        formDataToSend.append('iban', formData.iban);
-      }
-      if (biFile) formDataToSend.append('bi', biFile);
-
-      const res = await http.post("/cadastro/passo-3", formDataToSend, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const response = await fetch("/api/cadastro/finalizar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          telemovel,
+          senha: formData.senha,
+          iban: formData.iban
+        }),
       });
 
-      if (res.data?.sucesso) {
-        // Salvar usuário no localStorage
-        const dadosCadastro = localStorage.getItem('cadastro_temp');
-        const userData = {
-          id: res.data.usuario_id,
-          nome: dadosCadastro ? JSON.parse(dadosCadastro).nome : "Usuário",
-          tipo: res.data.tipo || tipoUsuario,
-          telemovel: dadosCadastro ? JSON.parse(dadosCadastro).telemovel : "",
-          conta_validada: false
-        };
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Cadastro realizado com sucesso! Bem-vindo ao AgroKongo!");
         
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.removeItem('cadastro_temp');
-        
-        toast.success("Conta criada com sucesso!");
-        router.push("/dashboard");
+        // Aguardar 2 segundos e redirecionar para dashboard
+        setTimeout(() => {
+          router.push(data.redirect || "/produtor/dashboard");
+        }, 2000);
       } else {
-        toast.error(res.data?.mensagem || "Erro ao criar conta");
+        toast.error(data.message || "Erro ao finalizar cadastro");
       }
-    } catch (error: any) {
-      console.error('Erro cadastro:', error);
-      const msg = error?.response?.data?.mensagem || error?.message || "Erro ao processar";
-      toast.error(msg);
+    } catch (error) {
+      console.error("Erro na finalização:", error);
+      toast.error("Erro ao conectar com servidor");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-surface-neutral">
-      <header className="border-b bg-white px-4 py-4">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-agro-primary flex items-center justify-center">
-              <Sprout className="h-5 w-5 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-agro-primary/5 to-agro-leaf/5 p-4">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="h-16 w-16 rounded-2xl bg-agro-primary flex items-center justify-center">
+              <Sprout className="h-8 w-8 text-white" />
             </div>
-            <span className="font-bold">AgroKongo</span>
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-md mx-auto px-4 py-12">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-agro-primary/10 px-4 py-2 rounded-full mb-4">
-            <span className="text-sm font-medium text-agro-primary">Passo 3 de 3 - Final</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">Segurança e Pagamentos</h1>
-          <p className="text-slate-600">Defina sua senha e dados bancários</p>
-        </div>
+          <CardTitle className="text-2xl">Último Passo!</CardTitle>
+          <CardDescription>
+            Passo 3 de 3: Senha e Pagamento
+          </CardDescription>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+            <div className="bg-agro-primary h-2.5 rounded-full" style={{ width: "100%" }}></div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          <div className="text-center py-2">
+            <CheckCircle className="h-16 w-16 text-agro-primary mx-auto mb-3" />
+            <h3 className="text-xl font-semibold mb-2">
+              Quase Lá!
+            </h3>
+            <p className="text-muted-foreground">
+              Defina sua senha e informe seu IBAN
+            </p>
+          </div>
 
-        <Card>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
-                <Lock className="h-4 w-4" />
-                PIN de Acesso (4-6 dígitos)
-              </label>
-              <div className="relative">
-                <input
-                  required
-                  type={showPassword ? "text" : "password"}
-                  inputMode="numeric"
-                  placeholder="Digite seu PIN"
-                  value={formData.senha}
-                  onChange={(e) => setFormData({...formData, senha: e.target.value.replace(/\D/g, "")})}
-                  maxLength={6}
-                  className="w-full h-12 px-4 pr-12 border-2 rounded-xl text-center font-bold focus:ring-2 focus:ring-agro-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Confirmar PIN</label>
-              <input
-                required
-                type={showPassword ? "text" : "password"}
-                inputMode="numeric"
-                placeholder="Digite novamente"
-                value={formData.confirmar_senha}
-                onChange={(e) => setFormData({...formData, confirmar_senha: e.target.value.replace(/\D/g, "")})}
-                maxLength={6}
-                className="w-full h-12 px-4 border-2 rounded-xl text-center font-bold focus:ring-2 focus:ring-agro-primary"
-              />
-            </div>
-
-            <div className="pt-4 border-t">
-              <label className="text-sm font-medium mb-2 block">Tipo de Entidade</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData({...formData, tipo_entidade: "singular"})}
-                  className={`h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
-                    formData.tipo_entidade === "singular" 
-                      ? "border-agro-primary bg-agro-primary/5 text-agro-primary" 
-                      : "border-slate-200 hover:border-slate-300"
-                  }`}
-                >
-                  <span className="text-sm font-medium">Pessoa Singular</span>
-                  <span className="text-xs text-slate-500">Indivíduo</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({...formData, tipo_entidade: "coletiva"})}
-                  className={`h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
-                    formData.tipo_entidade === "coletiva" 
-                      ? "border-agro-primary bg-agro-primary/5 text-agro-primary" 
-                      : "border-slate-200 hover:border-slate-300"
-                  }`}
-                >
-                  <span className="text-sm font-medium">Pessoa Coletiva</span>
-                  <span className="text-xs text-slate-500">Empresa/Cooperativa</span>
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                NIF {(tipoUsuario === "produtor" || formData.tipo_entidade === "coletiva") && "*"}
-              </label>
+          <div className="space-y-4">
+            {/* Senha */}
+            <div className="space-y-2">
+              <Label htmlFor="senha">
+                <Key className="inline h-4 w-4 mr-2" />
+                Senha (PIN de 4-6 dígitos)
+              </Label>
               <Input
-                required={tipoUsuario === "produtor" || formData.tipo_entidade === "coletiva"}
-                placeholder="Ex: 501234400001"
-                value={formData.nif}
-                onChange={(e) => setFormData({...formData, nif: e.target.value.replace(/\D/g, "")})}
-                maxLength={14}
-                className="h-12"
+                id="senha"
+                type="password"
+                placeholder="****"
+                value={formData.senha}
+                onChange={(e) => setFormData(prev => ({ ...prev, senha: e.target.value }))}
+                maxLength={6}
+                pattern="\d{4,6}"
+                required
               />
-              <p className="text-xs text-slate-600 mt-1">
-                {(tipoUsuario === "produtor" || formData.tipo_entidade === "coletiva") 
-                  ? "Obrigatório para produtores e pessoas coletivas" 
-                  : "Opcional para pessoas singulares"}
+            </div>
+
+            {/* Confirmar Senha */}
+            <div className="space-y-2">
+              <Label htmlFor="confirmar_senha">
+                Confirmar Senha
+              </Label>
+              <Input
+                id="confirmar_senha"
+                type="password"
+                placeholder="****"
+                value={formData.confirmar_senha}
+                onChange={(e) => setFormData(prev => ({ ...prev, confirmar_senha: e.target.value }))}
+                required
+              />
+            </div>
+
+            {/* IBAN */}
+            <div className="space-y-2">
+              <Label htmlFor="iban">
+                <CreditCard className="inline h-4 w-4 mr-2" />
+                IBAN para Pagamentos
+              </Label>
+              <Input
+                id="iban"
+                type="text"
+                placeholder="AO06 XXXXXXXXXXXXXXXXXXXXX"
+                value={formData.iban}
+                onChange={(e) => setFormData(prev => ({ ...prev, iban: e.target.value.toUpperCase() }))}
+                maxLength={27}
+                required
+                className="uppercase"
+              />
+              <p className="text-xs text-muted-foreground">
+                Formato: AO06 + 21 dígitos
               </p>
             </div>
+          </div>
 
-            {tipoUsuario === "produtor" && (
-              <div>
-                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  IBAN (Conta Bancária) *
-                </label>
-                <Input
-                  required
-                  placeholder="AO06000000000000000000000"
-                  value={formData.iban}
-                  onChange={(e) => setFormData({...formData, iban: e.target.value.toUpperCase().replace(/\s/g, "")})}
-                  maxLength={27}
-                  className="h-12 font-mono"
-                />
-                <p className="text-xs text-slate-600 mt-1">
-                  Formato: AO06 + 21 dígitos (obrigatório para receber pagamentos)
-                </p>
-              </div>
-            )}
+          <Alert>
+            <AlertDescription className="text-sm space-y-2">
+              <p><strong>O que acontece agora?</strong></p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Ao finalizar, sua conta será criada automaticamente</li>
+                <li>Você poderá explorar o marketplace imediatamente</li>
+                <li>Sua conta será validada em até 24h para publicar produtos</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Bilhete de Identidade (Opcional)</label>
-              <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-agro-primary transition-colors">
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  onChange={(e) => setBiFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                  id="bi-upload"
-                />
-                <label htmlFor="bi-upload" className="cursor-pointer">
-                  {biFile ? (
-                    <div className="flex items-center justify-center gap-2 text-green-600">
-                      <CheckCircle className="h-6 w-6" />
-                      <span className="font-medium">{biFile.name}</span>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-10 w-10 text-slate-400 mx-auto mb-2" />
-                      <p className="text-agro-primary font-medium mb-1">Escolher arquivo</p>
-                      <p className="text-xs text-slate-600">PDF, JPG ou PNG (máx 5MB)</p>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <p className="text-sm text-blue-900">
-                <strong>Nota:</strong> Sua conta será revista pela administração. 
-                Pode explorar o mercado, mas só poderá publicar após validação.
-              </p>
-            </div>
-
+          <div className="space-y-3 pt-4">
             <Button 
-              type="submit" 
-              variant="primary" 
-              className="w-full h-12 text-lg"
-              disabled={loading}
+              onClick={handleFinalizarCadastro}
+              className="w-full h-12 text-lg" 
+              disabled={isLoading}
             >
-              {loading ? "A criar conta..." : "Finalizar Cadastro"}
-              {!loading && <ArrowRight className="h-5 w-5 ml-2" />}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Criando Conta...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  Finalizar e Criar Conta
+                </>
+              )}
             </Button>
-          </form>
-        </Card>
+          </div>
 
-        <div className="mt-8">
-          <div className="flex justify-between text-xs text-slate-600 mb-2">
-            <span>Progresso</span>
-            <span>100%</span>
+          <div className="text-center pt-4">
+            <p className="text-xs text-muted-foreground">
+              Ao finalizar, você concorda com nossos{" "}
+              <Link href="/termos" className="underline hover:text-agro-primary">
+                Termos de Uso
+              </Link>{" "}
+              e{" "}
+              <Link href="/privacidade" className="underline hover:text-agro-primary">
+                Política de Privacidade
+              </Link>
+            </p>
           </div>
-          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-            <div className="h-full bg-agro-primary w-full transition-all"></div>
-          </div>
-        </div>
-      </main>
+        </CardContent>
+      </Card>
     </div>
   );
 }

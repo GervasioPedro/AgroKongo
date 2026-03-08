@@ -33,6 +33,18 @@ instance/
 *.swo
 *~
 
+# Backup files
+*.backup_*
+*.bak
+*.old
+
+# Temporary files
+cookies.txt
+*.tmp
+
+# Archive folder (keep structure but don't track new files)
+# archive/
+
 # Testing
 .pytest_cache/
 .coverage

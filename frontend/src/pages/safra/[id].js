@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth'; // Importar o hook de autenticação
+import { useAuth } from '../../hooks/useAuth'; // CORRIGIDO
 
 // ... (getStaticPaths e getStaticProps permanecem os mesmos) ...
 export async function getStaticPaths() {

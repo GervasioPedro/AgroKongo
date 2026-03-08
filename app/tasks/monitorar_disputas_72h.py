@@ -1,13 +1,14 @@
 # app/tasks/monitorar_disputas_72h.py - Implementação RN04
 # Task para detetar disputas automáticas após 72h sem confirmação
 from celery import shared_task
-from app.tasks.base import AgroKongoTask
-from app.extensions import db, current_app
+from app.tasks.base import AgroKongoTask, AgroKongoTaskBase
+from flask import current_app
+from app.extensions import db
 from app.models import Transacao, TransactionStatus, Notificacao, LogAuditoria
 from datetime import datetime, timedelta, timezone
 
 
-@shared_task(base=AgroKongoTask, bind=True, max_retries=3)
+@shared_task(base=AgroKongoTaskBase, bind=True, max_retries=3)
 def monitorar_disputas_72h(self):
     """
     RN04 - Disputa Automática:

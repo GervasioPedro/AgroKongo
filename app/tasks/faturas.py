@@ -11,15 +11,16 @@ from io import BytesIO
 import qrcode
 import hashlib
 import os
-from app.extensions import db, current_app
-from app.tasks.base import AgroKongoTask  # ← Import adicionado
+from flask import current_app
+from app.extensions import db
+from app.tasks.base import AgroKongoTask, AgroKongoTaskBase  # ← Import adicionado
 from app.models import Transacao, Usuario, LogAuditoria, Notificacao, Safra  # ← Safra adicionado
-from app.utils.helpers import aware_utcnow
+from app.models.base import aware_utcnow
 import bleach
 from sqlalchemy.orm import joinedload  # ← Import adicionado
 
 
-@shared_task(bind=True, base=AgroKongoTask, max_retries=5, rate_limit='5/m')
+@shared_task(bind=True, base=AgroKongoTaskBase, max_retries=5, rate_limit='5/m')
 def gerar_pdf_fatura_assincrono(self, trans_id: str, user_id: int):
     """
     Gera PDF fatura async com QR validação, hash integridade.
@@ -99,7 +100,7 @@ def _gerar_pdf_content(transacao):
         # Detalhes transação
         data_trans = [
             ['Produto', bleach.clean(transacao.safra.produto.nome)],
-            ['Quantidade', f"{transacao.quantidade_comprada} {transacao.safra.unidade_medida}"],
+            ['Quantidade', f"{transacao.quantidade_comprada} {transacao.safra.produto.categoria or 'unidades'}"],
             ['Preço unitário', f"{transacao.safra.preco_por_unidade:.2f} Kz"],
             ['Valor total', f"{transacao.valor_total_pago:.2f} Kz"],
             ['Comissão plataforma', f"{transacao.comissao_plataforma:.2f} Kz"],
@@ -172,7 +173,6 @@ def _notificar_fatura_pronta(transacao, user_id, path):
     db.session.add(Notificacao(
         usuario_id=user_id,
         mensagem=f"Fatura {transacao.fatura_ref} pronta! Baixe aqui.",
-        categoria='fatura_pronta',
         link=download_link
     ))
     
@@ -195,7 +195,6 @@ def _notificar_erro_fatura(trans_id, user_id, erro):
     
     db.session.add(Notificacao(
         usuario_id=user_id,
-        mensagem=f"Erro geração fatura {fatura_ref}: {str(erro)}",
-        categoria='erro_fatura'
+        mensagem=f"Erro geração fatura {fatura_ref}: {str(erro)}"
     ))
     db.session.commit()

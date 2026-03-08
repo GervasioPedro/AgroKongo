@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import ProtectedRoute from '../components/ProtectedRoute';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast'; // Importar toast
 
 function ProfilePage() {

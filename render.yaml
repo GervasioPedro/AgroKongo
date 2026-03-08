@@ -1,5 +1,5 @@
 services:
-  # Backend API (Servidor Web Gunicorn)
+  # 1. Backend API (Flask + Gunicorn)
   - type: web
     name: agrokongo-api
     env: python
@@ -13,41 +13,30 @@ services:
         value: production
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: DATABASE_URL
-        fromDatabase:
-          name: agrokongo-db
-          property: connectionString
       - key: SECRET_KEY
         generateValue: true
-        sync: true # Sincronizar a chave entre deploys
+        sync: true
+      - key: CORS_ORIGINS
+        value: https://agrokongo.netlify.app,https://www.agrokongo.ao
+      # Redis interno do Render
       - key: REDIS_URL
         fromService:
           name: agrokongo-redis
           type: redis
           property: connectionString
-      - key: CORS_ORIGINS
-        value: https://agrokongo.netlify.app,https://www.agrokongo.ao
-      # --- ADICIONE ESTAS VARIÁVEIS NO DASHBOARD DO RENDER ---
-      - key: MAIL_SERVER
-        value: "smtp.example.com" # Substituir
-      - key: MAIL_PORT
-        value: "587" # Substituir
-      - key: MAIL_USE_TLS
-        value: "True"
-      - key: MAIL_USERNAME
-        value: "seu_email@example.com" # Substituir
-      - key: MAIL_PASSWORD
-        sync: false # Manter segredos fora do YAML
+      # Variáveis que VOCÊ deve preencher no Dashboard do Render:
+      - key: DATABASE_URL
+        sync: false # Cole aqui a string do Supabase
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE
         sync: false
-      - key: SUPABASE_BUCKET
-        value: "agrokongo-uploads"
-      - key: SUPABASE_PUBLIC_URL
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
         sync: false
 
-  # Celery Worker (Processa tarefas assíncronas)
+  # 2. Celery Worker (Processamento de Fundo)
   - type: worker
     name: agrokongo-worker
     env: python
@@ -56,17 +45,15 @@ services:
     buildCommand: "pip install -r requirements.txt"
     startCommand: "celery -A celery_worker.celery worker --loglevel=info --concurrency=2"
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: agrokongo-db
-          property: connectionString
       - key: REDIS_URL
         fromService:
           name: agrokongo-redis
           type: redis
           property: connectionString
+      - key: DATABASE_URL
+        sync: false # O Render vai pedir para preencher isto igual à API
 
-  # Celery Beat (Agenda tarefas periódicas)
+  # 3. Celery Beat (Tarefas Agendadas)
   - type: worker
     name: agrokongo-beat
     env: python
@@ -75,25 +62,19 @@ services:
     buildCommand: "pip install -r requirements.txt"
     startCommand: "celery -A celery_worker.celery beat --loglevel=info"
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: agrokongo-db
-          property: connectionString
       - key: REDIS_URL
         fromService:
           name: agrokongo-redis
           type: redis
           property: connectionString
+      - key: DATABASE_URL
+        sync: false
 
+# Serviços de Dados (Apenas Redis, pois DB é Supabase)
 databases:
-  - name: agrokongo-db
-    databaseName: agrokongo
-    user: agrokongo
-    region: frankfurt
-    plan: free
-
   - name: agrokongo-redis
     type: redis
     region: frankfurt
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # Aberto apenas para serviços internos

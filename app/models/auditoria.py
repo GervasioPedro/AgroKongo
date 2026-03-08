@@ -3,12 +3,16 @@ Modelos de Auditoria e Configuração
 """
 import decimal
 from decimal import Decimal
+from sqlalchemy import Index
 from app.extensions import db
 from app.models.base import aware_utcnow
-
-
 class LogAuditoria(db.Model):
     __tablename__ = 'logs_auditoria'
+    __table_args__ = (
+        Index('idx_log_usuario', 'usuario_id'),
+        Index('idx_log_data', 'data_acao'),
+        Index('idx_log_acao', 'acao'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id', ondelete='SET NULL'))
     acao = db.Column(db.String(50), nullable=False)
@@ -31,7 +35,8 @@ class ConfiguracaoSistema(db.Model):
         try:
             config = cls.query.filter_by(chave=chave).first()
             if config and config.valor:
-                return Decimal(config.valor)
+                valor_decimal = Decimal(str(config.valor))
+                return valor_decimal
         except (ValueError, TypeError, decimal.InvalidOperation) as e:
             try:
                 from flask import current_app
@@ -46,4 +51,5 @@ class ConfiguracaoSistema(db.Model):
             except RuntimeError:
                 import sys
                 print(f"Erro inesperado ao obter configuração '{chave}': {e}", file=sys.stderr)
+        
         return padrao

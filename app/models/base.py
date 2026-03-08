@@ -29,3 +29,18 @@ class StatusConta:
     VERIFICADO = 'VERIFICADO'
     REJEITADO = 'REJEITADO'
     SUSPENSO = 'SUSPENSO'
+    
+    @classmethod
+    def choices(cls):
+        """Retorna lista de choices para formulários"""
+        return [
+            (cls.PENDENTE_VERIFICACAO, 'Pendente Verificação'),
+            (cls.VERIFICADO, 'Verificado'),
+            (cls.REJEITADO, 'Rejeitado'),
+            (cls.SUSPENSO, 'Suspenso')
+        ]
+    
+    @classmethod
+    def is_valid(cls, valor):
+        """Valida se o valor é um status válido"""
+        return valor in [cls.PENDENTE_VERIFICACAO, cls.VERIFICADO, cls.REJEITADO, cls.SUSPENSO]

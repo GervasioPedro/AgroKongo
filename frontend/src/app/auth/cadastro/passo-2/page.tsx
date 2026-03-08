@@ -1,144 +1,251 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
+import { Sprout, Key, WhatsApp, RefreshCw, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sprout, ArrowRight, Shield } from "lucide-react";
-import { http } from "@/services/http";
-import toast from "react-hot-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
-export default function CadastroPasso2() {
+export default function CadastroPasso2Page() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const searchParams = useSearchParams();
+  const [otp, setOtp] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutos
+  const [canResend, setCanResend] = useState(false);
+  
+  const telemovel = searchParams.get("telemovel") || "";
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-    
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const codigo = otp.join("");
-
-    if (codigo.length !== 6) {
-      toast.error("Digite o código completo");
+  useEffect(() => {
+    if (!telemovel) {
+      router.push("/auth/cadastro/passo-1");
       return;
     }
 
-    setLoading(true);
+    // Timer de expiração
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-    try {
-      const res = await http.post("/cadastro/passo-2", { codigo });
-      
-      if (res.data?.sucesso) {
-        toast.success("Telefone validado!");
-        router.push("/auth/cadastro/passo-3");
-      } else {
-        toast.error(res.data?.mensagem || "Código inválido");
-      }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.mensagem || "Código inválido");
-    } finally {
-      setLoading(false);
+    // Habilitar reenvio após 60 segundos
+    setTimeout(() => setCanResend(true), 60000);
+
+    return () => clearInterval(timer);
+  }, [telemovel, router]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+    
+    if (value.length > 6) {
+      value = value.slice(0, 6);
+    }
+    
+    setOtp(value);
+
+    // Auto-submit quando tiver 6 dígitos
+    if (value.length === 6) {
+      handleSubmit(new Event("submit") as any);
     }
   };
 
-  const handleReenviar = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    // Esta página agora é apenas de transição
+    // O código OTP é verificado no backend via API
+    // Após verificação bem-sucedida, redireciona para passo-3
+    
+    if (!otp || otp.length !== 6) {
+      toast.error("Código deve ter 6 dígitos");
+      return;
+    }
+
+    if (timeRemaining === 0) {
+      toast.error("Código expirado. Solicite um novo código.");
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      await http.post("/cadastro/reenviar-otp");
-      toast.success("Novo código enviado via SMS!");
+      const response = await fetch("/api/cadastro/verificar-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          telemovel,
+          otp 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Código verificado! Preencha seus dados.");
+        // Redireciona para página de dados básicos
+        router.push(`/auth/cadastro/dados-basicos?telemovel=${encodeURIComponent(telemovel)}`);
+      } else {
+        toast.error(data.message || "Código inválido");
+      }
     } catch (error) {
+      console.error("Erro na verificação:", error);
+      toast.error("Erro ao conectar com servidor");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReenviarCodigo = async () => {
+    if (!canResend) return;
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/cadastro/reenviar-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telemovel }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Novo código enviado!");
+        setTimeRemaining(600);
+        setCanResend(false);
+        setTimeout(() => setCanResend(true), 60000);
+      } else {
+        toast.error(data.message || "Erro ao reenviar código");
+      }
+    } catch (error) {
+      console.error("Erro no reenvio:", error);
       toast.error("Erro ao reenviar código");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-surface-neutral">
-      <header className="border-b bg-white px-4 py-4">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-agro-primary flex items-center justify-center">
-              <Sprout className="h-5 w-5 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-agro-primary/5 to-agro-leaf/5 p-4">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="h-16 w-16 rounded-2xl bg-agro-primary flex items-center justify-center">
+              <Sprout className="h-8 w-8 text-white" />
             </div>
-            <span className="font-bold">AgroKongo</span>
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-md mx-auto px-4 py-12">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-agro-primary/10 px-4 py-2 rounded-full mb-4">
-            <span className="text-sm font-medium text-agro-primary">Passo 2 de 3</span>
           </div>
-          <div className="h-16 w-16 rounded-full bg-escrow-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Shield className="h-8 w-8 text-escrow-primary" />
+          <CardTitle className="text-2xl">Verificação de Código</CardTitle>
+          <CardDescription>
+            Passo 2 de 3: Dados Pessoais
+          </CardDescription>
+                    
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+            <div className="bg-agro-primary h-2.5 rounded-full" style={{ width: "66% }}></div>
           </div>
-          <h1 className="text-3xl font-bold mb-2">Validar Telemóvel</h1>
-          <p className="text-slate-600">Digite o código enviado via SMS</p>
-        </div>
-
-        <Card>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex gap-2 justify-center">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  className="w-12 h-14 text-center text-2xl font-bold border-2 rounded-xl focus:border-agro-primary focus:ring-2 focus:ring-agro-primary/20"
-                />
-              ))}
+        </CardHeader>
+        
+        <CardContent>
+          <div className="text-center mb-6">
+            <WhatsApp className="h-12 w-12 text-agro-primary mx-auto mb-3" />
+            <h3 className="font-semibold text-lg mb-2">Verifique seu WhatsApp</h3>
+            <p className="text-sm text-muted-foreground">
+              Enviamos um código de 6 dígitos para seu número
+            </p>
+            <div className="mt-3 inline-flex items-center px-4 py-2 bg-muted rounded-md">
+              <span className="text-sm font-medium">+244 {telemovel.slice(-4)}</span>
             </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="otp">
+                <Key className="inline h-4 w-4 mr-2" />
+                Código de Verificação
+              </Label>
+              <Input
+                id="otp"
+                type="text"
+                placeholder="000000"
+                value={otp}
+                onChange={handleOtpChange}
+                pattern="\d{6}"
+                maxLength={6}
+                required
+                autoFocus
+                className="text-center text-2xl tracking-widest"
+                disabled={timeRemaining === 0}
+              />
+              <p className="text-xs text-muted-foreground text-center">
+                Digite os 6 dígitos recebidos via WhatsApp
+              </p>
+            </div>
+
+            {timeRemaining > 0 && (
+              <Alert>
+                <Clock className="h-4 w-4" />
+                <AlertDescription className="text-center font-mono">
+                  Código expira em {formatTime(timeRemaining)}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {timeRemaining === 0 && (
+              <Alert variant="destructive">
+                <AlertDescription className="text-center font-semibold">
+                  Código expirado
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Button 
               type="submit" 
-              variant="primary" 
-              className="w-full h-12 text-lg"
-              disabled={loading || otp.join("").length !== 6}
+              className="w-full h-12 text-lg" 
+              disabled={isLoading || timeRemaining === 0 || otp.length !== 6}
             >
-              {loading ? "A validar..." : "Validar Código"}
-              {!loading && <ArrowRight className="h-5 w-5 ml-2" />}
+              {isLoading ? "Verificando..." : "Verificar Código"}
             </Button>
-
-            <div className="text-center">
-              <p className="text-sm text-slate-600 mb-2">Não recebeu o código?</p>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm"
-                onClick={handleReenviar}
-              >
-                Reenviar via SMS
-              </Button>
-            </div>
           </form>
-        </Card>
 
-        <div className="mt-8">
-          <div className="flex justify-between text-xs text-slate-600 mb-2">
-            <span>Progresso</span>
-            <span>66%</span>
+          <div className="text-center mt-4 space-y-2">
+            <p className="text-sm text-muted-foreground">Não recebeu o código?</p>
+            <Button
+              variant="outline"
+              onClick={handleReenviarCodigo}
+              disabled={!canResend || isLoading}
+              size="sm"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reenviar Código
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Limite: 3 tentativas para evitar custos de SMS
+            </p>
           </div>
-          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-            <div className="h-full bg-agro-primary w-2/3 transition-all"></div>
+
+          <div className="text-center mt-4">
+            <Link href="/auth/cadastro/passo-1" className="text-sm text-muted-foreground hover:underline">
+              ← Voltar para passo anterior
+            </Link>
           </div>
-        </div>
-      </main>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,14 +1,15 @@
 # app/tasks/monitorar_transacoes_estagnadas.py - Versão auditada, resiliente e automática
 # Versão Corrigida - 22/02/2026
 from celery import shared_task
-from app.tasks.base import AgroKongoTask  # ← Import adicionado
-from app.extensions import db, current_app
+from app.tasks.base import AgroKongoTask, AgroKongoTaskBase  # ← Import adicionado
+from flask import current_app
+from app.extensions import db
 from app.models import Transacao, TransactionStatus, Notificacao, Safra, LogAuditoria, Usuario  # ← Usuario adicionado
 from datetime import datetime, timedelta, timezone
 from flask import url_for  # ← Import adicionado
 
 
-@shared_task(base=AgroKongoTask, bind=True, max_retries=3)
+@shared_task(base=AgroKongoTaskBase, bind=True, max_retries=3)
 def monitorar_transacoes_estagnadas(self):
     """
     Motor de integridade do AgroKongo:
@@ -39,10 +40,10 @@ def _alertar_admin_transacoes_atrasadas(agora):
     ).all()
 
     for t in estagnadas_admin:
-        current_app.logger.warning(f"⚠️ ADMIN_DELAY: Ref {t.fatura_ref} em análise há +24h")
+        current_app.logger.warning(f"ADMIN_DELAY: Ref {t.fatura_ref} em análise há +24h")
         db.session.add(Notificacao(
             usuario_id=1,
-            mensagem=f"🔔 Transação {t.fatura_ref} está em análise há mais de 24h. Verifique urgente!",
+            mensagem=f"Transação {t.fatura_ref} está em análise há mais de 24h. Verifique urgente!",
             link=f"/admin/detalhe-transacao/{t.id}"
         ))
     
@@ -112,6 +113,6 @@ def _registrar_auditoria_cancelamento(transacao):
 def _registrar_resultado_monitorizacao(canceladas_count):
     """Registra resultado da monitorização no log."""
     if canceladas_count > 0:
-        current_app.logger.info(f"♻️ Limpeza automática concluída: {canceladas_count} reservas canceladas e stock libertado.")
+        current_app.logger.info(f"Limpeza automática concluída: {canceladas_count} reservas canceladas e stock libertado.")
     else:
-        current_app.logger.info("✅ Nenhuma transação estagnada encontrada.")
+        current_app.logger.info("Nenhuma transação estagnada encontrada.")

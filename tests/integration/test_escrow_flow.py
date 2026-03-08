@@ -15,8 +15,6 @@ from app.models import StatusConta
 from app.tasks.pagamentos import processar_liquidacao
 
 
-@pytest.mark.integration
-@pytest.mark.financial
 class TestEscrowFlowSuccess:
     """Teste de integração - Cenário de Sucesso do Fluxo de Escrow"""
     
@@ -235,8 +233,6 @@ class TestEscrowFlowSuccess:
                 assert transacao_atualizada.transferencia_concluida is True
 
 
-@pytest.mark.integration
-@pytest.mark.financial
 class TestEscrowFlowFailure:
     """Teste de integração - Cenário de Falha e Rollback"""
     
@@ -395,8 +391,6 @@ class TestEscrowFlowFailure:
         assert mock_task.call_count == 1
 
 
-@pytest.mark.integration
-@pytest.mark.dispute
 class TestEscrowFlowWithDisputes:
     """Testes de integração do fluxo de escrow com disputas"""
     

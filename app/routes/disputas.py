@@ -1,13 +1,14 @@
 # app/routes/disputas.py - Sistema completo de resolução de disputas
 # Implementação das regras RN05-RN08 com segurança e performance
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, abort
+from flask import Blueprint, request, current_app, abort
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models import Transacao, TransactionStatus, Notificacao, LogAuditoria
 from app.models import Disputa
 from app.utils.helpers import salvar_ficheiro
 from app.tasks.notificacoes import enviar_notificacao_disputa_async
+from app.shared.constants import AUDITORIA_ACOES
 from datetime import datetime, timezone
 
 disputas_bp = Blueprint('disputas', __name__)
@@ -117,7 +118,7 @@ def abrir_disputa(trans_uuid):
             db.session.add(nova_disputa)
             db.session.add(LogAuditoria(
                 usuario_id=current_user.id,
-                acao="ABERTURA_DISPUTA",
+                acao=AUDITORIA_ACOES['ABERTURA_DISPUTA'],
                 detalhes=f"Comprador abriu disputa para transação {transacao.fatura_ref}. Motivo: {nova_disputa.motivo[:100]}...",
                 ip=request.remote_addr
             ))

@@ -16,7 +16,7 @@ from app.models.produto import Produto, Safra
 from app.models.transacao import Transacao, HistoricoStatus
 
 # Avaliação
-from app.models.avaliacao import Avaliacao # <-- ADICIONADO
+from app.models.avaliacao import Avaliacao
 
 # Financeiro
 from app.models.financeiro import Carteira, MovimentacaoFinanceira
@@ -49,7 +49,7 @@ __all__ = [
     'Transacao',
     'HistoricoStatus',
     # Avaliação
-    'Avaliacao', # <-- ADICIONADO
+    'Avaliacao',
     # Financeiro
     'Carteira',
     'MovimentacaoFinanceira',

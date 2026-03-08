@@ -5,8 +5,10 @@ import pytest
 import tempfile
 import os
 from unittest.mock import MagicMock
+from decimal import Decimal
+from datetime import datetime, timezone, timedelta
 
-from app import create_app, db, celery
+from app import create_app, db
 from app.models import (
     Usuario, Safra, Produto, Provincia, Municipio,
     Transacao, TransactionStatus, Notificacao
@@ -43,17 +45,60 @@ def app_integration():
         'LOG_LEVEL': 'DEBUG'
     }
     
-    app = create_app(test_config)
+    # Criar app com configurações de teste aplicadas desde o início
+    app = create_app('dev', test_config_override=test_config)
     
-    # Configurar Celery para testes
+    # Configurar extensões manualmente para testes
     with app.app_context():
-        celery.conf.update(
-            task_always_eager=True,
-            task_eager_propagates=True,
-            broker_url='memory://',
-            result_backend='memory://'
-        )
+        # Inicializar SQLAlchemy
+        from app.extensions import db
+        db.init_app(app)
         
+        # Inicializar outras extensões
+        from flask_migrate import Migrate
+        from flask_wtf import CSRFProtect
+        from flask_login import LoginManager
+        from flask_mail import Mail
+        from flask_limiter import Limiter
+        from flask_caching import Cache
+        from flask_cors import CORS
+        
+        migrate = Migrate()
+        migrate.init_app(app, db)
+        
+        csrf = CSRFProtect()
+        csrf.init_app(app)
+        
+        login_manager = LoginManager()
+        login_manager.init_app(app)
+        login_manager.session_protection = "strong"
+        login_manager.login_view = 'auth.login'
+        
+        mail = Mail()
+        mail.init_app(app)
+        
+        limiter = Limiter(key_func=lambda: 'test', default_limits=["200 per day", "50 per hour"])
+        limiter.init_app(app)
+        limiter.enabled = False
+        
+        cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
+        cache.init_app(app)
+        
+        CORS(app)
+        
+        # Configurar Celery para testes (síncrono)
+        from app.tasks import make_celery
+        if make_celery:
+            celery = make_celery(app)
+            celery.conf.update(
+                task_always_eager=True,
+                task_eager_propagates=True,
+                broker_url='memory://',
+                result_backend='memory://'
+            )
+            app.celery = celery
+        
+        # Criar tabelas
         db.create_all()
         yield app
         db.drop_all()

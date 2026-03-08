@@ -9,7 +9,7 @@ from app.models import (
     Usuario, Safra, Transacao, TransactionStatus,
     Notificacao, Produto, Provincia, Municipio
 )
-from app.models_carteiras import Carteira
+from app.models.financeiro import Carteira
 
 
 class TestUsuario:

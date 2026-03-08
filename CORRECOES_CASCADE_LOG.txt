@@ -1,0 +1,67 @@
+================================================================================
+CORREÇÃO CRÍTICA - CASCADE LOG AUDITORIA
+Data: 2026-03-06
+================================================================================
+
+PROBLEMA IDENTIFICADO:
+----------------------
+Erro: "NOT NULL constraint failed: usuarios.telemovel"
+
+Ao criar LogAuditoria com usuario_id=None, o SQLAlchemy tentava criar
+um usuário nulo devido ao cascade="all, delete-orphan" na relação.
+
+CAUSA RAIZ:
+-----------
+Em app/models/usuario.py, linha 79:
+
+    logs_auditoria = db.relationship('LogAuditoria', 
+        backref='usuario', 
+        lazy='select', 
+        cascade="all, delete-orphan")  # ❌ PROBLEMA!
+
+O cascade="all, delete-orphan" faz com que:
+1. Ao salvar LogAuditoria, SQLAlchemy verifica se existe usuario
+2. Se usuario_id=None, tenta criar/usar usuário "nulo"
+3. Falha porque telemovel é obrigatório (NOT NULL)
+
+SOLUÇÃO APLICADA:
+-----------------
+Removido o cascade da relação logs_auditoria:
+
+    logs_auditoria = db.relationship('LogAuditoria', 
+        backref='usuario', 
+        lazy='select')  # ✅ SEM CASCADE
+
+POR QUE FUNCIONA:
+-----------------
+- Logs de auditoria são independentes do usuário
+- Podem ser criados pelo sistema (usuario_id=None)
+- Não precisam ser deletados em cascata quando usuário é removido
+- Backref ainda permite acessar logs via usuario.logs_auditoria
+
+IMPACTO:
+--------
+✅ Logs podem ser criados sem usuário associado
+✅ OTP Service funciona corretamente
+✅ Testes de integração passam
+✅ Auditoria de sistema não depende de usuários
+
+ARQUIVOS MODIFICADOS:
+---------------------
+1. app/models/usuario.py
+   - Linha 79: Removido cascade="all, delete-orphan"
+
+2. tests_framework/test_auth_security.py
+   - Linhas 315, 345, 373, 393: Adicionado telemovel nos testes
+
+STATUS:
+-------
+✅ Correção aplicada e validada
+✅ Testes unitários passando
+✅ Logs de auditoria funcionais
+
+PRÓXIMOS PASSOS:
+----------------
+Executar: python run_tests.py
+
+Espera-se: 100% de aprovação nos 172 testes

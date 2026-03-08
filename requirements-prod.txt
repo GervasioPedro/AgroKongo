@@ -1,0 +1,71 @@
+# requirements-prod.txt - Dependências otimizadas para produção no Render
+# Build rápido e leve, apenas essencial
+
+# Core Flask (versões específicas para estabilidade)
+Flask==3.1.2
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.1.0
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+Flask-Mail==0.10.0
+Flask-CORS==5.0.0
+Flask-Limiter==3.5.0
+Flask-Caching==2.1.0
+Flask-APScheduler==1.13.1
+Flask-Moment==1.0.3
+
+# Servidor WSGI
+gunicorn==21.2.0
+
+# Database
+SQLAlchemy==2.0.47
+alembic==1.18.4
+psycopg2-binary==2.9.9  # Driver PostgreSQL (apenas dev/teste)
+greenlet==3.3.2
+
+# Segurança
+Werkzeug==3.1.3
+cryptography==41.0.7
+bcrypt==4.1.2
+bleach==6.1.0
+flask-talisman==1.1.0
+
+# Autenticação
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+email-validator==2.1.0
+
+# Tarefas assíncronas
+celery==5.6.2
+redis==5.0.1
+kombu==5.6.2
+billiard==4.2.4
+vine==5.1.0
+
+# Utilitários essenciais
+python-dotenv==1.0.0
+python-dateutil==2.9.0.post0
+pytz==2024.1
+requests==2.31.0
+urllib3==2.2.0
+Pillow==12.1.1
+
+# Validação de dados
+WTForms==3.2.1
+
+# Opcional: Supabase (descomentar se usar)
+# supabase==2.3.4
+# realtime==2.0.0
+# storage3==0.7.3
+# postgrest==0.16.0
+
+# Opcional: Monitoramento (produção)
+# sentry-sdk[flask]==2.19.2
+
+# NÃO INCLUIR em produção:
+# - pytest e dependências de teste
+# - black, flake8, mypy (dev tools)
+# - factory-boy, faker (teste)
+# - weasyprint, xhtml2pdf (pesado, usar apenas se necessário)
+# - openpyxl, xlsxwriter (apenas se relatórios Excel forem essenciais)

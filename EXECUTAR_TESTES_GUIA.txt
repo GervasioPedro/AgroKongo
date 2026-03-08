@@ -1,0 +1,81 @@
+================================================================================
+GUIA RÁPIDO - EXECUTAR TESTES
+================================================================================
+
+OPÇÃO 1 - RECOMENDADA (Windows):
+---------------------------------
+python run_tests.py
+
+OU
+
+run_tests_validados.bat
+
+
+OPÇÃO 2 - DIRETO NO TERMINAL:
+------------------------------
+# Definir variável de ambiente
+set TEST_DATABASE_URL=sqlite:///:memory:
+
+# Executar testes
+python -m pytest tests_framework/ -v --tb=short
+
+
+OPÇÃO 3 - VS CODE (PowerShell):
+--------------------------------
+$env:TEST_DATABASE_URL="sqlite:///:memory:"
+python -m pytest tests_framework/ -v --tb=short
+
+
+================================================================================
+O QUE ESPERAR:
+================================================================================
+
+✅ 172 testes coletados
+✅ Banco SQLite em memória criado automaticamente
+✅ Todas as tabelas criadas via db.create_all()
+✅ Tests de validação: email, telemovel, NIF, senha
+✅ Tests de integração: transações, escrow, disputas
+✅ Tests e2e: fluxo completo comprador/vendedor
+
+
+================================================================================
+STATUS DOS TESTES:
+================================================================================
+
+✓ test_auth_security.py - Validações do modelo Usuario
+✓ test_cadastro.py - OTP Service
+✓ test_e2e.py - Fluxos completos
+✓ test_financial.py - Transações financeiras
+✓ test_integration.py - Integração entre módulos
+✓ test_models.py - Modelos SQLAlchemy
+
+
+================================================================================
+SOLUÇÃO DE PROBLEMAS:
+================================================================================
+
+ERRO: "no such table: usuarios"
+CAUSA: Tabelas não foram criadas
+SOLUÇÃO: Verificar se conftest.py tem db.create_all() dentro do app_context()
+
+ERRO: "ModuleNotFoundError: app.models_carteiras"
+CAUSA: Import incorreto
+SOLUÇÃO: Usar "from app.models.financeiro import Carteira"
+
+ERRO: PostgreSQL authentication failed
+CAUSA: Tentando usar PostgreSQL sem credenciais
+SOLUÇÃO: Garantir TEST_DATABASE_URL=sqlite:///:memory:
+
+
+================================================================================
+DICA PROFISSIONAL:
+================================================================================
+
+Sempre execute com a variável TEST_DATABASE_URL definida para isolar testes
+do banco de desenvolvimento/produção. Isso previne:
+- Acidentes com dados reais
+- Lentidão nos testes
+- Dependência de conexão com banco externo
+
+
+================================================================================

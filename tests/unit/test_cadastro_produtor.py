@@ -153,105 +153,115 @@ class TestOTPService:
         assert codigo.isdigit()
         assert 100000 <= int(codigo) <= 999999
     
-    def test_gerar_hash_otp(self):
+    def test_gerar_hash_otp(self, app):
         """Testa geração de hash OTP"""
         codigo = "123456"
         telemovel = "912345678"
         
-        hash1 = OTPService.gerar_hash_otp(codigo, telemovel)
-        hash2 = OTPService.gerar_hash_otp(codigo, telemovel)
-        hash3 = OTPService.gerar_hash_otp("654321", telemovel)
-        
-        # Mesmo código e telemóvel devem gerar mesmo hash
-        assert hash1 == hash2
-        
-        # Código diferente deve gerar hash diferente
-        assert hash1 != hash3
-        
-        # Telemóvel diferente deve gerar hash diferente
-        hash4 = OTPService.gerar_hash_otp(codigo, "912345679")
-        assert hash1 != hash4
+        with app.app_context():
+            hash1 = OTPService.gerar_hash_otp(codigo, telemovel)
+            hash2 = OTPService.gerar_hash_otp(codigo, telemovel)
+            hash3 = OTPService.gerar_hash_otp("654321", telemovel)
+            
+            # Mesmo código e telemóvel devem gerar mesmo hash
+            assert hash1 == hash2
+            
+            # Código diferente deve gerar hash diferente
+            assert hash1 != hash3
+            
+            # Telemóvel diferente deve gerar hash diferente
+            hash4 = OTPService.gerar_hash_otp(codigo, "912345679")
+            assert hash1 != hash4
     
-    def test_armazenar_otp(self):
+    def test_armazenar_otp(self, app):
         """Testa armazenamento de OTP"""
         telemovel = "912345678"
         codigo = "123456"
         
-        otp_data = OTPService.armazenar_otp(telemovel, codigo, "127.0.0.1")
-        
-        assert otp_data['telemovel'] == telemovel
-        assert otp_data['codigo'] == codigo
-        assert otp_data['tentativas'] == 0
-        assert otp_data['max_tentativas'] == 3
-        assert otp_data['validado'] == False
-        assert otp_data['ip_address'] == "127.0.0.1"
-        assert 'data_expiracao' in otp_data
-        assert 'hash' in otp_data
+        with app.app_context():
+            otp_data = OTPService.armazenar_otp(telemovel, codigo, "127.0.0.1")
+            
+            assert otp_data['telemovel'] == telemovel
+            assert otp_data['codigo'] == codigo
+            assert otp_data['tentativas'] == 0
+            assert otp_data['max_tentativas'] == 3
+            assert otp_data['validado'] == False
+            assert otp_data['ip_address'] == "127.0.0.1"
+            assert 'data_expiracao' in otp_data
+            assert 'hash' in otp_data
     
-    def test_validar_otp_sucesso(self):
+    def test_validar_otp_sucesso(self, app):
         """Testa validação OTP com sucesso"""
         telemovel = "912345678"
         codigo = "123456"
         
-        # Armazenar OTP
-        OTPService.armazenar_otp(telemovel, codigo, "127.0.0.1")
-        
-        # Validar código correto
-        resultado = OTPService.validar_otp(telemovel, codigo, "127.0.0.1")
-        
-        assert resultado['valido'] == True
-        assert 'sucesso' in resultado['mensagem'].lower()
-        assert resultado['tentativas_restantes'] == 0
+        with app.app_context():
+            # Armazenar OTP
+            OTPService.armazenar_otp(telemovel, codigo, "127.0.0.1")
+            
+            # Validar código correto
+            resultado = OTPService.validar_otp(telemovel, codigo, "127.0.0.1")
+            
+            assert resultado['valido'] == True
+            assert 'sucesso' in resultado['mensagem'].lower()
+            assert resultado['tentativas_restantes'] == 0
     
-    def test_validar_otp_incorreto(self):
+    def test_validar_otp_incorreto(self, app):
         """Testa validação OTP com código incorreto"""
         telemovel = "912345678"
         codigo_correto = "123456"
         codigo_incorreto = "654321"
         
-        # Armazenar OTP
-        OTPService.armazenar_otp(telemovel, codigo_correto, "127.0.0.1")
-        
-        # Validar código incorreto
-        resultado = OTPService.validar_otp(telemovel, codigo_incorreto, "127.0.0.1")
-        
-        assert resultado['valido'] == False
-        assert 'inválido' in resultado['mensagem'].lower()
-        assert resultado['tentativas_restantes'] == 2
+        with app.app_context():
+            # Armazenar OTP
+            OTPService.armazenar_otp(telemovel, codigo_correto, "127.0.0.1")
+            
+            # Validar código incorreto
+            resultado = OTPService.validar_otp(telemovel, codigo_incorreto, "127.0.0.1")
+            
+            assert resultado['valido'] == False
+            assert 'inválido' in resultado['mensagem'].lower()
+            assert resultado['tentativas_restantes'] == 2
     
-    def test_validar_otp_inexistente(self):
+    def test_validar_otp_inexistente(self, app):
         """Testa validação OTP para código inexistente"""
-        resultado = OTPService.validar_otp("912345678", "123456", "127.0.0.1")
-        
-        assert resultado['valido'] == False
-        assert 'não encontrado' in resultado['mensagem'].lower()
-        assert resultado['tentativas_restantes'] == 0
+        with app.app_context():
+            # Limpar qualquer OTP anterior deste número
+            OTPService._limpar_otp("912345678")
+            
+            resultado = OTPService.validar_otp("912345678", "123456", "127.0.0.1")
+            
+            assert resultado['valido'] == False
+            assert 'não encontrado' in resultado['mensagem'].lower()
+            assert resultado['tentativas_restantes'] == 0
     
-    def test_limpar_otps_expirados(self):
+    def test_limpar_otps_expirados(self, app):
         """Testa limpeza de OTPs expirados"""
         telemovel = "912345678"
         codigo = "123456"
         
-        # Armazenar OTP
-        OTPService.armazenar_otp(telemovel, codigo, "127.0.0.1")
-        
-        # Verificar que existe
-        assert OTPService.obter_status_otp(telemovel) is not None
-        
-        # Limpar OTPs expirados (simulado)
-        expirados = OTPService.limpar_otps_expirados()
-        
-        # Como não expirou, não deve limpar
-        assert expirados == 0
-        assert OTPService.obter_status_otp(telemovel) is not None
+        with app.app_context():
+            # Armazenar OTP
+            OTPService.armazenar_otp(telemovel, codigo, "127.0.0.1")
+            
+            # Verificar que existe
+            assert OTPService.obter_status_otp(telemovel) is not None
+            
+            # Limpar OTPs expirados (simulado)
+            expirados = OTPService.limpar_otps_expirados()
+            
+            # Como não expirou, não deve limpar
+            assert expirados == 0
+            assert OTPService.obter_status_otp(telemovel) is not None
     
     def test_verificar_usuario_existente(self, session):
         """Teste Exceção 5B: Verificação de usuário existente"""
-        # Criar usuário
+        # Criar usuário com senha obrigatória
         usuario = Usuario(
             nome="Test User",
             telemovel="912345678",
-            tipo="produtor"
+            tipo="produtor",
+            senha="senha123"  # Senha é campo obrigatório
         )
         session.add(usuario)
         session.commit()

@@ -1,9 +1,11 @@
-# ... (imports e código existente) ...
+# app/routes/mercado.py - Versão refatorada com padrões enterprise
 from flask import Blueprint, request, current_app, jsonify
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
+
 from app.extensions import db
 from app.models import Safra, Transacao, TransactionStatus, Usuario
+from app.shared.responses import success_response, error_response, not_found_error
 
 mercado_bp = Blueprint('mercado', __name__)
 
@@ -22,7 +24,7 @@ def api_validar_fatura(code):
     venda = query.filter(Transacao.fatura_ref == code).first()
 
     if not venda:
-        return jsonify({'ok': False, 'message': 'Fatura não encontrada.'}), 404
+        return not_found_error(message='Fatura não encontrada.')
 
     acesso_completo = False
     if current_user.is_authenticated:
@@ -30,7 +32,11 @@ def api_validar_fatura(code):
             acesso_completo = True
     
     if acesso_completo:
-        return jsonify({'ok': True, 'fatura': venda.to_dict(), 'acesso_completo': True})
+        return success_response(
+            data=venda.to_dict(),
+            message='Fatura validada com sucesso',
+            status_code=200
+        )
     else:
         # Acesso público: apenas validação básica (sem dados sensíveis)
         dados_publicos = {
@@ -39,6 +45,10 @@ def api_validar_fatura(code):
             'data_criacao': venda.data_criacao.isoformat() if venda.data_criacao else None,
             'valida': True
         }
-        return jsonify({'ok': True, 'fatura': dados_publicos, 'acesso_completo': False})
+        return success_response(
+            data=dados_publicos,
+            message='Fatura válida (acesso público)',
+            status_code=200
+        )
 
 # ... (resto do código) ...

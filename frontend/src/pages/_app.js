@@ -1,5 +1,5 @@
-import { AuthProvider } from '../hooks/useAuth';
-import '../styles/globals.css'; // Supondo que você tenha um ficheiro de estilos globais
+import { AuthProvider } from '../../hooks/useAuth';
+import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
   return (

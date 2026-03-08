@@ -11,8 +11,11 @@ from app.models import Carteira, StatusConta
 from app.services.otp_service import OTPService, gerar_e_enviar_otp
 from app.routes.cadastro_produtor import _criar_usuario_produtor
 
+# Markers para testes
+def pytest_configure(config):
+    config.addinivalue_line("markers", "integration: mark test as integration test")
 
-@pytest.mark.integration
+
 class TestCadastroFlowCompleto:
     """Testes de integração do fluxo completo de cadastro"""
     
@@ -45,7 +48,7 @@ class TestCadastroFlowCompleto:
         }
         
         # Passo 4: Segurança (PIN)
-        senha = "1234"  # PIN de 4 dígitos
+        senha = "123456"  # PIN de 6 dígitos
         
         # Passo 5: Dados Financeiros (KYC)
         dados_financeiros = {
@@ -58,7 +61,7 @@ class TestCadastroFlowCompleto:
             telemovel=telemovel,
             dados=dados_basicos,
             senha=senha,
-            financeiros=dados_financeiros
+            iban=dados_financeiros['iban']
         )
         
         # Verificações finais
@@ -181,8 +184,8 @@ class TestCadastroFlowCompleto:
         usuario = _criar_usuario_produtor(
             telemovel=telemovel,
             dados=dados_basicos,
-            senha="1234",
-            financeiros=dados_financeiros
+            senha="123456",
+            iban=dados_financeiros['iban']
         )
         
         # Verificar atomicidade
@@ -203,6 +206,7 @@ class TestCadastroFlowCompleto:
             nome="Produtor Status",
             telemovel="912345683",
             tipo="produtor",
+            senha="123456",
             status_conta=StatusConta.PENDENTE_VERIFICACAO
         )
         session.add(usuario)
@@ -228,6 +232,7 @@ class TestCadastroFlowCompleto:
             nome="Produtor Rejeitado",
             telemovel="912345684",
             tipo="produtor",
+            senha="123456",
             status_conta=StatusConta.PENDENTE_VERIFICACAO
         )
         session.add(usuario)
@@ -244,7 +249,6 @@ class TestCadastroFlowCompleto:
         assert not usuario.conta_validada
 
 
-@pytest.mark.integration
 class TestCadastroFlowAPI:
     """Testes de integração com as APIs do cadastro"""
     
@@ -264,43 +268,44 @@ class TestCadastroFlowAPI:
         assert len(iban_invalido2) != 27
     
     @patch('app.services.otp_service.OTPService.enviar_otp_whatsapp')
-    def test_envio_otp_whatsapp_api(self, mock_envio):
+    def test_envio_otp_whatsapp_api(self, mock_envio, app):
         """Teste integração com API WhatsApp"""
         # Configurar mock
         mock_envio.return_value = True
         
-        # Configurar app com API
-        with patch('app.services.otp_service.current_app.config.get') as mock_config:
-            mock_config.side_effect = lambda key, default=None: {
-                'WHATSAPP_API_URL': 'https://api.whatsapp.com/send',
-                'WHATSAPP_TOKEN': 'test_token'
-            }.get(key, default)
-            
-            resultado = OTPService.enviar_otp_whatsapp("912345678", "123456")
-            
-            assert resultado == True
-            mock_envio.assert_called_once_with("912345678", "123456")
+        # Usar o contexto do app
+        with app.app_context():
+            with patch('app.services.otp_service.current_app.config.get') as mock_config:
+                mock_config.side_effect = lambda key, default=None: {
+                    'WHATSAPP_API_URL': 'https://api.whatsapp.com/send',
+                    'WHATSAPP_TOKEN': 'test_token'
+                }.get(key, default)
+                
+                resultado = OTPService.enviar_otp_whatsapp("912345678", "123456")
+                
+                assert resultado == True
+                mock_envio.assert_called_once_with("912345678", "123456")
     
     @patch('app.services.otp_service.OTPService.enviar_otp_sms')
-    def test_envio_otp_sms_api(self, mock_envio):
+    def test_envio_otp_sms_api(self, mock_envio, app):
         """Teste integração com API SMS"""
         # Configurar mock
         mock_envio.return_value = True
         
-        # Configurar app com API
-        with patch('app.services.otp_service.current_app.config.get') as mock_config:
-            mock_config.side_effect = lambda key, default=None: {
-                'SMS_API_URL': 'https://api.sms.com/send',
-                'SMS_API_KEY': 'test_key'
-            }.get(key, default)
-            
-            resultado = OTPService.enviar_otp_sms("912345678", "123456")
-            
-            assert resultado == True
-            mock_envio.assert_called_once_with("912345678", "123456")
+        # Usar o contexto do app
+        with app.app_context():
+            with patch('app.services.otp_service.current_app.config.get') as mock_config:
+                mock_config.side_effect = lambda key, default=None: {
+                    'SMS_API_URL': 'https://api.sms.com/send',
+                    'SMS_API_KEY': 'test_key'
+                }.get(key, default)
+                
+                resultado = OTPService.enviar_otp_sms("912345678", "123456")
+                
+                assert resultado == True
+                mock_envio.assert_called_once_with("912345678", "123456")
 
 
-@pytest.mark.integration
 class TestCadastroFlowPerformance:
     """Testes de performance do fluxo de cadastro"""
     
@@ -325,11 +330,8 @@ class TestCadastroFlowPerformance:
                 'municipio_id': 1,
                 'principal_cultura': 'Arroz'
             },
-            senha="1234",
-            financeiros={
-                'iban': 'AO0600600000123456789012345',
-                'bi_path': 'documentos_bi/test_bi.pdf'
-            }
+            senha="123456",
+            iban='AO0600600000123456789012345'
         )
         
         end_time = time.time()
@@ -340,7 +342,7 @@ class TestCadastroFlowPerformance:
         assert usuario is not None
         assert usuario.obter_carteira() is not None
     
-    def test_performance_validacao_otp(self):
+    def test_performance_validacao_otp(self, session):
         """Testa performance na validação OTP"""
         import time
         
@@ -362,7 +364,7 @@ class TestCadastroFlowPerformance:
         assert execution_time < 0.1  # Deve validar em < 100ms
         assert resultado['valido'] == True
     
-    def test_performance_multiplas_validacoes(self):
+    def test_performance_multiplas_validacoes(self, session):
         """Testa performance com múltiplas validações simultâneas"""
         import time
         from threading import Thread

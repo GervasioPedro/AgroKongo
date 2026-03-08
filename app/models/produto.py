@@ -3,13 +3,12 @@ Modelos de Produto e Safra
 """
 from typing import Dict, Any
 from decimal import Decimal
+from sqlalchemy import Index
 from app.extensions import db
 from app.models.base import aware_utcnow
-from sqlalchemy_serializer import SerializerMixin
 
-class Produto(db.Model, SerializerMixin):
+class Produto(db.Model):
     __tablename__ = 'produtos'
-    serialize_rules = ('-safras',)  # Evita recursão infinita
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
@@ -19,12 +18,15 @@ class Produto(db.Model, SerializerMixin):
     safras = db.relationship('Safra', backref='produto', lazy='select', cascade="all, delete-orphan")
 
 
-class Safra(db.Model, SerializerMixin):
+class Safra(db.Model):
     __tablename__ = 'safras'
-    # Regras para serialização:
-    # - Exclui 'transacoes' para evitar carregar dados pesados.
-    # - Expande 'produto' e 'produtor' para incluir seus detalhes.
-    serialize_rules = ('-transacoes', 'produto', 'produtor')
+    __table_args__ = (
+        Index('idx_safra_produto_status', 'produto_id', 'status'),
+        Index('idx_safra_produtor_id', 'produtor_id'),
+        Index('idx_safra_regiao_status', 'localizacao', 'status'),
+        Index('idx_safra_data_plantio', 'data_plantio'),
+        Index('idx_safra_preco', 'preco_por_unidade'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     produtor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id', ondelete='CASCADE'), nullable=False)
@@ -46,7 +48,7 @@ class Safra(db.Model, SerializerMixin):
     data_criacao = db.Column(db.DateTime(timezone=True), default=aware_utcnow)
     data_atualizacao = db.Column(db.DateTime(timezone=True), default=aware_utcnow, onupdate=aware_utcnow)
     
-    transacoes = db.relationship('Transacao', backref='safra', lazy='select', cascade="all, delete-orphan")
+    transacoes = db.relationship('Transacao', back_populates='safra', lazy='select', cascade="all, delete-orphan")
     
     def valor_total(self) -> Decimal:
         return self.quantidade_disponivel * self.preco_por_unidade

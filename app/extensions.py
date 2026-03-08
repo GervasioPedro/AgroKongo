@@ -41,8 +41,8 @@ def setup_extensions(app: Flask):
     
     # Configure Login Manager
     login_manager.session_protection = "strong"
-    # Keep login_view pointing to HTML endpoint for backwards compatibility
-    login_manager.login_view = 'auth.login'
+    # Apontar para endpoint API que existe
+    login_manager.login_view = 'auth.api_login'
     login_manager.login_message = "Por favor, faça login para aceder a esta página."
     login_manager.login_message_category = "warning"
 

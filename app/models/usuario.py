@@ -2,42 +2,43 @@
 Modelos de Usuário e Localização
 """
 import re
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from decimal import Decimal
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import validates
-from sqlalchemy_serializer import SerializerMixin
+from sqlalchemy import Index
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from app.extensions import db, login_manager
 from app.models.base import aware_utcnow, StatusConta
 
 
-class Provincia(db.Model, SerializerMixin):
+class Provincia(db.Model):
     __tablename__ = 'provincias'
-    serialize_rules = ('-municipios',)
-
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(50), unique=True, nullable=False)
     municipios = db.relationship('Municipio', backref='provincia', lazy='select', cascade="all, delete-orphan")
 
 
-class Municipio(db.Model, SerializerMixin):
+class Municipio(db.Model):
     __tablename__ = 'municipios'
-    serialize_rules = ('-provincia.municipios',)
-
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(50), nullable=False)
     provincia_id = db.Column(db.Integer, db.ForeignKey('provincias.id', ondelete='CASCADE'), nullable=False)
 
 
-class Usuario(db.Model, UserMixin, SerializerMixin):
+class Usuario(db.Model, UserMixin):
     __tablename__ = 'usuarios'
-    # Regras de serialização para o frontend
-    serialize_rules = (
-        '-senha', '-senha_hash', '-logs_auditoria', 
-        '-transacoes_como_comprador', '-transacoes_como_vendedor', 
-        '-notificacoes', '-safras_criadas', 'provincia', 'municipio'
+    __table_args__ = (
+        # Índices estratégicos para performance
+        Index('idx_usuario_tipo', 'tipo'),
+        Index('idx_usuario_conta_validada', 'conta_validada'),
+        Index('idx_usuario_tipo_validado', 'tipo', 'conta_validada'),
+        Index('idx_usuario_nif', 'nif'),
+        Index('idx_usuario_email', 'email'),
+        Index('idx_usuario_telemovel', 'telemovel'),
+        Index('idx_usuario_ativo', 'ativo'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -69,28 +70,71 @@ class Usuario(db.Model, UserMixin, SerializerMixin):
     ativo = db.Column(db.Boolean, default=True)
     data_bloqueio = db.Column(db.DateTime(timezone=True))
     motivo_bloqueio = db.Column(db.Text)
+    status_conta = db.Column(db.String(50), default=StatusConta.PENDENTE_VERIFICACAO)
     
     provincia = db.relationship('Provincia', backref='usuarios', lazy='select')
     municipio = db.relationship('Municipio', backref='usuarios', lazy='select')
     safras_criadas = db.relationship('Safra', backref='produtor', lazy='select', cascade="all, delete-orphan")
-    transacoes_como_comprador = db.relationship('Transacao', foreign_keys='Transacao.comprador_id', backref='comprador', lazy='select')
-    transacoes_como_vendedor = db.relationship('Transacao', foreign_keys='Transacao.vendedor_id', backref='vendedor', lazy='select')
+    # Relacionamentos com Transacao (bidirecionais)
+    transacoes_como_comprador = db.relationship('Transacao', foreign_keys='Transacao.comprador_id', back_populates='comprador', lazy='select')
+    transacoes_como_vendedor = db.relationship('Transacao', foreign_keys='Transacao.vendedor_id', back_populates='vendedor', lazy='select')
     notificacoes = db.relationship('Notificacao', backref='usuario', lazy='select', cascade="all, delete-orphan")
-    logs_auditoria = db.relationship('LogAuditoria', backref='usuario', lazy='select', cascade="all, delete-orphan")
+    logs_auditoria = db.relationship('LogAuditoria', backref='usuario', lazy='select')
+    
+    # Hybrid properties para compatibilidade de nomes
+    @hybrid_property
+    def compras(self):
+        """Alias para transacoes_como_comprador"""
+        # Retorna o relacionamento ou lista vazia se não carregado
+        if hasattr(self, 'transacoes_como_comprador'):
+            return self.transacoes_como_comprador
+        return []
+    
+    @hybrid_property
+    def vendas(self):
+        """Alias para transacoes_como_vendedor"""
+        # Retorna o relacionamento ou lista vazia se não carregado
+        if hasattr(self, 'transacoes_como_vendedor'):
+            return self.transacoes_como_vendedor
+        return []
     
     @validates('telemovel')
     def validate_telemovel(self, key: str, telemovel: str) -> str:
-        num = re.sub(r'\D', '', telemovel)
-        if num.startswith('244'): num = num[3:]
-        if not re.match(r'^9\d{8}$', num): raise ValueError("Formato AO inválido.")
+        if not telemovel:
+            raise ValueError("Telemovel não pode estar vazio.")
+        
+        num = re.sub(r'\D', '', str(telemovel))
+        if num.startswith('244'):
+            num = num[3:]
+        
+        if not re.match(r'^9\d{8}$', num):
+            raise ValueError("Formato AO inválido.")
+        
         return num
     
+    @validates('email')
+    def validate_email(self, key: str, email: Optional[str]) -> Optional[str]:
+        if email and '@' not in email:
+            raise ValueError("Email inválido.")
+        return email.lower() if email else None
+    
+    @validates('nif')
+    def validate_nif(self, key: str, nif: Optional[str]) -> Optional[str]:
+        if nif and len(nif) < 9:
+            raise ValueError("NIF inválido.")
+        return nif.upper() if nif else None
+    
     def set_senha(self, senha: str) -> None:
+        if not senha or len(senha) < 6:
+            raise ValueError("Senha deve ter pelo menos 6 caracteres.")
+        
         hashed = generate_password_hash(senha)
         self.senha = hashed
         self.senha_hash = hashed
     
     def verificar_senha(self, senha: str) -> bool:
+        if not senha or not self.senha:
+            return False
         return check_password_hash(self.senha, senha)
     
     def verificar_e_atualizar_perfil(self) -> bool:
@@ -104,6 +148,47 @@ class Usuario(db.Model, UserMixin, SerializerMixin):
     
     def pode_criar_anuncios(self) -> bool:
         return self.conta_validada and self.tipo == 'produtor'
+    
+    def notificacoes_nao_lidas(self) -> int:
+        if hasattr(self, 'notificacoes') and self.notificacoes:
+            return len([n for n in self.notificacoes if not n.lida])
+        return 0
+    
+    def ultimas_notificacoes(self, limite: int = 5) -> List:
+        if not hasattr(self, 'notificacoes') or not self.notificacoes:
+            return []
+        try:
+            notificacoes = sorted(list(self.notificacoes), key=lambda n: n.data_criacao or aware_utcnow(), reverse=True)
+            return notificacoes[:limite]
+        except Exception:
+            return []
+    
+    def atualizar_saldo(self, valor: Decimal) -> None:
+        if not isinstance(valor, Decimal):
+            valor = Decimal(str(valor))
+        self.saldo_disponivel = (self.saldo_disponivel or Decimal('0.00')) + valor
+    
+    def obter_carteira(self):
+        if not hasattr(self, 'carteira') or self.carteira is None:
+            from app.models.financeiro import Carteira
+            carteira = Carteira(usuario_id=self.id, saldo_disponivel=Decimal('0.00'))
+            db.session.add(carteira)
+            return carteira
+        return self.carteira
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'id': self.id,
+            'nome': self.nome,
+            'telemovel': self.telemovel,
+            'email': self.email,
+            'tipo': self.tipo,
+            'perfil_completo': self.perfil_completo,
+            'conta_validada': self.conta_validada,
+            'saldo_disponivel': float(self.saldo_disponivel or 0),
+            'vendas_concluidas': self.vendas_concluidas,
+            'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None
+        }
 
 
 @login_manager.user_loader

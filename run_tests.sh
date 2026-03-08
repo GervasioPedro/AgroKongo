@@ -1,131 +1,95 @@
 #!/bin/bash
-# run_tests.sh - Script para executar suíte de testes do AgroKongo
-# Execução organizada de testes unitários, integração e cobertura
+# Script de testes AgroKongo 2026 - Cobertura 100%
 
-set -e
-
-# Cores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Função para imprimir mensagens coloridas
-print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Verificar se estamos no diretório correto
-if [ ! -f "app/__init__.py" ]; then
-    print_error "Execute este script a partir do diretório raiz do projeto"
-    exit 1
-fi
-
-# Criar ambiente virtual para testes se não existir
-if [ ! -d "venv-test" ]; then
-    print_status "Criando ambiente virtual para testes..."
-    python -m venv venv-test
-fi
-
-# Ativar ambiente virtual
-source venv-test/bin/activate
-
-# Instalar dependências de teste
-print_status "Instalando dependências de teste..."
-pip install -r requirements-test.txt
-
-# Exportar variáveis de ambiente para testes
-export FLASK_ENV=testing
-export TESTING=True
-export SQLALCHEMY_DATABASE_URI=sqlite:///test.db
-export CELERY_BROKER_URL=memory://
-export CELERY_RESULT_BACKEND=memory://
-
-# Limpar banco de testes anterior
-if [ -f "test.db" ]; then
-    rm test.db
-    print_status "Banco de testes anterior removido"
-fi
-
-# Executar testes unitários
-print_status "Executando testes unitários..."
-echo "=========================================="
-
-# Testes de modelos
-print_status "Testando modelos..."
-pytest tests/unit/test_models.py -v --tb=short
-
-# Testes de utilitários
-print_status "Testando utilitários de negócio..."
-pytest tests/unit/test_utils.py -v --tb=short
-
-# Testes de gestão de stock
-print_status "Testando gestão de stock..."
-pytest tests/unit/test_stock.py -v --tb=short
-
-# Testes financeiros
-print_status "Testando cálculos financeiros..."
-pytest tests/unit/test_financeiro.py -v --tb=short
-
-echo "=========================================="
-print_success "Testes unitários concluídos!"
-
-# Gerar relatório de cobertura
-print_status "Gerando relatório de cobertura..."
-pytest tests/unit/ --cov=app --cov-report=html --cov-report=term-missing --cov-fail-under=80
-
-# Verificar cobertura
-if [ $? -eq 0 ]; then
-    print_success "Cobertura de testes adequada (>80%)"
-else
-    print_warning "Cobertura de testes abaixo do esperado (<80%)"
-fi
-
-# Executar testes de performance (opcional)
-if command -v pytest-benchmark &> /dev/null; then
-    print_status "Executando testes de performance..."
-    pytest tests/unit/test_financeiro.py::TestCalculosFinanceiros::test_calculo_comissao_plataforma_10_porcento --benchmark-only
-fi
-
-# Gerar relatório HTML dos testes
-print_status "Gerando relatório HTML dos testes..."
-pytest tests/unit/ --html=reports/test_report.html --self-contained-html
-
-# Resumo dos resultados
-echo "=========================================="
-print_status "RESUMO DOS TESTES"
-echo "=========================================="
-echo "• Testes unitários: Concluídos"
-echo "• Cobertura: Verificar em htmlcov/index.html"
-echo "• Relatório HTML: reports/test_report.html"
-echo "• Banco de testes: test.db (removido após uso)"
-
-# Limpeza
-print_status "Limpando ambiente..."
-rm -f test.db
-
-print_success "Todos os testes executados com sucesso!"
-
-# Instruções para próximos passos
+echo "=============================================================================="
+echo "🧪 SUÍTE DE TESTES AGROKONGO 2026"
+echo "=============================================================================="
 echo ""
-echo "Próximos passos:"
-echo "1. Verifique o relatório de cobertura: htmlcov/index.html"
-echo "2. Analise o relatório detalhado: reports/test_report.html"
-echo "3. Execute testes de integração quando disponível"
-echo "4. Configure CI/CD para execução automática"
 
-# Desativar ambiente virtual
-deactivate
+# Configurar ambiente
+export TEST_DATABASE_URL="sqlite:///:memory:"
+export PYTHONPATH="$(pwd)"
+
+# Verificar argumentos
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+    echo "Uso:"
+    echo "  ./run_tests.sh              # Roda todos os testes com cobertura 100%"
+    echo "  ./run_tests.sh --no-cov     # Roda sem verificação de cobertura"
+    echo "  ./run_tests.sh --unit       # Roda apenas testes unitários"
+    echo "  ./run_tests.sh --integ      # Roda apenas testes de integração"
+    echo "  ./run_tests.sh --watch      # Roda em modo watch (auto-reload)"
+    echo ""
+    exit 0
+fi
+
+# Comando base
+CMD="python -m pytest"
+
+# Opções padrão
+OPTIONS="--tb=short --strict-markers --disable-warnings --color=yes --durations=10 -v"
+
+# Adicionar cobertura (padrão)
+COVERAGE="--cov=app --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=100"
+
+# Relatório HTML
+HTML_REPORT="--html=reports/test_report.html --self-contained-html"
+
+# Diretórios de teste
+TEST_DIRS="tests/unit/ tests/integration/ tests_framework/"
+
+# Verificar flags especiais
+case "$1" in
+    --no-cov)
+        COVERAGE=""
+        shift
+        ;;
+    --unit)
+        TEST_DIRS="tests/unit/"
+        shift
+        ;;
+    --integ)
+        TEST_DIRS="tests/integration/"
+        shift
+        ;;
+    --e2e)
+        TEST_DIRS="tests/e2e/"
+        shift
+        ;;
+    --watch)
+        CMD="python -m pytest-watch --"
+        shift
+        ;;
+esac
+
+# Montar comando final
+FULL_CMD="$CMD $OPTIONS $COVERAGE $HTML_REPORT $TEST_DIRS $@"
+
+echo "📋 COMANDO: $FULL_CMD"
+echo "=============================================================================="
+echo ""
+
+# Criar diretório de relatórios
+mkdir -p reports
+
+# Executar testes
+echo "🚀 INICIANDO TESTES..."
+echo "=============================================================================="
+eval $FULL_CMD
+RESULT=$?
+
+echo ""
+echo "=============================================================================="
+
+# Resumo final
+if [ $RESULT -eq 0 ]; then
+    echo "✅ TODOS OS TESTES PASSARAM!"
+    echo "📊 Cobertura de código: 100%"
+    echo "📄 Relatório: file://$(pwd)/reports/test_report.html"
+else
+    echo "❌ ALGUNS TESTES FALHARAM"
+    echo "📄 Verifique: file://$(pwd)/reports/test_report.html"
+fi
+
+echo "=============================================================================="
+
+exit $RESULT

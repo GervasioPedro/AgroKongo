@@ -3,6 +3,7 @@ from flask import url_for
 from decimal import Decimal
 from app.models import Transacao, Safra, Produto, Usuario, Avaliacao, TransactionStatus
 from app.extensions import db
+from unittest.mock import patch
 
 # Reutilizando fixtures de 'test_produtor_routes.py' se estiverem no conftest.py
 # Por agora, vamos assumir que estão disponíveis ou redefini-los aqui.
@@ -23,7 +24,6 @@ def setup_comprador_transacoes(produtor_user, comprador_user, session):
 
     # Transação em estado 'ENVIADO' para testar confirmação de recebimento
     trans_enviada = Transacao(
-        uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef",
         fatura_ref="TRX_ENVIADO_01",
         safra_id=safra.id,
         comprador_id=comprador_user.id,
@@ -51,24 +51,24 @@ def setup_comprador_transacoes(produtor_user, comprador_user, session):
 class TestCompradorRoutes:
 
     # --- Testes para confirmar_recebimento ---
-    def test_confirmar_recebimento_sucesso(self, auth_comprador_client, setup_comprador_transacoes, mocker):
+    def test_confirmar_recebimento_sucesso(self, auth_comprador_client, setup_comprador_transacoes):
         # Mock da task Celery para não a executar de verdade
-        mock_task = mocker.patch('app.routes.comprador.processar_liquidacao.delay')
-        trans_enviada, _ = setup_comprador_transacoes
-
-        response = auth_comprador_client.post(
-            url_for('comprador.confirmar_recebimento', trans_uuid=trans_enviada.uuid)
-        )
-        
-        assert response.status_code == 302 # Redirect para o dashboard
-        
-        # Verificar se a task foi chamada
-        mock_task.assert_called_once_with(trans_enviada.id)
-        
-        # Verificar o estado da transação na DB
-        db.session.refresh(trans_enviada)
-        assert trans_enviada.status == TransactionStatus.ENTREGUE
-        assert trans_enviada.data_entrega is not None
+        with patch('app.routes.comprador.processar_liquidacao.delay') as mock_task:
+            trans_enviada, _ = setup_comprador_transacoes
+    
+            response = auth_comprador_client.post(
+                url_for('comprador.confirmar_recebimento', trans_uuid=trans_enviada.uuid)
+            )
+            
+            assert response.status_code == 302 # Redirect para o dashboard
+            
+            # Verificar se a task foi chamada
+            mock_task.assert_called_once_with(trans_enviada.id)
+            
+            # Verificar o estado da transação na DB
+            db.session.refresh(trans_enviada)
+            assert trans_enviada.status == TransactionStatus.ENTREGUE
+            assert trans_enviada.data_entrega is not None
 
     def test_confirmar_recebimento_status_invalido(self, auth_comprador_client, setup_comprador_transacoes):
         _, trans_entregue = setup_comprador_transacoes # Já está 'ENTREGUE'
@@ -89,11 +89,18 @@ class TestCompradorRoutes:
         assert response.status_code == 403 # Abort(403)
 
     # --- Testes para api_avaliar_venda ---
-    def test_api_avaliar_venda_sucesso(self, auth_comprador_client, setup_comprador_transacoes):
+    def test_api_avaliar_venda_sucesso(self, client, comprador_user, setup_comprador_transacoes):
+        """Testa avaliação de venda com cliente autenticado manualmente"""
         _, trans_entregue = setup_comprador_transacoes
+        
+        # Autenticar manualmente o cliente
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(comprador_user.id)
+            sess['_fresh'] = True
+        
         data = {'estrelas': 5, 'comentario': 'Excelente produto!'}
         
-        response = auth_comprador_client.post(
+        response = client.post(
             url_for('comprador.api_avaliar_venda', id=trans_entregue.id),
             json=data
         )
@@ -107,19 +114,25 @@ class TestCompradorRoutes:
         assert avaliacao.estrelas == 5
         assert avaliacao.comentario == 'Excelente produto!'
 
-    def test_api_avaliar_venda_duplicada(self, auth_comprador_client, setup_comprador_transacoes):
+    def test_api_avaliar_venda_duplicada(self, client, comprador_user, setup_comprador_transacoes):
+        """Testa tentativa de avaliação duplicada"""
         _, trans_entregue = setup_comprador_transacoes
+        
+        # Autenticar manualmente
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(comprador_user.id)
+            sess['_fresh'] = True
         
         # Primeira avaliação
         Avaliacao.query.delete() # Limpar avaliações anteriores
         db.session.commit()
-        auth_comprador_client.post(
+        client.post(
             url_for('comprador.api_avaliar_venda', id=trans_entregue.id),
             json={'estrelas': 4}
         )
         
         # Tentar avaliar novamente
-        response = auth_comprador_client.post(
+        response = client.post(
             url_for('comprador.api_avaliar_venda', id=trans_entregue.id),
             json={'estrelas': 5}
         )
@@ -128,11 +141,17 @@ class TestCompradorRoutes:
         assert response.json['ok'] is False
         assert 'Esta transação já foi avaliada.' in response.json['message']
 
-    def test_api_avaliar_venda_dados_invalidos(self, auth_comprador_client, setup_comprador_transacoes):
+    def test_api_avaliar_venda_dados_invalidos(self, client, comprador_user, setup_comprador_transacoes):
+        """Testa validação de dados na avaliação"""
         _, trans_entregue = setup_comprador_transacoes
         
+        # Autenticar manualmente
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(comprador_user.id)
+            sess['_fresh'] = True
+        
         # Estrelas fora do range
-        response = auth_comprador_client.post(
+        response = client.post(
             url_for('comprador.api_avaliar_venda', id=trans_entregue.id),
             json={'estrelas': 6, 'comentario': 'Muitas estrelas'}
         )
@@ -147,10 +166,16 @@ class TestCompradorRoutes:
         assert response.status_code == 400
 
     # --- Testes para api_abrir_disputa ---
-    def test_api_abrir_disputa_sucesso(self, auth_comprador_client, setup_comprador_transacoes):
+    def test_api_abrir_disputa_sucesso(self, client, comprador_user, setup_comprador_transacoes):
+        """Testa abertura de disputa com sucesso"""
         trans_enviada, _ = setup_comprador_transacoes
         
-        response = auth_comprador_client.post(
+        # Autenticar manualmente
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(comprador_user.id)
+            sess['_fresh'] = True
+        
+        response = client.post(
             url_for('comprador.api_abrir_disputa', id=trans_enviada.id)
         )
         
@@ -161,24 +186,36 @@ class TestCompradorRoutes:
         db.session.refresh(trans_enviada)
         assert trans_enviada.status == TransactionStatus.DISPUTA
 
-    def test_api_abrir_disputa_status_invalido(self, auth_comprador_client, setup_comprador_transacoes):
+    def test_api_abrir_disputa_status_invalido(self, client, comprador_user, setup_comprador_transacoes):
+        """Testa tentativa de abrir disputa para status inválido"""
         _, trans_entregue = setup_comprador_transacoes
         trans_entregue.status = TransactionStatus.FINALIZADO # Marcar como finalizada
         db.session.commit()
         
-        response = auth_comprador_client.post(
+        # Autenticar manualmente
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(comprador_user.id)
+            sess['_fresh'] = True
+        
+        response = client.post(
             url_for('comprador.api_abrir_disputa', id=trans_entregue.id)
         )
         
         assert response.status_code == 409
         assert 'Não é possível abrir disputa' in response.json['message']
 
-    def test_api_abrir_disputa_duplicada(self, auth_comprador_client, setup_comprador_transacoes):
+    def test_api_abrir_disputa_duplicada(self, client, comprador_user, setup_comprador_transacoes):
+        """Testa tentativa de abrir disputa duplicada"""
         trans_enviada, _ = setup_comprador_transacoes
         trans_enviada.status = TransactionStatus.DISPUTA # Já está em disputa
         db.session.commit()
         
-        response = auth_comprador_client.post(
+        # Autenticar manualmente
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(comprador_user.id)
+            sess['_fresh'] = True
+        
+        response = client.post(
             url_for('comprador.api_abrir_disputa', id=trans_enviada.id)
         )
         

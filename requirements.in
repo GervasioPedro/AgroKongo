@@ -34,6 +34,7 @@ email-validator
 cryptography
 bcrypt
 bleach
+flask-talisman  # HTTPS/HSTS headers
 
 # --- Redis & Celery (Assíncrono) ---
 redis

@@ -1,12 +1,18 @@
 """
 Modelos de Notificação e Alertas
 """
+from sqlalchemy import Index
 from app.extensions import db
 from app.models.base import aware_utcnow
 
 
 class Notificacao(db.Model):
     __tablename__ = 'notificacoes'
+    __table_args__ = (
+        Index('idx_notificacao_usuario_lida', 'usuario_id', 'lida'),
+        Index('idx_notificacao_data', 'data_criacao'),
+        Index('idx_notificacao_usuario_data', 'usuario_id', 'data_criacao'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id', ondelete='CASCADE'), nullable=False)
     mensagem = db.Column(db.Text, nullable=False)

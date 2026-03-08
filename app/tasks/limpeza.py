@@ -1,15 +1,16 @@
 # app/tasks/limpeza.py - Versão auditada, eficiente e auditável (produção-ready)
 # Versão Corrigida - 22/02/2026
 from celery import shared_task
-from app.extensions import db, current_app
+from flask import current_app
+from app.extensions import db
 from app.models import Transacao, TransactionStatus, LogAuditoria, Notificacao, Usuario  # ← Usuario adicionado
-from app.utils.helpers import aware_utcnow  # ← Import adicionado
+from app.models.base import aware_utcnow
 from datetime import timedelta
 from sqlalchemy import and_, or_
-from app.tasks.base import AgroKongoTask  # ← Import adicionado
+from app.tasks.base import AgroKongoTask, AgroKongoTaskBase  # ← Import adicionado
 
 
-@shared_task(bind=True, base=AgroKongoTask, max_retries=5, rate_limit='1/d')
+@shared_task(bind=True, base=AgroKongoTaskBase, max_retries=5, rate_limit='1/d')
 def limpar_transacoes_antigas(self):
     """
     Limpeza async transações antigas (> config dias, FINALIZADO/CANCELADO).
