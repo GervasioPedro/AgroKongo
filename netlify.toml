@@ -1,0 +1,19 @@
+[build]
+  # Forçar detecção como projeto Node.js
+  command = "cd frontend && npm run build"
+  publish = "frontend/.next"
+
+# Ignorar completamente Python
+[[ignore]]
+  paths = [
+    "app",
+    "migrations", 
+    "scripts",
+    "tests",
+    "tests_framework",
+    "*.py",
+    "requirements*.txt",
+    "config.py",
+    "run.py",
+    "celery_worker.py"
+  ]
