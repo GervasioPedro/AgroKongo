@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Vendas — AgroKongo{% endblock %}
+
+{% block content %}
+
+{# === 1. MACRO PARA RENDERIZAR AS TABELAS === #}
+{% macro render_vendas_table(lista_vendas, mensagem_vazia) %}
+    {% if lista_vendas %}
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle" style="min-width: 900px;">
+                <thead>
+                    <tr class="border-bottom" style="border-color: #f1f5f9 !important;">
+                        <th class="tiny-elite text-muted py-3">Mercadoria / Ref</th>
+                        <th class="tiny-elite text-muted py-3">Qtd / Ganho Total</th>
+                        <th class="tiny-elite text-muted py-3 text-center">Estado do Pedido</th>
+                        <th class="tiny-elite text-muted py-3 text-end">Ações Operacionais</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venda in lista_vendas %}
+                    <tr class="venda-row border-bottom transition-all" style="border-color: #f8fafc !important;">
+                        <td class="py-4">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-4 me-3 overflow-hidden bg-light border shadow-sm" style="width: 58px; height: 58px;">
+                                    {# CORREÇÃO: Usando a rota de serviço de imagem profissional que configuramos no __init__.py #}
+                                    <img src="{{ url_for('serve_safra_image', filename=venda.safra.imagem or 'default.webp') }}"
+                                         class="w-100 h-100 object-fit-cover"
+                                         onerror="this.src='https://images.unsplash.com/photo-1592910710242-ca930d749719?q=80&w=100&auto=format&fit=crop'">
+                                </div>
+                                <div>
+                                    <div class="fw-900 text-dark-sharp mb-0" style="font-size: 0.95rem;">{{ venda.safra.produto.nome }}</div>
+                                    <div class="text-muted small fw-800" style="font-size: 0.7rem;">REF: {{ venda.fatura_ref }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-900 text-dark-sharp">{{ "{:,.1f}".format(venda.quantidade_comprada) }} kg</div>
+                            <div class="text-success fw-800 small">{{ "{:,.0f}".format(venda.valor_liquido_vendedor) }} Kz <span class="text-muted opacity-50 fw-600">(Líquido)</span></div>
+                        </td>
+                        <td class="text-center">
+                            {# MAPEAMENTO DE STATUS - Certifique-se que estas chaves batem com as strings do seu TransactionStatus #}
+                            {% set status_cfg = {
+                                'pendente': ['bg-secondary-subtle text-secondary', 'RESERVA EM ESPERA'],
+                                'pendente_pagamento': ['bg-warning-subtle text-warning', 'AGUARDANDO PAGAMENTO'],
+                                'pagamento_sob_analise': ['bg-info-subtle text-info', 'VALIDANDO COMPROVATIVO'],
+                                'pago_escrow': ['bg-primary-subtle text-primary', 'PAGO - ENVIAR AGORA'],
+                                'enviado': ['bg-info-subtle text-info', 'PRODUTO EM TRÂNSITO'],
+                                'finalizada': ['bg-success-subtle text-success', 'VENDA LIQUIDADA']
+                            } %}
+
+                            {# Tenta pegar o valor se for um Enum (venda.status.value) ou string direta #}
+                            {% set status_key = venda.status.value if venda.status.value is defined else venda.status %}
+                            {% set current = status_cfg.get(status_key, ['bg-light text-muted', status_key|upper]) %}
+
+                            <span class="badge rounded-pill {{ current[0] }} px-3 py-2 fw-900 tiny-badge shadow-sm">
+                                {{ current[1] }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end align-items-center gap-2">
+
+                                {# AÇÃO: CONFIRMAR DISPONIBILIDADE #}
+                                {# CORREÇÃO: O botão só aparece se o status for estritamente 'pendente' #}
+                                {% if status_key == 'pendente' %}
+                                    <form action="{{ url_for('produtor.confirmar_reserva', trans_id=venda.id) }}" method="POST" class="m-0">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-success btn-sm rounded-pill fw-900 px-3 shadow-sm border-0 btn-hover-grow">
+                                            CONFIRMAR STOCK
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                {# AÇÃO: DESPACHAR CARGA #}
+                                {% if status_key == 'pago_escrow' %}
+                                    <form action="{{ url_for('produtor.confirmar_envio', trans_id=venda.id) }}" method="POST" class="m-0">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-primary btn-sm rounded-pill fw-900 px-3 shadow-sm border-0 btn-hover-grow">
+                                            <i class="fas fa-truck-loading me-1"></i> DESPACHAR CARGA
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                {# MENU DE DOCUMENTAÇÃO #}
+                                <div class="dropdown">
+                                    <button class="btn btn-white rounded-circle btn-icon border shadow-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-h text-muted"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2 animate__animated animate__fadeIn animate__faster">
+                                        <li><a class="dropdown-item fw-800 p-2 py-3 rounded-3" href="{{ url_for('produtor.gerar_guia', trans_id=venda.id) }}" target="_blank">
+                                            <i class="fas fa-file-pdf me-2 text-danger"></i> Guia de Remessa</a></li>
+                                        <li><a class="dropdown-item fw-800 p-2 py-3 rounded-3" href="{{ url_for('main.baixar_fatura', trans_id=venda.id) }}" target="_blank">
+                                            <i class="fas fa-file-invoice-dollar me-2 text-primary"></i> Fatura Comercial</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item fw-800 p-2 py-3 rounded-3 text-success" href="https://wa.me/244{{ venda.comprador.telemovel }}" target="_blank">
+                                            <i class="fab fa-whatsapp me-2"></i> Contactar Comprador</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <div class="bg-light rounded-circle mx-auto d-flex align-items-center justify-content-center mb-4" style="width: 90px; height: 90px;">
+                <i class="fas fa-receipt fa-2x text-muted opacity-25"></i>
+            </div>
+            <h5 class="fw-900 text-dark-sharp">Tudo em dia por aqui</h5>
+            <p class="text-muted fw-600 small px-5">{{ mensagem_vazia }}</p>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-4 py-md-5">
+        {# HEADER #}
+        <div class="row align-items-center mb-5 g-3">
+            <div class="col-md-7">
+                <span class="tiny-elite text-muted fw-900">CENTRO DE OPERAÇÕES</span>
+                <h2 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -2px; font-size: 2.3rem;">Fluxo de Vendas</h2>
+                <p class="text-muted fw-600 mb-0">Gerencie ordens de compra e libere despachos logísticos.</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <a href="{{ url_for('produtor.dashboard') }}" class="btn btn-white rounded-pill px-4 py-3 fw-900 border shadow-sm transition-all">
+                    <i class="fas fa-th-large me-2 text-success"></i> DASHBOARD GERAL
+                </a>
+            </div>
+        </div>
+
+        {# ABAS DE ESTADO #}
+        <div class="card border-0 shadow-lg rounded-5 p-4 p-md-5 bg-white">
+            <ul class="nav nav-pills bg-light p-1 rounded-pill mb-5 d-inline-flex border" id="vendasTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill tiny-elite fw-900 px-4" data-bs-toggle="pill" data-bs-target="#tab-reservas">
+                        Novas Reservas ({{ reservas|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill tiny-elite fw-900 px-4" data-bs-toggle="pill" data-bs-target="#tab-ativas">
+                        Em Trânsito ({{ vendas|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill tiny-elite fw-900 px-4" data-bs-toggle="pill" data-bs-target="#tab-historico">
+                        Concluídas
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="tab-reservas" role="tabpanel">
+                    {{ render_vendas_table(reservas, "Nenhuma reserva aguarda confirmação de stock.") }}
+                </div>
+                <div class="tab-pane fade" id="tab-ativas" role="tabpanel">
+                    {{ render_vendas_table(vendas, "Não existem mercadorias em processo de envio.") }}
+                </div>
+                <div class="tab-pane fade" id="tab-historico" role="tabpanel">
+                    {{ render_vendas_table(historico, "O seu histórico de vendas liquidadas aparecerá aqui.") }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Seus estilos mantidos... */
+    .fw-900 { font-weight: 900 !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 900; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .nav-pills .nav-link.active { background-color: #0f172a !important; color: white !important; }
+    .bg-primary-subtle { background-color: #eff6ff !important; color: #1e40af !important; }
+    .bg-warning-subtle { background-color: #fffbeb !important; color: #92400e !important; }
+    .bg-info-subtle { background-color: #f0fdfa !important; color: #0f766e !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Definições de Perfil — AgroKongo{% endblock %}
+
+{% block content %}
+{# 1. Lógica de Identidade Visual Contextual #}
+{% set theme_color = 'primary' %}
+{% set user_role_label = 'Comprador' %}
+{% set dashboard_url = url_for('comprador.dashboard') %}
+
+{% if current_user.tipo == 'produtor' %}
+    {% set theme_color = 'success' %}
+    {% set user_role_label = 'Produtor Agrícola' %}
+    {% set dashboard_url = url_for('produtor.dashboard') %}
+{% elif current_user.tipo == 'admin' %}
+    {% set theme_color = 'dark' %}
+    {% set user_role_label = 'Administrador' %}
+    {% set dashboard_url = url_for('admin.dashboard') %}
+{% endif %}
+
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-5 animate__animated animate__fadeIn">
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-9">
+
+                {# HEADER INTELIGENTE #}
+                <div class="d-flex align-items-center justify-content-between mb-4 px-2">
+                    <div>
+                        <span class="badge bg-{{ theme_color }} text-white px-3 py-2 rounded-pill fw-900 tiny-elite mb-2 shadow-sm">
+                            CONTA {{ user_role_label | upper }}
+                        </span>
+                        <h1 class="fw-900 text-dark-sharp mb-0" style="letter-spacing: -2px; font-size: 2.5rem;">Definições</h1>
+                    </div>
+                    <div class="text-end">
+                        <a href="{{ dashboard_url }}" class="btn btn-white shadow-sm rounded-pill fw-800 px-4 transition-all" id="btnCancel">
+                            <i class="fas fa-times me-2"></i> Sair
+                        </a>
+                    </div>
+                </div>
+
+                {# BARRA DE PROGRESSO INTELIGENTE #}
+                <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="tiny-elite fw-900 text-muted">Completude do Perfil</span>
+                        <span id="profile-percent" class="fw-900 text-{{ theme_color }}">0%</span>
+                    </div>
+                    <div class="progress" style="height: 8px; border-radius: 10px; background: #f1f5f9;">
+                        <div id="profile-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-{{ theme_color }}" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('auth.editar_perfil') }}" method="POST" id="editForm" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="row g-4">
+                        {# --- SEÇÃO FOTO DE PERFIL --- #}
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-5 bg-white p-4 text-center overflow-hidden position-relative">
+                                <div class="position-relative d-inline-block mx-auto">
+                                    {# ATUALIZADO: Aponta para a tua rota de media personalizada #}
+                                    <img id="avatar-preview"
+                                         src="{{ url_for('main.serve_perfil', filename=current_user.foto_perfil or 'default_user.jpg') }}"
+                                         alt="Perfil"
+                                         class="rounded-circle border border-4 border-{{ theme_color }} shadow"
+                                         style="width: 140px; height: 140px; object-fit: cover;">
+
+                                    <label for="foto_perfil" class="btn btn-{{ theme_color }} btn-sm position-absolute bottom-0 end-0 rounded-circle shadow-lg p-2" style="width: 38px; height: 38px;">
+                                        <i class="fas fa-camera"></i>
+                                        <input type="file" name="foto_perfil" id="foto_perfil" class="d-none" accept="image/*">
+                                    </label>
+                                </div>
+                                <h6 class="fw-900 text-dark-sharp mt-3 mb-1">{{ current_user.nome }}</h6>
+                                <p class="x-small text-muted fw-600 mb-0">NIF: {{ current_user.nif }}</p>
+                            </div>
+                        </div>
+
+                        {# --- SEÇÃO 1: IDENTIDADE DIGITAL --- #}
+                        <div class="col-md-7">
+                            <div class="card border-0 shadow-sm rounded-5 bg-white p-4 p-md-5 h-100">
+                                <h5 class="fw-900 text-dark-sharp mb-4 pb-2 border-bottom">
+                                    <i class="fas fa-id-card text-{{ theme_color }} me-2"></i> Dados Pessoais
+                                </h5>
+
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="tiny-elite fw-900 text-muted mb-1 d-block">Nome Completo (Verificado)</label>
+                                        <input type="text" class="form-control input-elite bg-light text-muted" value="{{ current_user.nome }}" readonly>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="tiny-elite fw-900 text-muted mb-1 d-block">Telemóvel 🇦🇴</label>
+                                        <input type="tel" name="telemovel" id="input_tel" class="form-control input-elite" value="{{ current_user.telemovel }}" required pattern="[9][0-9]{8}" maxlength="9">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="tiny-elite fw-900 text-muted mb-1 d-block">E-mail de Contacto</label>
+                                        <input type="email" name="email" id="input_email" class="form-control input-elite" value="{{ current_user.email or '' }}" placeholder="ex@agro.com">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="tiny-elite fw-900 text-muted mb-1 d-block">NIF / BI</label>
+                                        <input type="text" class="form-control input-elite bg-light text-muted" value="{{ current_user.nif or '' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# --- SEÇÃO 2: LOGÍSTICA E FINANÇAS --- #}
+                        <div class="col-md-5">
+                            {# BLOCO IBAN #}
+                            {% if current_user.tipo == 'produtor' %}
+                            <div class="card border-0 shadow-sm rounded-5 bg-dark-sharp text-white p-4 mb-4">
+                                <h5 class="fw-900 mb-4 text-success"><i class="fas fa-university me-2"></i> Recebimentos</h5>
+                                <div class="mb-0">
+                                    <label class="tiny-elite fw-900 text-success-light mb-2 d-block">IBAN NACIONAL</label>
+                                    <input type="text" name="iban" id="iban_input" class="form-control border-0 bg-white bg-opacity-10 text-white fw-900 py-3 rounded-4 font-monospace"
+                                           value="{{ current_user.iban or '' }}" placeholder="AO06...">
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {# BLOCO LOCALIZAÇÃO #}
+                            <div class="card border-0 shadow-sm rounded-5 bg-white p-4">
+                                <h5 class="fw-900 text-dark-sharp mb-4 pb-2 border-bottom">
+                                    <i class="fas fa-map-marker-alt text-danger me-2"></i> Localização
+                                </h5>
+                                <div class="mb-3">
+                                    <label class="tiny-elite fw-900 text-muted mb-2 d-block">PROVÍNCIA</label>
+                                    <select name="provincia_id" id="provincia" class="form-select input-elite select-geo">
+                                        <option value="">Selecione...</option>
+                                        {% for p in provincias %}
+                                        <option value="{{ p.id }}" {% if p.id == current_user.provincia_id %}selected{% endif %}>{{ p.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="tiny-elite fw-900 text-muted mb-2 d-block">MUNICÍPIO</label>
+                                    <select name="municipio_id" id="municipio" class="form-select input-elite select-geo" {% if not current_user.provincia_id %}disabled{% endif %}>
+                                        <option value="">Selecione...</option>
+                                        {% for m in municipios %}
+                                        <option value="{{ m.id }}" {% if m.id == current_user.municipio_id %}selected{% endif %}>{{ m.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# BARRA DE AÇÕES INTELIGENTE #}
+                    <div class="mt-5 p-4 bg-white rounded-5 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-center border border-2 border-dashed border-muted">
+                        <div class="mb-3 mb-md-0 px-2">
+                            <p id="status-msg" class="small text-muted mb-0 fw-700">
+                                <i class="fas fa-info-circle me-1"></i> Nenhuma alteração detetada.
+                            </p>
+                        </div>
+                        <button type="submit" id="btnSubmit" class="btn btn-{{ theme_color }} rounded-pill px-5 py-3 fw-900 shadow-lg border-0 transition-up w-100 w-md-auto disabled" style="opacity: 0.5;">
+                            GUARDAR ATUALIZAÇÕES <i class="fas fa-check-circle ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* AgroKongo Professional UI Core */
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .tiny-elite { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; }
+    .fw-900 { font-weight: 900 !important; }
+    .rounded-5 { border-radius: 2rem !important; }
+    .input-elite {
+        padding: 0.9rem 1.2rem; border: 2px solid #f1f5f9; border-radius: 1.2rem;
+        font-weight: 700; color: #0f172a; transition: all 0.3s ease; font-size: 0.95rem;
+    }
+    .input-elite:focus:not([readonly]) {
+        border-color: var(--bs-{{ theme_color }});
+        box-shadow: 0 0 0 5px rgba(var(--bs-{{ theme_color }}-rgb), 0.1);
+        background: #fff; outline: none;
+    }
+    .input-elite[readonly] { background-color: #f8fafc !important; cursor: not-allowed; border-color: #e2e8f0; opacity: 0.7; }
+    .transition-up { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .btn-white { background: #fff; color: #64748b; border: 1px solid #e2e8f0; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editForm = document.getElementById('editForm');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const statusMsg = document.getElementById('status-msg');
+    const progressBar = document.getElementById('profile-progress-bar');
+    const percentText = document.getElementById('profile-percent');
+
+    // 1. Lógica de Completude (Smart Progress)
+    function updateProgress() {
+        const fields = [
+            document.getElementById('input_tel').value,
+            document.getElementById('input_email').value,
+            document.getElementById('provincia').value,
+            document.getElementById('municipio').value,
+            {% if current_user.tipo == 'produtor' %} document.getElementById('iban_input').value {% else %} "N/A" {% endif %}
+        ];
+        const filled = fields.filter(f => f && f.length > 5).length;
+        const total = fields.length;
+        const perc = Math.round((filled / total) * 100);
+
+        progressBar.style.width = perc + '%';
+        percentText.innerText = perc + '%';
+    }
+
+    // 2. Detetar Alterações (Smart Submit)
+    const initialData = new FormData(editForm);
+    editForm.addEventListener('input', () => {
+        btnSubmit.classList.remove('disabled');
+        btnSubmit.style.opacity = "1";
+        statusMsg.innerHTML = '<i class="fas fa-exclamation-circle text-warning me-1"></i> Tens alterações não guardadas!';
+        updateProgress();
+    });
+
+    // 3. Preview de Foto
+    document.getElementById('foto_perfil').addEventListener('change', function(e) {
+        if(this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => { document.getElementById('avatar-preview').src = e.target.result; };
+            reader.readAsDataURL(this.files[0]);
+            btnSubmit.classList.remove('disabled');
+            btnSubmit.style.opacity = "1";
+        }
+    });
+
+    // 4. API Municípios (Mantida e Estabilizada)
+    document.getElementById('provincia').addEventListener('change', function() {
+        const munSelect = document.getElementById('municipio');
+        if (!this.value) { munSelect.disabled = true; return; }
+
+        fetch(`/api/municipios/${this.value}`)
+            .then(res => res.json())
+            .then(data => {
+                munSelect.innerHTML = '<option value="">Selecione...</option>';
+                data.forEach(m => munSelect.add(new Option(m.nome, m.id)));
+                munSelect.disabled = false;
+            });
+    });
+
+    // 5. Máscara IBAN
+    const ibanInp = document.getElementById('iban_input');
+    if(ibanInp) {
+        ibanInp.addEventListener('input', e => {
+            let v = e.target.value.replace(/[^A-Z0-9]/g, '').toUpperCase();
+            if (v.length > 0 && !v.startsWith('AO06')) v = 'AO06' + v;
+            e.target.value = v.match(/.{1,4}/g)?.join(' ') || v;
+        });
+    }
+
+    updateProgress(); // Run once on load
+});
+</script>
+{% endblock %}

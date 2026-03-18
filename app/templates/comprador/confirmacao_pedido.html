@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar Reserva — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+
+                {# NAVEGAÇÃO DE RETORNO #}
+                <div class="mb-4">
+                    <a href="javascript:history.back()" class="btn btn-link text-muted fw-800 text-decoration-none p-0 transition-all hover-success">
+                        <i class="fas fa-chevron-left me-2"></i> AJUSTAR QUANTIDADE
+                    </a>
+                </div>
+
+                <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white">
+                    {# HEADER DE CONFIRMAÇÃO #}
+                    <div class="bg-agro p-5 text-white text-center position-relative overflow-hidden">
+                        <div class="position-relative" style="z-index: 2;">
+                            <span class="tiny-elite opacity-50 fw-900 tracking-widest d-block mb-2">VERIFICAÇÃO DE PEDIDO</span>
+                            <h2 class="fw-900 mb-0" style="letter-spacing: -1.5px;">Rever Encomenda</h2>
+                        </div>
+                        <i class="fas fa-shopping-basket position-absolute top-50 start-50 translate-middle opacity-10" style="font-size: 10rem;"></i>
+                    </div>
+
+                    <div class="card-body p-4 p-md-5">
+                        {# RESUMO DO PRODUTO #}
+                        <div class="d-flex align-items-center mb-5 p-3 bg-light-sharp rounded-4 border border-2 border-dashed">
+                            <div class="position-relative me-4">
+                                <img src="{{ url_for('static', filename='uploads/safras/' + (safra.imagem or 'default.webp')) }}"
+                                     class="rounded-4 shadow-sm border border-4 border-white"
+                                     style="width: 90px; height: 90px; object-fit: cover;"
+                                     onerror="this.src='https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=200&auto=format&fit=crop'">
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="tiny-elite text-success d-block mb-1">ITEM DA SAFRA</span>
+                                <h4 class="fw-900 text-dark-sharp mb-0">{{ safra.produto.nome }}</h4>
+                                <div class="small fw-700 text-muted">
+                                    <i class="fas fa-tractor me-1 text-success"></i> Produtor: {{ safra.produtor.nome }}
+                                </div>
+                            </div>
+                        </div>
+
+                        {# DETALHES TÉCNICOS #}
+                        <div class="row g-3 mb-5">
+                            <div class="col-6">
+                                <div class="p-3 bg-white border-2 border rounded-4 shadow-sm text-center">
+                                    <small class="tiny-elite text-muted d-block mb-2">QUANTIDADE</small>
+                                    <div class="fw-900 fs-4 text-dark-sharp">{{ "{:,.0f}".format(quantidade) }} <span class="fs-6 opacity-50">KG</span></div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 bg-white border-2 border rounded-4 shadow-sm text-center">
+                                    <small class="tiny-elite text-muted d-block mb-2">PREÇO/UNIT</small>
+                                    <div class="fw-900 fs-4 text-dark-sharp">{{ "{:,.0f}".format(safra.preco_por_unidade) }} <span class="fs-6 opacity-50">Kz</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# TOTAL FINAL #}
+                        <div class="p-4 rounded-5 bg-success-subtle border-0 mb-5 text-center">
+                            <span class="tiny-elite text-success fw-900 d-block mb-2">VALOR TOTAL DO INVESTIMENTO</span>
+                            <h1 class="fw-900 text-success mb-0" style="font-size: 2.8rem; letter-spacing: -2px;">
+                                {{ "{:,.2f}".format(valor_total) }} <small class="fs-4 fw-700">Kz</small>
+                            </h1>
+                        </div>
+
+                        {# AVISO DE COMPROMISSO #}
+                        <div class="d-flex align-items-start gap-3 p-4 rounded-4 bg-primary-subtle border-0 mb-5">
+                            <div class="icon-circle bg-white text-primary shadow-sm" style="width: 45px; height: 45px; flex-shrink: 0;">
+                                <i class="fas fa-stopwatch"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-900 text-primary mb-1" style="font-size: 0.8rem;">RESERVA TEMPORÁRIA</h6>
+                                <p class="small text-primary fw-700 mb-0" style="line-height: 1.4; opacity: 0.8;">
+                                    Ao confirmar, o stock será bloqueado. Terá até <strong class="text-decoration-underline">24 horas</strong> para enviar o comprovativo de pagamento.
+                                </p>
+                            </div>
+                        </div>
+
+                        {# FORMULÁRIO DE AÇÃO #}
+                        <form action="{{ url_for('comprador.finalizar_reserva_db') }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="safra_id" value="{{ safra.id }}">
+                            <input type="hidden" name="quantidade" value="{{ quantidade }}">
+
+                            <div class="d-grid gap-3">
+                                <button type="submit" class="btn btn-dark-sharp py-3 rounded-pill fw-900 shadow-lg border-0 fs-5 transition-all hover-up-sm">
+                                    BLOQUEAR STOCK E CONTINUAR <i class="fas fa-lock-alt ms-2"></i>
+                                </button>
+                                <a href="{{ url_for('mercado.explorar') }}" class="btn btn-light-sharp py-3 rounded-pill fw-800 text-muted border transition-all">
+                                    CANCELAR PEDIDO
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="mt-5 text-center px-4">
+                    <p class="small text-muted fw-700 opacity-75">
+                        <i class="fas fa-info-circle me-1"></i> A AgroKongo garante a devolução do valor se a carga não for despachada pelo produtor no prazo acordado.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-agro { background: #1B4332 !important; }
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; color: #166534 !important; }
+    .bg-primary-subtle { background-color: #eff6ff !important; color: #1e40af !important; }
+    .text-dark-sharp { color: #0f172a !important; }
+
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 900; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; border-color: #e2e8f0 !important; }
+    .hover-up-sm:hover { transform: translateY(-3px); filter: brightness(1.1); }
+    .hover-success:hover { color: #16a34a !important; }
+
+    .icon-circle { border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+</style>
+{% endblock %}

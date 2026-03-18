@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Análise de Pagamento #{{ venda.fatura_ref }} — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row g-4">
+
+        {# COLUNA ESQUERDA: O COMPROVATIVO #}
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden bg-dark" style="min-height: 600px;">
+                <div class="card-header bg-white p-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-900 mb-0">Documento Enviado</h5>
+                    <a href="{{ url_for('main.servir_privado', subpasta='comprovativos', filename=venda.comprovativo_path) }}"
+                       target="_blank" class="btn btn-sm btn-light border fw-800">
+                       <i class="fas fa-expand-arrows-alt me-1"></i> ECRÃ INTEIRO
+                    </a>
+                </div>
+                <div class="card-body p-0 d-flex align-items-center justify-content-center bg-secondary bg-opacity-10">
+                    {% if venda.comprovativo_path.lower().endswith('.pdf') %}
+                        <embed src="{{ url_for('main.servir_privado', subpasta='comprovativos', filename=venda.comprovativo_path) }}"
+                               type="application/pdf" width="100%" height="600px" />
+                    {% else %}
+                        <img src="{{ url_for('main.servir_privado', subpasta='comprovativos', filename=venda.comprovativo_path) }}"
+                             class="img-fluid shadow-sm" style="max-height: 800px;">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# COLUNA DIREITA: DETALHES E AÇÃO #}
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-lg rounded-5 p-4 p-md-5 bg-white h-100">
+                <span class="tiny-elite text-primary mb-2 d-block">DETALHES DA TRANSAÇÃO</span>
+                <h2 class="fw-900 text-dark-sharp mb-4">Ref: #{{ venda.fatura_ref }}</h2>
+
+                <div class="transaction-details mb-5">
+                    <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                        <span class="text-muted fw-700">Comprador:</span>
+                        <span class="fw-900">{{ venda.comprador.nome }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                        <span class="text-muted fw-700">Data do Upload:</span>
+                        <span class="fw-900">{{ venda.data_criacao.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                        <span class="text-muted fw-700">Produto:</span>
+                        <span class="fw-900">{{ venda.safra.produto.nome }}</span>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-light rounded-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small fw-700 text-muted">Total Pago:</span>
+                            <span class="fw-900 text-dark-sharp fs-5">{{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span class="small fw-700">Comissão AgroKongo (5%):</span>
+                            <span class="fw-900">+ {{ "{:,.2f}".format(comissao) }} Kz</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-2 mt-2">
+                            <span class="small fw-700 text-muted">A Repassar ao Produtor:</span>
+                            <span class="fw-900 text-primary">{{ "{:,.2f}".format(valor_produtor) }} Kz</span>
+                        </div>
+                    </div>
+                </div>
+
+                {# BOTÕES DE DECISÃO #}
+                <div class="d-grid gap-3">
+                    <form action="{{ url_for('admin.validar_pagamento', id=venda.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-900 py-3 shadow-sm">
+                            CONFIRMAR CRÉDITO <i class="fas fa-check-circle ms-2"></i>
+                        </button>
+                    </form>
+
+                    <a href="{{ url_for('admin_dashboard.dashboard') }}" class="btn btn-light btn-lg w-100 rounded-pill fw-800 py-3 text-muted">
+                        VOLTAR AO PAINEL
+                    </a>
+                </div>
+
+                <p class="small text-center text-muted mt-4 fw-600">
+                    <i class="fas fa-info-circle me-1"></i> Verifique se o nome no talão coincide com o comprador antes de aprovar.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

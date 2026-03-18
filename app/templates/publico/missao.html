@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Nossa Missão — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #ffffff; min-height: 100vh;">
+
+    {# === HERO SECTION === #}
+    <section class="py-5 py-lg-5 position-relative overflow-hidden" style="background: radial-gradient(circle at 0% 0%, #f0fdf4 0%, #ffffff 50%);">
+        <div class="container position-relative z-1 py-lg-5">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-7 animate__animated animate__fadeInLeft">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-900 tiny-elite">MANIFESTO 2026</span>
+                        <div class="pulse-dot-green"></div>
+                    </div>
+                    <h1 class="display-2 fw-900 text-dark-sharp mb-4 tracking-tighter" style="line-height: 0.9;">
+                        A ponte digital para o <br><span class="text-success italic">renascimento agrícola.</span>
+                    </h1>
+                    <p class="lead text-muted fw-700 mb-5 fs-4" style="max-width: 600px;">
+                        Nascemos para garantir que nenhum fruto apodreça na terra por falta de escoamento e que nenhum angolano pague caro por falta de conexão direta.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#pilares" class="btn btn-dark-sharp rounded-pill px-4 py-3 fw-900 shadow-lg transition-up">
+                            CONHECER OS PILARES
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 position-relative animate__animated animate__fadeInRight">
+                    <div class="main-image-frame p-3 bg-white shadow-2xl rounded-5 border">
+                        <img src="https://images.unsplash.com/photo-1595113316349-9fa4ee24f884?auto=format&fit=crop&w=800"
+                             class="img-fluid rounded-4 transition-all hover-scale" alt="Agricultura em Angola">
+                    </div>
+                    <div class="absolute-stats-card bg-dark-sharp text-white p-4 rounded-5 shadow-2xl border border-light border-opacity-10">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-success text-white rounded-4 d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;">
+                                <i class="fas fa-chart-line fa-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="fw-900 m-0">100%</h3>
+                                <p class="tiny-elite text-white text-opacity-50 m-0 fw-800">NACIONAL</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# === PILARES === #}
+    <section id="pilares" class="py-5 bg-light-sharp border-top border-bottom">
+        <div class="container py-lg-5">
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-4">
+                    <div class="pillar-card bg-white border p-5 h-100 transition-all hover-up shadow-sm">
+                        <div class="icon-avatar-payment bg-success-subtle text-success mb-4 fs-2">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <h4 class="fw-900 text-dark-sharp mb-3">Missão</h4>
+                        <p class="text-muted fw-700 mb-0">Democratizar o acesso ao mercado para produtores, eliminando intermediários que encarecem a cesta básica das famílias angolanas.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pillar-card bg-dark-sharp text-white p-5 h-100 transition-all hover-up shadow-2xl">
+                        <div class="icon-avatar-payment bg-white bg-opacity-10 text-white mb-4 fs-2">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <h4 class="fw-900 mb-3">Visão</h4>
+                        <p class="text-white text-opacity-70 fw-700 mb-0">Ser a espinha dorsal do escoamento agrícola de Angola, conectando as 18 províncias num único ecossistema digital de confiança.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pillar-card bg-white border p-5 h-100 transition-all hover-up shadow-sm">
+                        <div class="icon-avatar-payment bg-primary-subtle text-primary mb-4 fs-2">
+                            <i class="fas fa-shield-heart"></i>
+                        </div>
+                        <h4 class="fw-900 text-dark-sharp mb-3">Valores</h4>
+                        <p class="text-muted fw-700 mb-0">Transparência radical, valorização do camponês e compromisso absoluto com a soberania e segurança alimentar nacional.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# === CONTEXTO === #}
+    <section class="py-5 overflow-hidden">
+        <div class="container py-lg-5">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6 order-2 order-lg-1">
+                    <div class="quote-box-elite p-5 bg-success-subtle rounded-5 border-start border-success border-5 shadow-sm">
+                        <h2 class="fw-900 text-dark-sharp mb-4" style="letter-spacing: -2px;">Por que existimos?</h2>
+                        <p class="fs-5 text-dark-sharp fw-700 mb-4" style="line-height: 1.6;">
+                            "Em Angola, a logística é o maior desafio do agronegócio. O AgroKongo utiliza tecnologia para transformar telemóveis em ferramentas de venda direta."
+                        </p>
+                        <p class="text-muted fw-700 mb-5">
+                            Permitimos que o produtor no Huambo saiba exatamente quem quer comprar o seu produto em Luanda, sem intermediários e sem sair da lavra.
+                        </p>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge bg-dark rounded-pill px-3 py-2 fw-900 tiny-elite">ANGOLA 🇦🇴</span>
+                            <span class="label-caps-elite text-success fw-900">Compromisso Nacional</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 order-1 order-lg-2">
+                    <div class="row g-3">
+                        <div class="col-6 mt-5">
+                            <img src="https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?auto=format&fit=crop&w=400" class="img-fluid rounded-5 shadow-lg mb-3" alt="Lote agrícola">
+                            <div class="bg-primary p-4 rounded-5 text-white shadow-lg text-center">
+                                <h4 class="fw-900 m-0">18</h4>
+                                <small class="tiny-elite fw-900 opacity-75">PROVÍNCIAS</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-success p-4 rounded-5 text-white shadow-lg text-center mb-3">
+                                <h4 class="fw-900 m-0">+5K</h4>
+                                <small class="tiny-elite fw-900 opacity-75">PRODUTORES</small>
+                            </div>
+                            <img src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&w=400" class="img-fluid rounded-5 shadow-lg" alt="Colheita">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# === CTA FINAL === #}
+    <section class="py-5 bg-white border-top">
+        <div class="container text-center py-5">
+            <div class="mx-auto" style="max-width: 700px;">
+                <h2 class="display-5 fw-900 text-dark-sharp mb-4">Pronto para fazer parte desta mudança?</h2>
+                <p class="text-muted fs-5 mb-5 fw-700">Seja como produtor que quer escoar a sua safra ou como comprador que busca qualidade, o seu lugar é aqui.</p>
+
+                <div class="d-flex flex-column flex-md-row gap-3 justify-content-center align-items-center">
+                    <a href="{{ url_for('auth.registro') }}" class="btn btn-dark-sharp rounded-pill px-5 py-3 fw-900 shadow-lg transition-up">
+                        CRIAR CONTA AGORA <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    <a href="{{ url_for('mercado.explorar') }}" class="btn btn-outline-dark rounded-pill px-5 py-3 fw-900 transition-up">
+                        EXPLORAR MERCADO
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a; }
+    .text-dark-sharp { color: #0f172a; }
+    .bg-light-sharp { background-color: #f8fafc; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+    .italic { font-style: italic; }
+
+    .main-image-frame { transform: rotate(-2deg); transition: 0.5s; }
+    .main-image-frame:hover { transform: rotate(0deg); }
+    .absolute-stats-card { position: absolute; bottom: -20px; left: -20px; z-index: 3; }
+
+    .pillar-card { border-radius: 35px; }
+    .icon-avatar-payment { width: 60px; height: 60px; border-radius: 20px; display: flex; align-items: center; justify-content: center; }
+
+    .btn-dark-sharp { background: #0f172a; color: white; border: none; }
+    .btn-dark-sharp:hover { background: #1e293b; color: white; }
+
+    .hover-up:hover { transform: translateY(-10px); }
+    .transition-up:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+    .pulse-dot-green {
+        width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+</style>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Validação de Fatura — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-5">
+        <div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+            <div class="col-md-7 col-lg-5 text-center">
+
+                {% if venda %}
+                    {# --- ESTADO: SUCESSO (DOCUMENTO VÁLIDO) --- #}
+                    <div class="card border-0 shadow-2xl rounded-5 p-4 p-md-5 animate__animated animate__zoomIn" style="background: #ffffff;">
+                        <div class="mb-4">
+                            <div class="bg-success-subtle rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 100px; height: 100px;">
+                                <i class="fas fa-check-double text-success fa-3x"></i>
+                            </div>
+                        </div>
+
+                        <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-900 tiny-elite mb-3">
+                            AUTENTICIDADE CONFIRMADA
+                        </span>
+                        <h2 class="fw-900 text-dark-sharp mb-2" style="letter-spacing: -2px;">Fatura Legítima</h2>
+                        <p class="text-muted fw-700 mb-4 px-3">Os dados abaixo coincidem com os registos encriptados na nossa base de dados oficial.</p>
+
+                        <div class="bg-light-sharp border-2 border-dashed rounded-4 p-4 text-start">
+                            <div class="d-flex justify-content-between border-bottom border-light pb-2 mb-2">
+                                <span class="text-muted small fw-800 tracking-tighter">REFERÊNCIA</span>
+                                <span class="fw-900 text-dark-sharp">#{{ venda.fatura_ref }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between border-bottom border-light pb-2 mb-2">
+                                <span class="text-muted small fw-800 tracking-tighter">COMPRADOR</span>
+                                <span class="fw-900 text-dark-sharp">{{ venda.comprador.nome }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between border-bottom border-light pb-2 mb-2">
+                                <span class="text-muted small fw-800 tracking-tighter">TOTAL PAGO</span>
+                                <span class="fw-900 text-success">{{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small fw-800 tracking-tighter">EMISSÃO</span>
+                                <span class="fw-900 text-dark-sharp">{{ venda.data_criacao.strftime('%d/%m/%Y - %H:%M') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-dark-sharp rounded-4 shadow-inner">
+                            <p class="mb-0 small fw-800 text-white opacity-90">
+                                <i class="fas fa-lock text-success me-2"></i> Protegido por Escrow AgroKongo
+                            </p>
+                        </div>
+                    </div>
+                {% else %}
+                    {# --- ESTADO: FALHA (FRAUDE OU ERRO) --- #}
+                    <div class="card border-0 shadow-2xl rounded-5 p-4 p-md-5 animate__animated animate__shakeX" style="background: #ffffff; border-top: 6px solid #ef4444 !important;">
+                        <div class="mb-4">
+                            <div class="bg-danger-subtle rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 100px; height: 100px;">
+                                <i class="fas fa-shield-exclamation text-danger fa-3x"></i>
+                            </div>
+                        </div>
+
+                        <span class="badge bg-danger text-white px-3 py-2 rounded-pill fw-900 tiny-elite mb-3">
+                            ALERTA DE SEGURANÇA
+                        </span>
+                        <h2 class="fw-900 text-dark-sharp mb-2" style="letter-spacing: -2px;">Inválido ou Falso</h2>
+                        <p class="text-muted fw-700 mb-4 px-2">Este código não corresponde a nenhuma transação registada. Não prossiga com o pagamento.</p>
+
+                        <div class="bg-danger-subtle border border-danger border-opacity-10 rounded-4 p-4 mt-3">
+                            <p class="mb-1 tiny-elite text-danger fw-900">CÓDIGO VERIFICADO:</p>
+                            <code class="h5 fw-900 text-danger font-monospace" style="letter-spacing: 3px;">{{ codigo or 'N/A' }}</code>
+                        </div>
+
+                        <div class="mt-4 text-start">
+                            <div class="d-flex gap-3 align-items-start text-muted">
+                                <i class="fas fa-info-circle mt-1 text-danger"></i>
+                                <p class="x-small fw-600 mb-0">Se recebeu este código impresso num documento, reporte imediatamente à nossa equipa de apoio ao cliente.</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="mt-5 px-3">
+                    <a href="{{ url_for('mercado.explorar') }}" class="btn btn-white shadow-sm rounded-pill px-5 py-3 fw-900 transition-up w-100">
+                        <i class="fas fa-home me-2"></i> Ir para o Mercado
+                    </a>
+                    <p class="mt-4 text-muted small fw-800 opacity-50 text-uppercase tracking-widest" style="font-size: 0.6rem;">
+                        © 2026 AgroKongo — Infraestrutura de Confiança
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a; }
+    .bg-light-sharp { background-color: #f8fafc; }
+    .text-dark-sharp { color: #0f172a; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; }
+    .x-small { font-size: 0.75rem; line-height: 1.4; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; }
+    .bg-danger-subtle { background-color: #fef2f2 !important; }
+    .border-dashed { border-style: dashed !important; }
+    .font-monospace { font-family: 'JetBrains Mono', 'Courier New', monospace !important; }
+
+    .btn-white { background: #fff; border: 1px solid #e2e8f0; color: #475569; }
+    .btn-white:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+    .transition-up:hover { transform: translateY(-4px); }
+</style>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Painel do Comprador - AgroKongo{% endblock %}
+
+{% macro render_compras_table(compras_lista, mensagem_vazia) %}
+    {% if compras_lista %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr class="small text-uppercase text-muted">
+                        <th class="py-3">Produto</th>
+                        <th class="py-3">Vendedor</th>
+                        <th class="py-3 text-center">Total Pago</th>
+                        <th class="py-3 text-center">Status</th>
+                        <th class="py-3 text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for compra in compras_lista %}
+                    {% set status_key = compra.status.name|lower if compra.status.name is defined else compra.status|string|lower %}
+                    <tr>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('serve_safra_image', filename=compra.safra.imagem) if compra.safra.imagem else 'https://dummyimage.com/100x100/e2e8f0/6c757d.png&text=Sem+Foto' }}"
+                                     class="rounded-2 me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                <div>
+                                    <a href="{{ url_for('mercado.detalhes_safra', id=compra.safra.id) }}" class="fw-bold text-dark text-decoration-none">{{ compra.safra.produto.nome }}</a>
+                                    <p class="small text-muted mb-0">Ref: {{ compra.fatura_ref }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="small">{{ compra.vendedor.nome }}</td>
+                        <td class="text-center fw-bold">{{ "{:,.2f}".format(compra.valor_total_pago|default(0)|float).replace(',', 'X').replace('.', ',').replace('X', '.') }} Kz</td>
+                        <td class="text-center">
+                            {% set status_map = {
+                                'pendente': ['secondary', 'Aguardando Produtor'],
+                                'aguardando_pagamento': ['warning', 'Aguardando Pagamento'],
+                                'analise': ['info', 'Pagamento em Análise'],
+                                'escrow': ['primary', 'Pago, Aguardando Envio'],
+                                'enviado': ['primary', 'Em Trânsito'],
+                                'entregue': ['success', 'Entregue'],
+                                'finalizado': ['dark', 'Concluída'],
+                                'cancelada': ['danger', 'Cancelada'],
+                                'disputa': ['danger', 'Em Disputa']
+                            } %}
+                            {% set color, text = status_map.get(status_key, ['light', status_key|upper]) %}
+                            <span class="badge bg-{{ color }} bg-opacity-25 text-{{ color }}-emphasis rounded-pill px-2 py-1 small fw-bold">{{ text }}</span>
+                        </td>
+                        <td class="text-end">
+                            {% if status_key == 'aguardando_pagamento' %}
+                                <a href="{{ url_for('comprador.pagar_reserva', trans_id=compra.id) }}" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">Pagar Agora</a>
+                            {% elif status_key == 'enviado' %}
+                                <form action="{{ url_for('comprador.confirmar_recebimento', trans_id=compra.id) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">Confirmar Entrega</button>
+                                </form>
+                            {% elif status_key == 'entregue' %}
+                                {% if not compra.avaliacao %}
+                                    <a href="{{ url_for('comprador.encomenda_detalhe', id=compra.id) }}#avaliacao" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold">
+                                        <i class="fas fa-star me-1"></i> Avaliar
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-2 py-1 small">
+                                        <i class="fas fa-check me-1"></i> Avaliada
+                                    </span>
+                                {% endif %}
+                            {% elif status_key == 'em_disputa' %}
+                                <a href="{{ url_for('comprador.encomenda_detalhe', id=compra.id) }}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">
+                                    <i class="fas fa-gavel me-1"></i> Ver Disputa
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('comprador.encomenda_detalhe', id=compra.id) }}" class="btn btn-light btn-sm border-0" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5 border-top">
+            <p class="text-muted">{{ mensagem_vazia }}</p>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Cabeçalho -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold">Painel do Comprador</h2>
+            <p class="text-muted mb-0">Gestão completa das suas compras e encomendas.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('mercado.explorar') }}" class="btn btn-agro fw-bold shadow-sm">
+                <i class="fas fa-store me-2"></i>Ir para o Mercado
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-5">
+        {{ render_kpi('fa-shopping-basket', 'Compras Ativas', compras_ativas, 'encomendas', 'primary') }}
+        {{ render_kpi('fa-receipt', 'Total Gasto', total_gasto, 'Kz', 'dark', is_money=True) }}
+    </div>
+
+    <!-- Abas de Compras -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 p-4">
+            <ul class="nav nav-pills" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold position-relative" id="pills-pendentes-tab" data-bs-toggle="pill" data-bs-target="#pills-pendentes" type="button">
+                        Ações Pendentes
+                        {% if pendentes %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ pendentes|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="pills-transito-tab" data-bs-toggle="pill" data-bs-target="#pills-transito" type="button">Em Trânsito</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="pills-historico-tab" data-bs-toggle="pill" data-bs-target="#pills-historico" type="button">Histórico</button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body p-0">
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-pendentes" role="tabpanel">
+                    {{ render_compras_table(pendentes, "Não há ações pendentes.") }}
+                </div>
+                <div class="tab-pane fade" id="pills-transito" role="tabpanel">
+                    {{ render_compras_table(em_transito, "Nenhuma encomenda a caminho.") }}
+                </div>
+                <div class="tab-pane fade" id="pills-historico" role="tabpanel">
+                    {{ render_compras_table(historico, "O seu histórico de compras aparecerá aqui.") }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

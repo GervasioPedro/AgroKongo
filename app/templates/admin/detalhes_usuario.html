@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Dossiê: {{ user.nome }} — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn font-sharp">
+
+        {# === CABEÇALHO: IDENTIDADE & COMANDOS === #}
+        <div class="row align-items-center mb-5 g-4">
+            <div class="col-md-7 d-flex align-items-center flex-wrap gap-4">
+                <div class="position-relative">
+                    {# Foto de Perfil - Pasta: data_storage/public/perfil #}
+                    <img src="{{ url_for('main.servir_publico', subpasta='perfil', filename=user.foto_perfil) if user.foto_perfil else url_for('static', filename='img/default_user.jpg') }}"
+                         class="rounded-5 shadow-2xl border border-4 border-white"
+                         style="width: 120px; height: 120px; object-fit: cover;"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ user.nome }}&background=16a34a&color=fff'">
+
+                    <span class="position-absolute bottom-0 start-50 translate-middle-x badge {% if user.tipo == 'produtor' %}bg-success{% else %}bg-primary{% endif %} rounded-pill px-3 py-1 shadow fw-900 tiny-elite mb-n2">
+                        {{ user.tipo|upper }}
+                    </span>
+                </div>
+                <div>
+                    <h1 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -3px; font-size: 2.5rem;">{{ user.nome }}</h1>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if user.conta_validada %}
+                            <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 fw-900 tiny-elite">
+                                <i class="fas fa-check-circle me-1"></i> VERIFICADO
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 fw-900 tiny-elite">
+                                <i class="fas fa-clock me-1"></i> PENDENTE DE ANÁLISE
+                            </span>
+                        {% endif %}
+                        <span class="text-muted fw-800 small border-start ps-3">REGISTO #{{ user.id }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <a href="{{ url_for('admin.lista_usuarios') }}" class="btn btn-white rounded-pill px-4 fw-900 shadow-sm border transition-up">
+                        <i class="fas fa-arrow-left me-2"></i> VOLTAR
+                    </a>
+
+                    {% if not user.conta_validada %}
+                        {# Gatilho do Modal de Rejeição #}
+                        <button class="btn btn-outline-danger rounded-pill px-4 fw-900 transition-up" data-bs-toggle="modal" data-bs-target="#modalRejeitar">
+                            REJEITAR
+                        </button>
+
+                        <form action="{{ url_for('admin.validar_usuario', user_id=user.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-success rounded-pill px-4 fw-900 shadow-lg border-0 transition-up">
+                                VALIDAR AGORA <i class="fas fa-check-double ms-1"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {# Coluna de Documentos e Contactos #}
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-5 p-4 bg-white mb-4">
+                    <h6 class="fw-900 tiny-elite text-primary mb-4 border-bottom pb-2">CONFORMIDADE E CONTACTO</h6>
+
+                    <div class="mb-4">
+                        <label class="tiny-elite text-muted d-block mb-1">NIF / IDENTIFICAÇÃO</label>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-id-card text-muted me-2"></i>
+                            <span class="fw-900 text-dark-sharp">{{ user.nif or 'NÃO DECLARADO' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="tiny-elite text-muted d-block mb-1">LOCALIZAÇÃO</label>
+                        <div class="d-flex align-items-center text-dark-sharp">
+                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                            <span class="fw-800">{{ user.municipio.nome if user.municipio else 'Sede' }}, {{ user.provincia.nome if user.provincia else 'Luanda' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="tiny-elite text-muted d-block mb-1">TELEFONE</label>
+                        <a href="tel:{{ user.telemovel }}" class="text-decoration-none fw-900 text-dark-sharp">
+                            <i class="fas fa-phone-alt text-success me-2"></i> {{ user.telemovel }}
+                        </a>
+                    </div>
+
+                    <hr class="opacity-10 my-4">
+
+                    <label class="tiny-elite text-muted d-block mb-3">FICHEIRO DE SUPORTE (BI/ALVARÁ)</label>
+                    {% if user.documento_pdf %}
+                        {# Documento - Pasta: data_storage/private_docs/identidade #}
+                        <a href="{{ url_for('main.servir_privado', subpasta='identidade', filename=user.documento_pdf) }}"
+                           target="_blank"
+                           class="btn btn-dark-sharp w-100 rounded-4 py-3 fw-900 transition-up shadow">
+                            <i class="fas fa-file-pdf me-2 text-warning"></i> VISUALIZAR DOCUMENTO
+                        </a>
+                    {% else %}
+                        <div class="alert alert-danger-subtle text-danger small fw-800 rounded-4 border-0 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i> DOCUMENTO EM FALTA
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Coluna de Atividade #}
+            <div class="col-lg-8">
+                <div class="alert bg-white border rounded-5 p-4 shadow-sm h-100">
+                    <h5 class="fw-900 text-dark-sharp mb-3"><i class="fas fa-history me-2 text-primary"></i> Atividade do Utilizador</h5>
+                    <p class="text-muted fw-700 mb-0 small">Histórico de auditoria, vendas e interações registadas no ecossistema AgroKongo.</p>
+                    <div class="mt-4 py-5 text-center text-muted border-top border-dashed">
+                        <i class="fas fa-database fa-2x mb-3 opacity-25"></i>
+                        <p class="fw-600">Sem atividade recente registada para este perfil.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# === MODAL DE REJEIÇÃO (Fica fora da estrutura principal) === #}
+<div class="modal fade" id="modalRejeitar" tabindex="-1" aria-labelledby="modalRejeitarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-5 shadow-2xl">
+            <form action="{{ url_for('admin.rejeitar_usuario', user_id=user.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body p-5 text-center">
+                    <div class="icon-circle bg-danger-subtle text-danger mx-auto mb-4" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                        <i class="fas fa-user-times fa-2x"></i>
+                    </div>
+                    <h3 class="fw-900 text-dark-sharp mb-2">Rejeitar Conta?</h3>
+                    <p class="text-muted fw-700 mb-4 small">Indique o motivo para que o produtor possa corrigir os dados.</p>
+
+                    <div class="text-start mb-4">
+                        <label class="tiny-elite text-muted mb-2">MOTIVO DA REJEIÇÃO</label>
+                        <textarea name="motivo" class="form-control rounded-4 border-light-sharp bg-light p-3 fw-700" rows="3" required placeholder="Ex: PDF ilegível, NIF inválido..."></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger py-3 rounded-pill fw-900 shadow-sm">CONFIRMAR E NOTIFICAR</button>
+                        <button type="button" class="btn btn-link text-muted fw-800 text-decoration-none" data-bs-dismiss="modal">CANCELAR</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+    .transition-up { transition: all 0.3s ease; }
+    .transition-up:hover { transform: translateY(-3px); }
+    .border-dashed { border-style: dashed !important; }
+</style>
+{% endblock %}

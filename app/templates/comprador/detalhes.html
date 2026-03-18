@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}{{ safra.produto.nome }} — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #ffffff; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+
+        {# NAVEGAÇÃO SUPERIOR #}
+        <nav aria-label="breadcrumb" class="mb-5">
+            <a href="{{ url_for('mercado.explorar') }}" class="btn btn-light rounded-pill px-4 fw-800 tiny-elite text-muted border shadow-sm transition-all">
+                <i class="fas fa-arrow-left me-2"></i> Voltar ao Mercado
+            </a>
+        </nav>
+
+        <div class="row g-5">
+            {# --- COLUNA A: VISUAL --- #}
+            <div class="col-lg-6">
+                <div class="sticky-top" style="top: 2rem; z-index: 1;">
+                    <div class="card border-0 shadow-lg rounded-5 overflow-hidden position-relative">
+                        <img src="{{ url_for('static', filename='uploads/safras/' + (safra.imagem or 'default.webp')) }}"
+                             class="img-fluid w-100 object-fit-cover shadow-inner"
+                             style="height: 550px;"
+                             onerror="this.src='https://images.unsplash.com/photo-1592910710242-ca930d749719?q=80&w=800&auto=format&fit=crop'">
+
+                        {# BADGES FLUTUANTES #}
+                        <div class="position-absolute top-0 start-0 m-4 d-flex flex-column gap-2">
+                            <span class="badge bg-white text-success shadow-lg rounded-pill px-3 py-2 fw-900 tiny-elite border">
+                                <i class="fas fa-certificate me-1"></i> QUALIDADE GARANTIDA
+                            </span>
+                            <span class="badge bg-dark text-white shadow-lg rounded-pill px-3 py-2 fw-900 tiny-elite border border-secondary border-opacity-25">
+                                <i class="fas fa-truck-loading me-1"></i> PRONTO PARA ENVIO
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# --- COLUNA B: INFORMAÇÃO E COMPRA --- #}
+            <div class="col-lg-6">
+                <div class="ps-lg-4">
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill tiny-elite fw-900">
+                                {{ safra.produto.categoria }}
+                            </span>
+                            <span class="text-muted fw-800 tiny-elite">REF: #SK-{{ safra.id }}</span>
+                        </div>
+                        <h1 class="fw-900 text-dark-sharp mb-2" style="font-size: 3.5rem; letter-spacing: -3px;">{{ safra.produto.nome }}</h1>
+                        <div class="d-flex align-items-center gap-3">
+                            <p class="text-muted fw-700 mb-0">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                {{ safra.usuario.municipio.nome }}, {{ safra.usuario.provincia.nome }}
+                            </p>
+                            <span class="text-muted opacity-25">/</span>
+                            <p class="text-muted fw-700 mb-0">
+                                <i class="fas fa-tractor text-success me-1"></i>
+                                {{ safra.usuario.nome }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-end gap-2 mb-5">
+                        <h2 class="text-success fw-900 mb-0" style="font-size: 3rem; letter-spacing: -1px;">
+                            {{ "{:,.0f}".format(safra.preco_kg) }}
+                            <small class="fs-4 fw-700">Kz</small>
+                        </h2>
+                        <span class="text-muted fw-800 mb-2">por quilograma (kg)</span>
+                    </div>
+
+                    {# INFO DO STOCK #}
+                    <div class="row g-3 mb-5">
+                        <div class="col-6">
+                            <div class="p-4 rounded-5 bg-light-sharp border border-2 text-center h-100 shadow-sm transition-all hover-white">
+                                <small class="tiny-elite text-muted d-block mb-1">STOCK DISPONÍVEL</small>
+                                <span class="fw-900 fs-4 text-dark-sharp">{{ "{:,.0f}".format(safra.quantidade_kg) }} KG</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-4 rounded-5 bg-light-sharp border border-2 text-center h-100 shadow-sm transition-all hover-white">
+                                <small class="tiny-elite text-muted d-block mb-1">CAPACIDADE ENVIO</small>
+                                <span class="fw-900 fs-4 text-dark-sharp">IMEDIATA</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5 pb-4 border-bottom">
+                        <h6 class="tiny-elite fw-900 text-dark-sharp mb-3">Nota do Produtor</h6>
+                        <p class="text-muted fw-600 lh-base" style="font-size: 1.1rem;">
+                            {{ safra.descricao or 'Safra colhida recentemente sob rigoroso controlo de qualidade. O produto encontra-se devidamente armazenado e aguarda apenas o seu pedido para o carregamento.' }}
+                        </p>
+                    </div>
+
+                    {# WIDGET DE COMPRA #}
+                    <div class="card border-0 rounded-5 bg-dark-sharp p-4 p-md-5 shadow-2xl position-relative overflow-hidden">
+                        <form action="{{ url_for('comprador.iniciar_encomenda', safra_id=safra.id) }}" method="POST" class="position-relative" style="z-index: 2;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <div class="mb-4">
+                                <label class="fw-900 text-white-50 tiny-elite mb-3">Quantidade Pretendida</label>
+                                <div class="input-group input-group-lg border-0 shadow-sm">
+                                    <input type="number" name="quantidade" id="qtd_input"
+                                           class="form-control fw-900 border-0 bg-white rounded-start-pill ps-4"
+                                           min="1" max="{{ safra.quantidade_kg }}" value="1" step="1" oninput="calcularTotal()">
+                                    <span class="input-group-text bg-white border-0 rounded-end-pill pe-4 fw-900 text-muted">KG</span>
+                                </div>
+                                <div id="stock_warning" class="text-warning small fw-800 mt-2 d-none">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> Quantidade excede o stock disponível!
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-5 px-2">
+                                <span class="fw-800 text-white-50">VALOR DA OPERAÇÃO</span>
+                                <h3 class="fw-900 text-white mb-0" id="total_display">{{ "{:,.2f}".format(safra.preco_kg) }} Kz</h3>
+                            </div>
+
+                            <button type="submit" id="btn_comprar" class="btn btn-success w-100 py-3 rounded-pill fw-900 shadow-lg border-0 btn-hover-grow fs-5">
+                                RESERVAR CARGA <i class="fas fa-chevron-right ms-2"></i>
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-4 position-relative" style="z-index: 2;">
+                            <p class="text-white-50 small fw-700 mb-0">
+                                <i class="fas fa-shield-check text-success me-1"></i> Pagamento Protegido via Escrow AgroKongo
+                            </p>
+                        </div>
+
+                        {# Elemento visual de fundo #}
+                        <i class="fas fa-leaf position-absolute bottom-0 end-0 m-n4 opacity-10 text-white" style="font-size: 10rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 900; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+
+    .hover-white:hover { background-color: white !important; transform: translateY(-3px); }
+    .btn-hover-grow { transition: 0.3s; }
+    .btn-hover-grow:hover { transform: scale(1.02); filter: brightness(1.1); }
+    .btn-hover-grow:disabled { opacity: 0.5; filter: grayscale(1); transform: none; }
+
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { opacity: 1; }
+
+    .bg-success-subtle { background-color: #f0fdf4 !important; }
+</style>
+
+<script>
+function calcularTotal() {
+    const preco = {{ safra.preco_kg }};
+    const stockMax = {{ safra.quantidade_kg }};
+    const input = document.getElementById('qtd_input');
+    const display = document.getElementById('total_display');
+    const warning = document.getElementById('stock_warning');
+    const btn = document.getElementById('btn_comprar');
+
+    let qtd = parseFloat(input.value);
+
+    if (qtd > stockMax) {
+        warning.classList.remove('d-none');
+        btn.disabled = true;
+        display.classList.add('text-danger');
+        display.innerText = "Inválido";
+    } else if (qtd <= 0 || isNaN(qtd)) {
+        warning.classList.add('d-none');
+        btn.disabled = true;
+        display.innerText = "0.00 Kz";
+    } else {
+        warning.classList.add('d-none');
+        btn.disabled = false;
+        display.classList.remove('text-danger');
+        let total = preco * qtd;
+        display.innerText = total.toLocaleString('pt-PT', { minimumFractionDigits: 2 }) + ' Kz';
+    }
+}
+</script>
+{% endblock %}

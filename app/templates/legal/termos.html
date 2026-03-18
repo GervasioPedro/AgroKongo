@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Termos e Condições — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); min-height: 100vh;">
+
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+
+        {# === CABEÇALHO === #}
+        <div class="text-center mb-5 pb-lg-4">
+            <span class="label-caps-elite text-success mb-2 d-block">Transparência e Segurança</span>
+            <h1 class="fw-900 display-4 text-dark-sharp mb-3" style="letter-spacing: -2px;">Termos de Serviço</h1>
+            <p class="text-slate-bold fs-5 mx-auto fw-600" style="max-width: 650px;">
+                Última atualização: 05 de Janeiro de 2026. Entenda como protegemos as suas negociações no ecossistema AgroKongo.
+            </p>
+        </div>
+
+        <div class="row g-5">
+            {# === NAVEGAÇÃO LATERAL (STICKY) === #}
+            <div class="col-lg-4 d-none d-lg-block">
+                <div class="sticky-top" style="top: 100px;">
+                    <div class="card border-0 rounded-5 shadow-sm p-4 bg-white">
+                        <h6 class="fw-900 text-dark-sharp mb-4 px-2">Neste documento</h6>
+                        <nav id="terms-nav" class="nav flex-column gap-2">
+                            <a class="nav-link-elite active" href="#aceitacao">1. Aceitação de Termos</a>
+                            <a class="nav-link-elite" href="#perfil">2. Cadastro de Perfil</a>
+                            <a class="nav-link-elite" href="#transacoes">3. Transações e Pagamentos</a>
+                            <a class="nav-link-elite" href="#responsabilidades">4. Responsabilidades</a>
+                            <a class="nav-link-elite" href="#privacidade">5. Proteção de Dados</a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            {# === CONTEÚDO JURÍDICO === #}
+            <div class="col-lg-8">
+                <div class="card border-0 rounded-5 shadow-sm p-4 p-md-5 bg-white border-light-sharp">
+
+                    <section id="aceitacao" class="mb-5">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="icon-avatar-payment bg-green-light text-success">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <h4 class="fw-900 m-0 text-dark-sharp">1. Aceitação de Termos</h4>
+                        </div>
+                        <p class="text-slate-bold fw-500 lh-lg">
+                            Ao aceder e utilizar a plataforma AgroKongo, o utilizador concorda expressamente em cumprir com as diretrizes aqui estabelecidas. Este serviço destina-se a facilitar a conexão entre produtores agrícolas e compradores no território de Angola.
+                        </p>
+                    </section>
+
+                    <section id="perfil" class="mb-5">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="icon-avatar-payment bg-indigo-light text-primary">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <h4 class="fw-900 m-0 text-dark-sharp">2. Cadastro de Perfil</h4>
+                        </div>
+                        <p class="text-slate-bold fw-500 lh-lg">
+                            Cada utilizador é responsável pela veracidade das informações fornecidas. O AgroKongo reserva-se o direito de verificar a identidade dos produtores através de documentos oficiais ou visitas técnicas, visando manter o selo de <strong>Vendedor Verificado</strong>.
+                        </p>
+                    </section>
+
+                    <section id="transacoes" class="mb-5">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="icon-avatar-payment bg-warning-light text-warning">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <h4 class="fw-900 m-0 text-dark-sharp">3. Transações e Pagamentos</h4>
+                        </div>
+                        <div class="comment-bubble-elite mb-3">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            <span class="text-dark-sharp small fw-700">O AgroKongo não processa pagamentos diretos na versão atual.</span>
+                        </div>
+                        <p class="text-slate-bold fw-500 lh-lg">
+                            As negociações de preço e transporte são de livre acordo entre as partes. Recomendamos o uso do sistema de mensagens interno para manter o histórico da negociação em caso de litígios.
+                        </p>
+                    </section>
+
+                    <section id="responsabilidades" class="mb-5">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="icon-avatar-payment bg-dark-sharp text-white">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h4 class="fw-900 m-0 text-dark-sharp">4. Responsabilidades</h4>
+                        </div>
+                        <ul class="list-unstyled text-slate-bold fw-500">
+                            <li class="mb-3 d-flex gap-2">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <span>A qualidade dos produtos é responsabilidade exclusiva do produtor.</span>
+                            </li>
+                            <li class="mb-3 d-flex gap-2">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <span>O transporte deve ser acordado antes da confirmação da venda.</span>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section id="privacidade">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="icon-avatar-payment bg-light text-dark">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <h4 class="fw-900 m-0 text-dark-sharp">5. Proteção de Dados</h4>
+                        </div>
+                        <p class="text-slate-bold fw-500 lh-lg">
+                            Os seus dados pessoais estão protegidos de acordo com a Lei de Proteção de Dados de Angola. Não partilhamos informações de contacto com terceiros sem a sua autorização expressa durante uma negociação.
+                        </p>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos específicos para a Navegação de Termos */
+    .nav-link-elite {
+        display: block;
+        padding: 12px 20px;
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.95rem;
+        border-radius: 15px;
+        transition: 0.3s;
+    }
+    .nav-link-elite:hover {
+        background: #f8fafc;
+        color: #15803d;
+        transform: translateX(5px);
+    }
+    .nav-link-elite.active {
+        background: #f0fdf4;
+        color: #15803d;
+        border-left: 4px solid #15803d;
+    }
+    section { scroll-margin-top: 120px; }
+</style>
+{% endblock %}

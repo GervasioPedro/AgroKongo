@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fatura_{{ venda.fatura_ref }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+        body { background: #f1f5f9; font-family: 'Inter', sans-serif; padding: 40px 0; -webkit-print-color-adjust: exact; }
+
+        .invoice-card {
+            background: white;
+            max-width: 850px;
+            margin: auto;
+            padding: 60px 80px;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            min-height: 297mm;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Normalização do Status para o CSS */
+        {% set status_slug = venda.status.name|lower if venda.status.name is defined else venda.status|string|lower %}
+
+        /* Marca d'água de estado de pagamento - Ativada para estados de sucesso */
+        {% if status_slug in ['escrow', 'enviado', 'entregue', 'finalizada', 'finalizado'] %}
+        .invoice-card::before {
+            content: "LIQUIDADO";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 110px;
+            font-weight: 900;
+            color: rgba(22, 163, 74, 0.05);
+            z-index: 0;
+            pointer-events: none;
+            border: 15px solid rgba(22, 163, 74, 0.05);
+            padding: 20px;
+            border-radius: 50px;
+        }
+        {% endif %}
+
+        .header-line { border-bottom: 4px solid #0f172a; padding-bottom: 30px; margin-bottom: 40px; position: relative; z-index: 1; }
+        .label-elite { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #64748b; letter-spacing: 1.5px; }
+        .text-dark-sharp { color: #0f172a !important; }
+
+        .bg-status-success { background-color: #f0fdf4 !important; color: #16a34a !important; border: 1px solid #bcf0da !important; }
+        .bg-status-pending { background-color: #fefce8 !important; color: #a16207 !important; border: 1px solid #fef08a !important; }
+
+        .table thead th {
+            background: #f8fafc;
+            border-top: none;
+            border-bottom: 2px solid #0f172a;
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .total-box { background: #0f172a; color: white; padding: 25px; border-radius: 12px; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; background: white; }
+            .invoice-card { box-shadow: none; width: 100%; max-width: 100%; padding: 40px; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="invoice-card shadow-lg" id="fatura-conteudo">
+    {# CABEÇALHO #}
+    <div class="header-line d-flex justify-content-between align-items-end">
+        <div>
+            <h1 class="fw-900 text-dark-sharp mb-0" style="font-size: 48px; letter-spacing: -3px;">FATURA</h1>
+            <p class="text-muted fw-700 mb-0">SÉRIE 2026 / Nº <span class="text-dark-sharp">{{ venda.fatura_ref }}</span></p>
+        </div>
+        <div class="text-end">
+            <h2 class="fw-900 text-success mb-0" style="letter-spacing: -1.5px;">AGRO<span class="text-dark-sharp">KONGO</span></h2>
+            <p class="small text-muted fw-800 mb-0">AGRONEGÓCIO DIGITAL SOLUTIONS</p>
+            <p class="small text-muted fw-700 mb-0">ANGOLA</p>
+        </div>
+    </div>
+
+    {# ENTIDADES #}
+    <div class="row mb-5 position-relative" style="z-index: 1;">
+        <div class="col-6 border-end">
+            <div class="label-elite mb-3">Emitente (Fornecedor)</div>
+            <h5 class="fw-900 text-dark-sharp mb-2">{{ venda.vendedor.nome }}</h5>
+            <div class="small text-muted fw-600">
+                <div class="mb-1"><i class="fas fa-fingerprint me-2"></i><strong>NIF:</strong> {{ venda.vendedor.nif or 'Pessoa Física' }}</div>
+                <div class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>{{ venda.vendedor.municipio.nome if venda.vendedor.municipio else 'Angola' }}</div>
+                <div><i class="fas fa-phone me-2"></i>+244 {{ venda.vendedor.telefone }}</div>
+            </div>
+        </div>
+        <div class="col-6 ps-5">
+            <div class="label-elite mb-3">Destinatário (Cliente)</div>
+            <h5 class="fw-900 text-dark-sharp mb-2">{{ venda.comprador.nome }}</h5>
+            <div class="small text-muted fw-600">
+                <div class="mb-1"><strong>Data de Emissão:</strong> {{ venda.data_criacao.strftime('%d/%m/%Y') }}</div>
+                <div class="mb-2"><strong>Moeda:</strong> Kwanza (AOA)</div>
+
+                {# Lógica de Badge de Status Dinâmica #}
+                {% set is_pago = status_slug in ['escrow', 'enviado', 'entregue', 'finalizada', 'finalizado'] %}
+                <span class="badge rounded-pill {{ 'bg-status-success' if is_pago else 'bg-status-pending' }} px-3 py-2 fw-800">
+                    <i class="fas fa-circle me-1" style="font-size: 8px;"></i>
+                    {{ status_slug.replace('_', ' ').upper() }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    {# ITENS #}
+    <div class="table-responsive mb-5 position-relative" style="z-index: 1;">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th class="py-3 ps-0">Item / Descrição Técnica</th>
+                    <th class="text-center py-3">Quantidade</th>
+                    <th class="text-end py-3">Preço Unit. (Kz)</th>
+                    <th class="text-end py-3 pe-0">Total da Linha</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                <tr>
+                    <td class="py-4 ps-0">
+                        <div class="fw-900 text-dark-sharp" style="font-size: 1.15rem;">{{ venda.safra.produto.nome }}</div>
+                        <small class="text-muted fw-700">Ref: #SK-{{ venda.safra.id }} | Origem: {{ venda.vendedor.provincia.nome if venda.vendedor.provincia else 'Angola' }}</small>
+                    </td>
+                    <td class="text-center fw-800 text-dark-sharp">{{ "{:,.1f}".format(venda.quantidade_comprada or 0) }} kg</td>
+                    <td class="text-end fw-700 text-muted">{{ "{:,.2f}".format(venda.valor_total_pago / venda.quantidade_comprada if venda.quantidade_comprada > 0 else 0) }}</td>
+                    <td class="text-end fw-900 text-dark-sharp pe-0">{{ "{:,.2f}".format(venda.valor_total_pago or 0) }} Kz</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {# TOTAIS #}
+    <div class="row justify-content-end mb-auto">
+        <div class="col-md-5">
+            <div class="d-flex justify-content-between mb-2">
+                <span class="fw-700 text-muted">Subtotal Líquido:</span>
+                <span class="fw-800 text-dark-sharp">{{ "{:,.2f}".format(venda.valor_total_pago or 0) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3">
+                <span class="fw-700 text-muted">IVA (0% Isento):</span>
+                <span class="fw-800 text-dark-sharp">0,00</span>
+            </div>
+            <div class="total-box shadow-lg">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-900" style="font-size: 14px; letter-spacing: 1px;">TOTAL PAGO</span>
+                    <span class="fw-900" style="font-size: 1.6rem;">{{ "{:,.2f}".format(venda.valor_total_pago or 0) }} <small style="font-size: 12px;">Kz</small></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# RODAPÉ #}
+    <div class="mt-5 pt-4 border-top">
+        <div class="row align-items-center">
+            <div class="col-8">
+                <p class="small text-muted mb-0 fw-700" style="line-height: 1.5;">
+                    <i class="fas fa-lock text-success me-2"></i>
+                    Esta transação foi processada sob o sistema de custódia (Escrow) <strong>AgroKongo</strong>.<br>
+                    O valor é libertado ao produtor apenas após a confirmação da entrega.
+                </p>
+            </div>
+            <div class="col-4 text-end">
+                <div class="label-elite text-muted mb-1">Assinatura Digital</div>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=AGROKONGO-{{ venda.fatura_ref }}" width="60" class="opacity-75" alt="QR Code de Validação">
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ACÇÕES #}
+<div class="text-center mt-4 no-print pb-5">
+    <div class="d-flex justify-content-center gap-3">
+        <button onclick="history.back()" class="btn btn-white rounded-pill px-4 fw-800 border shadow-sm transition-all">
+            <i class="fas fa-arrow-left me-2"></i> VOLTAR
+        </button>
+        <button onclick="window.print()" class="btn btn-dark px-4 py-3 rounded-pill fw-900 shadow-sm">
+            <i class="fas fa-print me-2"></i> IMPRIMIR
+        </button>
+        <button onclick="baixarFaturaPDF()" class="btn btn-success px-5 py-3 rounded-pill fw-900 shadow-lg">
+            <i class="fas fa-file-pdf me-2"></i> GUARDAR PDF
+        </button>
+    </div>
+</div>
+
+<script>
+    function baixarFaturaPDF() {
+        const elemento = document.getElementById('fatura-conteudo');
+        const opt = {
+            margin:       10,
+            filename:     'Fatura_AgroKongo_{{ venda.fatura_ref }}.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(elemento).save();
+    }
+</script>
+
+</body>
+</html>

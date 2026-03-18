@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Helvetica, Arial, sans-serif; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #1B4332; padding-bottom: 10px; }
+        .section { margin-top: 20px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .footer { margin-top: 50px; font-size: 10px; text-align: center; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AGROKONGO - MARKETPLACE</h1>
+        <p>GUIA DE REMESSA / TRANSPORTE: #{{ venda.fatura_ref }}</p>
+    </div>
+
+    <div class="section">
+        <h3>1. DADOS DO PRODUTOR (ORIGEM)</h3>
+        <p><strong>Nome:</strong> {{ venda.safra.produtor.nome }}</p>
+        <p><strong>NIF:</strong> {{ venda.safra.produtor.nif }}</p>
+        <p><strong>Província:</strong> {{ venda.safra.produtor.provincia.nome }}</p>
+    </div>
+
+    <div class="section">
+        <h3>2. DADOS DO COMPRADOR (DESTINO)</h3>
+        <p><strong>Nome:</strong> {{ venda.comprador.nome }}</p>
+        <p><strong>Endereço de Entrega:</strong> {{ venda.comprador.endereco_entrega }}</p>
+    </div>
+
+    <div class="section">
+        <h3>3. ESPECIFICAÇÃO DA MERCADORIA</h3>
+        <table class="table">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th>Preço Unit.</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ venda.safra.produto.nome }}</td>
+                    <td>{{ venda.quantidade_comprada }} kg</td>
+                    <td>{{ "{:,.2f}".format(venda.safra.preco_por_unidade) }} Kz</td>
+                    <td>{{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>Documento gerado eletronicamente em {{ data_emissao.strftime('%d/%m/%Y %H:%M') }}</p>
+        <p>AgroKongo - Conectando a produção de M'banza Kongo ao resto de Angola.</p>
+    </div>
+</body>
+</html>

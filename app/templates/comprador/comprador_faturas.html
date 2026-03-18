@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Arquivo de Faturas — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+
+        {# --- BREADCRUMB E HEADER --- #}
+        <div class="row align-items-center mb-5 g-4">
+            <div class="col-md-7">
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('comprador.dashboard') }}" class="text-success fw-800 text-decoration-none small">Painel</a></li>
+                        <li class="breadcrumb-item active small fw-800 text-muted" aria-current="page">Arquivo Fiscal</li>
+                    </ol>
+                </nav>
+                <h1 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -2px; font-size: 2.8rem;">As Minhas Faturas</h1>
+                <p class="text-muted fw-600 mb-0">Gestão centralizada de documentos e recibos de liquidação.</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <div class="d-inline-flex align-items-center bg-white p-3 rounded-5 shadow-sm border border-white">
+                    <div class="icon-circle bg-success-subtle text-success me-3 shadow-sm" style="width: 48px; height: 48px;">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="text-start">
+                        <div class="tiny-elite text-muted mb-0" style="line-height: 1;">VOLUME TOTAL</div>
+                        <div class="fw-900 text-dark-sharp fs-5">{{ "{:,.0f}".format(total_gasto or 0) }} <small class="fw-700 opacity-50">Kz</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# --- LISTAGEM DE FATURAS --- #}
+        <div class="card border-0 shadow-sm rounded-5 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr class="bg-light-sharp">
+                            <th class="ps-4 py-4 border-0 tiny-elite text-muted">DOCUMENTO</th>
+                            <th class="py-4 border-0 tiny-elite text-muted">DETALHES DA CARGA</th>
+                            <th class="py-4 border-0 tiny-elite text-muted text-center">DATA EMISSÃO</th>
+                            <th class="py-4 border-0 tiny-elite text-muted">VALOR TOTAL</th>
+                            <th class="py-4 border-0 tiny-elite text-muted">STATUS</th>
+                            <th class="py-4 border-0 tiny-elite text-muted text-end pe-4">OPÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        {% for f in faturas %}
+                        <tr class="border-bottom border-light transition-all hover-row">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="file-icon me-3">
+                                        <i class="fas fa-file-pdf fa-2x text-danger opacity-75"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-900 text-dark-sharp mb-0">#{{ f.fatura_ref or f.id }}</div>
+                                        <div class="tiny-badge text-muted">REF: {{ f.id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="img-thumb me-3 shadow-sm border border-2 border-white" style="width: 45px; height: 45px;">
+                                        <img src="{{ url_for('static', filename='uploads/safras/' + (f.safra.imagem or 'default.webp')) }}"
+                                             class="w-100 h-100 object-fit-cover"
+                                             onerror="this.src='https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=150&auto=format&fit=crop'">
+                                    </div>
+                                    <div>
+                                        <div class="fw-800 text-dark-sharp mb-0 small">{{ f.safra.produto.nome }}</div>
+                                        <div class="text-muted fw-600" style="font-size: 0.75rem;">De: {{ f.vendedor.nome }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="fw-800 text-dark-sharp small mb-0">{{ f.data_criacao.strftime('%d/%m/%Y') }}</div>
+                                <div class="text-muted tiny-elite" style="font-size: 0.6rem;">{{ f.data_criacao.strftime('%H:%M') }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-900 text-dark-sharp">{{ "{:,.2f}".format(f.valor_total_pago) }} <small class="fw-700 opacity-50">Kz</small></div>
+                            </td>
+                            <td>
+                                {% set st_map = {
+                                    'finalizada': 'bg-success-subtle text-success',
+                                    'finalizada_paga': 'bg-success-subtle text-success',
+                                    'mercadoria_entregue': 'bg-success-subtle text-success',
+                                    'cancelada': 'bg-danger-subtle text-danger',
+                                    'pago_escrow': 'bg-primary-subtle text-primary'
+                                } %}
+                                <span class="badge {{ st_map.get(f.status, 'bg-warning-subtle text-warning') }} rounded-pill px-3 py-2 fw-900 tiny-elite border-0">
+                                    {{ f.status | replace('_', ' ') | upper }}
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
+                                    <a href="{{ url_for('comprador.gerar_fatura_pdf', trans_id=f.id) }}"
+                                       target="_blank"
+                                       class="btn btn-white btn-sm px-3 fw-900 border-end transition-all"
+                                       title="Descarregar PDF">
+                                        <i class="fas fa-download text-success"></i>
+                                    </a>
+                                    <button onclick="printInvoice('{{ f.id }}')"
+                                            class="btn btn-white btn-sm px-3 fw-900 transition-all"
+                                            title="Imprimir Direto">
+                                        <i class="fas fa-print text-muted"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+                                    <i class="fas fa-file-invoice fa-3x text-muted opacity-25"></i>
+                                </div>
+                                <h5 class="fw-900 text-dark-sharp">Arquivo Vazio</h5>
+                                <p class="text-muted fw-700 small mx-auto" style="max-width: 300px;">As suas faturas oficiais aparecerão aqui após a liquidação dos pagamentos.</p>
+                                <a href="{{ url_for('mercado.explorar') }}" class="btn btn-success rounded-pill px-4 fw-900 shadow-sm mt-3">IR PARA O MERCADO</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; color: #16a34a !important; }
+    .bg-primary-subtle { background-color: #eff6ff !important; color: #1e40af !important; }
+    .bg-warning-subtle { background-color: #fffbeb !important; color: #92400e !important; }
+    .bg-danger-subtle { background-color: #fef2f2 !important; color: #dc2626 !important; }
+
+    .text-dark-sharp { color: #0f172a !important; }
+    .tiny-elite { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 900; }
+    .tiny-badge { font-size: 0.6rem; font-weight: 800; opacity: 0.6; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+
+    .img-thumb { border-radius: 12px; overflow: hidden; flex-shrink: 0; }
+    .icon-circle { border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+    .hover-row:hover { background-color: #fcfdfe !important; cursor: default; }
+    .btn-white { background: #fff; border: none; }
+    .btn-white:hover { background: #0f172a !important; color: white !important; }
+    .btn-white:hover i { color: white !important; }
+
+    @media print {
+        .navbar, .btn-group, .breadcrumb, footer, .col-md-5, .btn-success { display: none !important; }
+        .card { box-shadow: none !important; border: none !important; }
+        body { background: white !important; }
+    }
+</style>
+
+<script>
+    function printInvoice(id) {
+        // Lógica para abrir o PDF e chamar o print
+        const printWindow = window.open(`/comprador/fatura/${id}/pdf`, '_blank');
+        printWindow.onload = function() {
+            printWindow.print();
+        };
+    }
+</script>
+{% endblock %}

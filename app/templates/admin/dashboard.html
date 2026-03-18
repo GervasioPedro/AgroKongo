@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Centro de Comando - AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Cabeçalho -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold">Centro de Comando</h2>
+            <p class="text-muted mb-0">Visão geral e gestão da plataforma AgroKongo.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.lista_usuarios') }}" class="btn btn-light border shadow-sm fw-bold">
+                <i class="fas fa-users me-2"></i>Gerir Utilizadores
+            </a>
+            <a href="{{ url_for('admin.exportar_financeiro') }}" class="btn btn-success fw-bold shadow-sm">
+                <i class="fas fa-file-excel me-2"></i>Exportar Relatório
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-5">
+        {{ render_kpi('fa-hand-holding-usd', 'Comissões', comissao_total, 'Kz', 'success', is_money=True) }}
+        {{ render_kpi('fa-chart-bar', 'Volume Transacionado', total_vendas, 'Kz', 'primary', is_money=True) }}
+        {{ render_kpi('fa-university', 'Dívida a Produtores', divida_produtores, 'Kz', 'warning', is_money=True) }}
+        {{ render_kpi('fa-users', 'Total de Utilizadores', total_utilizadores, '', 'dark') }}
+    </div>
+
+    <!-- Alerta de Urgência -->
+    {% set urgentes = pendentes|selectattr("data_criacao", "lt", now - timedelta(hours=24))|list %}
+    {% if urgentes %}
+    <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center mb-4">
+        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+        <div>
+            <h6 class="fw-bold mb-0">Atenção: {{ urgentes|length }} Pagamento(s) Crítico(s)</h6>
+            <p class="small mb-0">Há pagamentos a aguardar validação há mais de 24 horas.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Colunas de Tarefas -->
+    <div class="row g-4">
+        <!-- Coluna de Validação de Pagamentos (Entradas) -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white p-4 border-0">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center">
+                        <i class="fas fa-receipt text-primary me-2"></i> Validar Pagamentos
+                        {% if pendentes %}<span class="badge bg-primary ms-2">{{ pendentes|length }}</span>{% endif %}
+                    </h5>
+                    <p class="small text-muted mb-0">Confirme os comprovativos para mover o dinheiro para Escrow.</p>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <tbody>
+                                {% for p in pendentes %}
+                                <tr class="{% if p in urgentes %}table-danger{% endif %}">
+                                    <td class="p-3">
+                                        <div class="fw-bold">{{ p.comprador.nome }}</div>
+                                        <small class="text-muted">Ref: {{ p.fatura_ref }}</small>
+                                    </td>
+                                    <td class="text-center fw-bold">{{ "{:,.2f}".format(p.valor_total_pago|float).replace(',', 'X').replace('.', ',').replace('X', '.') }} Kz</td>
+                                    <td class="text-end p-3">
+                                        <a href="{{ url_for('admin.ver_comprovativo', filename=p.comprovativo_path) }}" target="_blank" class="btn btn-light btn-sm border fw-bold">Ver Talão</a>
+                                        <form action="{{ url_for('admin.validar_pagamento', id=p.id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-success btn-sm fw-bold">Aprovar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center p-5 text-muted">
+                                        <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                                        <p class="mb-0">Nenhum pagamento a aguardar validação.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna de Liquidações (Saídas) -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white p-4 border-0">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center">
+                        <i class="fas fa-university text-warning me-2"></i> Liquidar Pagamentos
+                        {% if dividas %}<span class="badge bg-warning ms-2">{{ dividas|length }}</span>{% endif %}
+                    </h5>
+                    <p class="small text-muted mb-0">Transfira o dinheiro para o IBAN dos produtores.</p>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <tbody>
+                                {% for d in dividas %}
+                                <tr>
+                                    <td class="p-3">
+                                        <div class="fw-bold">{{ d.vendedor.nome }}</div>
+                                        <code class="small text-muted">{{ d.vendedor.iban or 'IBAN não informado' }}</code>
+                                    </td>
+                                    <td class="text-center fw-bold text-success">+ {{ "{:,.2f}".format(d.valor_liquido_vendedor|float).replace(',', 'X').replace('.', ',').replace('X', '.') }} Kz</td>
+                                    <td class="text-end p-3">
+                                        <form action="{{ url_for('admin.confirmar_transferencia', id=d.id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-dark btn-sm fw-bold" onclick="return confirm('Confirma que já realizou a transferência bancária para este produtor?')">Pagar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center p-5 text-muted">
+                                        <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                                        <p class="mb-0">Nenhuma liquidação pendente.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

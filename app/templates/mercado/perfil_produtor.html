@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil de {{ produtor.nome }} — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+
+        <div class="row g-4">
+            {# === COLUNA DA ESQUERDA: IDENTIDADE === #}
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-lg rounded-5 p-4 text-center bg-white sticky-top" style="top: 100px; z-index: 10;">
+
+                    {# Avatar Estilizado com Fallback #}
+                    <div class="avatar-elite-grande mx-auto mb-4 shadow-sm">
+                        {% if produtor.foto_perfil %}
+                            <img src="/data_storage/public/perfil/{{ produtor.foto_perfil }}" class="w-100 h-100 object-fit-cover rounded-5">
+                        {% else %}
+                            <span class="fw-900 text-white">{{ produtor.nome[0]|upper }}</span>
+                        {% endif %}
+
+                        {% if produtor.conta_validada %}
+                        <div class="verified-check shadow-sm" title="Identidade Verificada pela AgroKongo">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="fw-900 text-dark-sharp mb-1 tracking-tighter">{{ produtor.nome }}</h3>
+                    <p class="text-muted fw-700 small mb-4">
+                        <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                        {{ produtor.municipio.nome }}, {{ produtor.provincia.nome }}
+                    </p>
+
+                    {# Reputação Dinâmica #}
+                    <div class="bg-light p-3 rounded-4 mb-4 border-dashed border-2">
+                        {% set rating = produtor.rating|default(0)|int %}
+                        <div class="text-warning mb-1">
+                            {% for i in range(rating) %}<i class="fas fa-star"></i>{% endfor %}
+                            {% for i in range(5 - rating) %}<i class="far fa-star opacity-25"></i>{% endfor %}
+                        </div>
+                        <div class="fw-900 text-dark-sharp h4 mb-0">{{ "{:.1f}".format(produtor.rating|default(0.0)) }}</div>
+                        <span class="tiny-elite text-muted fw-800" style="font-size: 0.55rem;">AVALIAÇÃO MÉDIA</span>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-4">
+                        {% if produtor.conta_validada %}
+                            <div class="badge-status-elite bg-success-subtle text-success">
+                                <i class="fas fa-shield-check me-2"></i>PRODUTOR VERIFICADO
+                            </div>
+                        {% else %}
+                            <div class="badge-status-elite bg-warning-subtle text-warning">
+                                <i class="fas fa-clock me-2"></i>IDENTIDADE EM ANÁLISE
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-start px-2 border-top pt-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="tiny-elite text-muted">Membro desde</span>
+                            <span class="small fw-900 text-dark-sharp">{{ produtor.data_cadastro.strftime('%Y') if produtor.data_cadastro else '2024' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="tiny-elite text-muted">Volume Comercial</span>
+                            {# Aqui pode-se passar uma variável 'total_vendas_concluidas' do backend #}
+                            <span class="small fw-900 text-dark-sharp">{{ total_vendas|default('0') }} Negócios</span>
+                        </div>
+                    </div>
+
+                    {# Botão de WhatsApp Protegido (só aparece se o produtor tiver telemóvel) #}
+                    {% if produtor.telemovel %}
+                    <a href="https://wa.me/244{{ produtor.telemovel }}" target="_blank" class="btn btn-outline-success w-100 rounded-pill fw-900 mt-4 py-2">
+                        <i class="fab fa-whatsapp me-2"></i> CONTACTAR PRODUTOR
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# === COLUNA DA DIREITA: CONTEÚDO === #}
+            <div class="col-lg-8">
+                <ul class="nav nav-pills border-0 gap-2 mb-4 bg-white p-2 rounded-pill shadow-sm" id="pills-tab" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active elite-tab-link" data-bs-toggle="pill" data-bs-target="#produtos">
+                            <i class="fas fa-seedling me-2"></i>Safras Ativas
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link elite-tab-link" data-bs-toggle="pill" data-bs-target="#feedback">
+                            <i class="fas fa-star me-2"></i>Avaliações ({{ avaliacoes|length }})
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    {# ABA: PRODUTOS #}
+                    <div class="tab-pane fade show active" id="produtos">
+                        <div class="row g-4">
+                            {% for safra in safras %}
+                            <div class="col-md-6">
+                                <div class="card-elite h-100 shadow-sm bg-white overflow-hidden">
+                                    <div class="position-relative">
+                                        <img src="/data_storage/public/safras/{{ safra.imagem or 'default.webp' }}"
+                                             class="w-100" style="height: 180px; object-fit: cover;"
+                                             onerror="this.src='https://images.unsplash.com/photo-1592919016327-519e2817bf05?q=80&w=400&auto=format&fit=crop'">
+                                        <div class="position-absolute top-0 end-0 m-3">
+                                            <span class="badge bg-success shadow-sm rounded-pill px-3">{{ "{:,.0f}".format(safra.preco_por_unidade) }} Kz/kg</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <span class="x-tiny-tag text-success">{{ safra.produto.categoria.nome if safra.produto.categoria else 'Agrícola' }}</span>
+                                        <h5 class="fw-900 text-dark-sharp mb-3 mt-1">{{ safra.produto.nome }}</h5>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="fw-700 text-muted">Stock: {{ "{:,.0f}".format(safra.quantidade_disponivel) }} kg</small>
+                                            <a href="{{ url_for('mercado.detalhes_safra', id=safra.id) }}" class="btn-buy-round py-2">
+                                                VER DETALHES
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12 text-center py-5 bg-white rounded-5 shadow-sm">
+                                <i class="fas fa-archive fa-3x text-muted opacity-25 mb-3"></i>
+                                <h5 class="fw-900 text-dark-sharp">Sem stock disponível</h5>
+                                <p class="text-muted fw-700">Aguardando a próxima colheita deste produtor.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {# ABA: AVALIAÇÕES #}
+                    <div class="tab-pane fade" id="feedback">
+                        {% if avaliacoes %}
+                            {% for av in avaliacoes %}
+                            <div class="card border-0 shadow-sm rounded-4 mb-3 p-4 bg-white border-start border-4 border-success">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="text-warning small">
+                                        {% for i in range(av.estrelas|default(5)) %}<i class="fas fa-star"></i>{% endfor %}
+                                    </div>
+                                    <span class="text-muted x-small fw-800">{{ av.data_criacao.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                                <p class="text-dark-sharp fw-600 mb-2">"{{ av.comentario }}"</p>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-xs bg-light-sharp text-success fw-900 me-2">{{ av.comprador.nome[0] }}</div>
+                                    <span class="small fw-900 text-muted">{{ av.comprador.nome }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5 bg-white rounded-5 shadow-sm">
+                                <i class="fas fa-comment-slash fa-2x text-muted opacity-25 mb-3"></i>
+                                <h6 class="fw-900 text-muted">Ainda não há avaliações de compradores.</h6>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-elite-grande {
+        width: 120px; height: 120px;
+        background: linear-gradient(135deg, #1b4332 0%, #081c15 100%);
+        color: white; border-radius: 40px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 3rem; font-weight: 900; position: relative;
+    }
+    .verified-check {
+        position: absolute; bottom: -5px; right: -5px;
+        background: #2563eb; color: white;
+        width: 35px; height: 35px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        border: 4px solid white; font-size: 0.9rem;
+    }
+    .badge-status-elite { padding: 12px; border-radius: 15px; font-weight: 900; font-size: 0.7rem; letter-spacing: 1px; }
+    .elite-tab-link {
+        border: none !important; color: #64748b !important; font-weight: 900; font-size: 0.8rem;
+        padding: 12px 25px !important; border-radius: 50px !important; transition: 0.3s;
+    }
+    .elite-tab-link.active {
+        background: #0f172a !important; color: white !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .card-elite { border-radius: 25px; transition: 0.3s ease-in-out; border: 1px solid #f1f5f9; }
+    .card-elite:hover { transform: translateY(-5px); }
+    .avatar-xs { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.65rem; background: #f1f5f9; }
+</style>
+{% endblock %}

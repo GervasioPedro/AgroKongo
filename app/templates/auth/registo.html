@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Conta - AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 1rem;">
+                <div class="row g-0">
+                    <!-- Coluna da Imagem (visível em desktop) -->
+                    <div class="col-md-6 d-none d-md-block">
+                        <img src="{{ url_for('static', filename='img/registo-bg.jpg') }}"
+                             class="img-fluid h-100"
+                             style="object-fit: cover; object-position: center;"
+                             alt="Mãos de agricultor a segurar terra fértil"
+                             onerror="this.style.display='none'">
+                    </div>
+
+                    <!-- Coluna do Formulário -->
+                    <div class="col-md-6 d-flex flex-column justify-content-center p-4 p-lg-5">
+                        <div class="text-center text-md-start mb-4">
+                            <a href="{{ url_for('main.index') }}" class="text-decoration-none text-agro h4 font-brand fw-800">
+                                <i class="fas fa-leaf me-1"></i>AgroKongo
+                            </a>
+                            <h3 class="fw-bold mt-3">Junte-se à nossa rede!</h3>
+                            <p class="text-muted small">Crie a sua conta e comece a negociar.</p>
+                        </div>
+
+                        <form action="{{ url_for('auth.registo') }}" method="POST" id="registoForm">
+                            {{ form.hidden_tag() if form else '' }}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <!-- Seleção de Tipo de Conta -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Eu quero:</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tipo" id="tipo_comprador" value="comprador" checked>
+                                        <label class="form-check-label" for="tipo_comprador">Comprar</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="tipo" id="tipo_produtor" value="produtor">
+                                        <label class="form-check-label" for="tipo_produtor">Vender (Produtor)</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Campo Nome Completo -->
+                            <div class="mb-3">
+                                <label for="nome" class="form-label small fw-bold">Nome Completo</label>
+                                <input type="text" name="nome" id="nome" class="form-control" placeholder="O seu nome" required>
+                            </div>
+
+                            <!-- Campo Telemóvel -->
+                            <div class="mb-3">
+                                <label for="telemovel" class="form-label small fw-bold">Telemóvel</label>
+                                <input type="tel" name="telemovel" id="telemovel" class="form-control" placeholder="9XX XXX XXX" required>
+                            </div>
+
+                            <!-- Campo Senha -->
+                            <div class="mb-3">
+                                <label for="senha" class="form-label small fw-bold">Palavra-passe</label>
+                                <input type="password" name="senha" id="senha" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+                            </div>
+
+                            <!-- Termos e Condições -->
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="termos" required>
+                                <label class="form-check-label small" for="termos">
+                                    Li e aceito os <a href="#" class="fw-bold text-decoration-none">Termos e Condições</a>.
+                                </label>
+                            </div>
+
+                            <!-- Botão de Submissão -->
+                            <div class="d-grid">
+                                <button type="submit" id="submitBtn" class="btn btn-agro btn-lg fw-bold">
+                                    Criar Conta
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-4 pt-3 border-top">
+                            <p class="small text-muted">
+                                Já tem uma conta? <a href="{{ url_for('auth.login') }}" class="fw-bold text-decoration-none">Faça login</a>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const registoForm = document.getElementById('registoForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (registoForm) {
+        registoForm.addEventListener('submit', function() {
+            // Desativa o botão e mostra um spinner para dar feedback ao utilizador
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> A criar conta...';
+        });
+    }
+});
+</script>
+{% endblock %}

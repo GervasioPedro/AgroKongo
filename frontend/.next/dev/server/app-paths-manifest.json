@@ -1,0 +1,10 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/registro/page": "app/auth/registro/page.js",
+  "/completar-perfil/page": "app/completar-perfil/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/mercado/page": "app/mercado/page.js",
+  "/page": "app/page.js",
+  "/produtor/nova-safra/page": "app/produtor/nova-safra/page.js"
+}

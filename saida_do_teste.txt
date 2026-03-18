@@ -1,0 +1,238 @@
+PS C:\Users\Madalena Fernandes\Desktop\GSP\agrokongoVS> pytest
+=============================================================================== test session starts ===============================================================================
+platform win32 -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\Madalena Fernandes\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+metadata: {'Python': '3.13.7', 'Platform': 'Windows-10-10.0.19045-SP0', 'Packages': {'pytest': '9.0.2', 'pluggy': '1.6.0'}, 'Plugins': {'Faker': '40.11.0', 'cov': '7.0.0', 'html': '4.2.0', 'metadata': '3.1.1', 'mock': '3.15.1'}}
+rootdir: C:\Users\Madalena Fernandes\Desktop\GSP\agrokongoVS
+configfile: pytest.ini
+testpaths: tests
+plugins: Faker-40.11.0, cov-7.0.0, html-4.2.0, metadata-3.1.1, mock-3.15.1
+collected 89 items
+
+tests/integration/test_api.py::TestApiProdutos::test_listar_produtos_vazio PASSED                                                                                            [  1%]
+tests/integration/test_api.py::TestApiProdutos::test_listar_produtos_com_dados PASSED                                                                                        [  2%]
+tests/integration/test_api.py::TestApiSafras::test_listar_safras_vazio PASSED                                                                                                [  3%]
+tests/integration/test_api.py::TestApiSafras::test_listar_safras_com_filtro_provincia PASSED                                                                                 [  4%]
+tests/integration/test_api.py::TestApiSafras::test_listar_safras_com_busca PASSED                                                                                            [  5%]
+tests/integration/test_api.py::TestApiSafras::test_detalhar_safra PASSED                                                                                                     [  6%]
+tests/integration/test_api.py::TestApiSafras::test_detalhar_safra_nao_existente FAILED                                                                                       [  7%]
+tests/integration/test_api.py::TestApiSafras::test_listar_safras_paginacao PASSED                                                                                            [  8%]
+tests/integration/test_api.py::TestApiProvincias::test_listar_provincias PASSED                                                                                              [ 10%]
+tests/integration/test_api.py::TestApiHealth::test_health_check PASSED                                                                                                       [ 11%]
+tests/integration/test_api.py::TestApiAutenticacao::test_usuario_nao_autenticado PASSED                                                                                      [ 12%]
+tests/integration/test_api.py::TestSwaggerDocs::test_swagger_json PASSED                                                                                                     [ 13%]
+tests/integration/test_api.py::TestSwaggerDocs::test_swagger_ui PASSED                                                                                                       [ 14%]
+tests/integration/test_correcoes.py::TestRecusarReservaFix::test_recusar_reserva_repoe_stock FAILED                                                                          [ 15%]
+tests/integration/test_correcoes.py::TestValidacoesSegurancaCompraFix::test_auto_compra_bloqueada PASSED                                                                     [ 16%]
+tests/integration/test_fluxo_escrow.py::TestFluxoEscrowCompleto::test_fluxo_completo_escrow FAILED                                                                           [ 17%]
+tests/integration/test_fluxo_escrow.py::TestFluxoEscrowCompleto::test_recusar_reserva_repoe_stock FAILED                                                                     [ 19%]
+tests/integration/test_fluxo_escrow.py::TestFluxoEscrowCompleto::test_validacoes_seguranca_compra PASSED                                                                     [ 20%]
+tests/integration/test_fluxo_escrow.py::TestFluxoEscrowCompleto::test_calculo_comissao_correto PASSED                                                                        [ 21%]
+tests/integration/test_fluxos_adicionais.py::TestRecusarReserva::test_recusar_reserva_repoe_stock FAILED                                                                     [ 22%]
+tests/integration/test_fluxos_adicionais.py::TestRecusarReserva::test_recusar_reserva_apenas_pendente FAILED                                                                 [ 23%]
+tests/integration/test_fluxos_adicionais.py::TestValidacoesSegurancaCompra::test_auto_compra_bloqueada FAILED                                                                [ 24%]
+tests/integration/test_fluxos_adicionais.py::TestValidacoesSegurancaCompra::test_compra_quantidade_indisponivel FAILED                                                       [ 25%]
+tests/integration/test_fluxos_adicionais.py::TestValidacoesSegurancaCompra::test_compra_quantidade_zero_negativa PASSED                                                      [ 26%]
+tests/integration/test_fluxos_adicionais.py::TestEntregaAutomatica::test_verificar_entregas_automaticas ERROR                                                                [ 28%]
+tests/test_auth.py::test_pagina_inicial PASSED                                                                                                                               [ 29%]
+tests/test_auth.py::test_acesso_protegido PASSED                                                                                                                             [ 30%]
+tests/test_auth.py::test_login_invalido PASSED                                                                                                                               [ 31%]
+tests/test_auth.py::test_registo_simples PASSED                                                                                                                              [ 32%]
+tests/test_mercado.py::test_fluxo_completo_compra PASSED                                                                                                                     [ 33%]
+tests/unit/test_cache_service.py::TestCacheService::test_key_safra_disponivel PASSED                                                                                         [ 34%]
+tests/unit/test_cache_service.py::TestCacheService::test_key_safras_disponiveis_com_filtros PASSED                                                                           [ 35%]
+tests/unit/test_cache_service.py::TestCacheService::test_serialize_decimal PASSED                                                                                            [ 37%]
+tests/unit/test_cache_service.py::TestCacheService::test_set_get_cache PASSED                                                                                                [ 38%]
+tests/unit/test_cache_service.py::TestCacheService::test_delete_cache PASSED                                                                                                 [ 39%]
+tests/unit/test_cache_service.py::TestCacheService::test_exists_cache PASSED                                                                                                 [ 40%]
+tests/unit/test_cache_service.py::TestCacheService::test_invalidate_pattern PASSED                                                                                           [ 41%]
+tests/unit/test_cache_service.py::TestCacheService::test_cache_safra PASSED                                                                                                  [ 42%]
+tests/unit/test_cache_service.py::TestCacheService::test_get_safra_hit PASSED                                                                                                [ 43%]
+tests/unit/test_cache_service.py::TestCacheService::test_get_safra_miss PASSED                                                                                               [ 44%]
+tests/unit/test_cache_service.py::TestCacheService::test_invalidate_safra PASSED                                                                                             [ 46%]
+tests/unit/test_cache_service.py::TestCacheService::test_cache_safras_disponiveis PASSED                                                                                     [ 47%]
+tests/unit/test_cache_service.py::TestCacheService::test_invalidate_safras_cache PASSED                                                                                      [ 48%]
+tests/unit/test_cache_service.py::TestCacheService::test_cached_decorator PASSED                                                                                             [ 49%]
+tests/unit/test_cache_service.py::TestCacheServiceErrorHandling::test_get_with_error_returns_none PASSED                                                                     [ 50%]
+tests/unit/test_cache_service.py::TestCacheServiceErrorHandling::test_set_with_error_returns_false PASSED                                                                    [ 51%]
+tests/unit/test_file_validator.py::TestValidarExtensao::test_extensoes_imagem_permitidas PASSED                                                                              [ 52%]
+tests/unit/test_file_validator.py::TestValidarExtensao::test_extensao_pdf_permitida PASSED                                                                                   [ 53%]
+tests/unit/test_file_validator.py::TestValidarExtensao::test_extensoes_proibidas PASSED                                                                                      [ 55%]
+tests/unit/test_file_validator.py::TestValidarExtensao::test_sem_extensao PASSED                                                                                             [ 56%]
+tests/unit/test_file_validator.py::TestValidarExtensao::test_extensao_maiuscula PASSED                                                                                       [ 57%]
+tests/unit/test_file_validator.py::TestValidarMimeType::test_detectar_jpeg PASSED                                                                                            [ 58%]
+tests/unit/test_file_validator.py::TestValidarMimeType::test_detectar_png PASSED                                                                                             [ 59%]
+tests/unit/test_file_validator.py::TestValidarMimeType::test_detectar_pdf PASSED                                                                                             [ 60%]
+tests/unit/test_file_validator.py::TestValidarMimeType::test_detectar_webp PASSED                                                                                            [ 61%]
+tests/unit/test_file_validator.py::TestValidarMimeType::test_mime_type_invalido PASSED                                                                                       [ 62%]
+tests/unit/test_file_validator.py::TestValidarTamanho::test_ficheiro_dentro_limite PASSED                                                                                    [ 64%]
+tests/unit/test_file_validator.py::TestValidarTamanho::test_ficheiro_acima_limite PASSED                                                                                     [ 65%]
+tests/unit/test_file_validator.py::TestValidarTamanho::test_ficheiro_vazio PASSED                                                                                            [ 66%]
+tests/unit/test_file_validator.py::TestValidarFicheiroCompleto::test_validacao_sucesso_imagem PASSED                                                                         [ 67%]
+tests/unit/test_file_validator.py::TestValidarFicheiroCompleto::test_validacao_falha_extensao PASSED                                                                         [ 68%]
+tests/unit/test_file_validator.py::TestValidarFicheiroCompleto::test_validacao_falha_mime_type PASSED                                                                        [ 69%]
+tests/unit/test_file_validator.py::TestValidarFicheiroCompleto::test_validacao_sem_ficheiro PASSED                                                                           [ 70%]
+tests/unit/test_file_validator.py::TestValidarFicheiroCompleto::test_validacao_documento_pdf PASSED                                                                          [ 71%]
+tests/unit/test_file_validator.py::TestSanitizeFilename::test_sanitiza_nome_simples PASSED                                                                                   [ 73%]
+tests/unit/test_file_validator.py::TestSanitizeFilename::test_sanitiza_nome_com_caracteres_especiais PASSED                                                                  [ 74%]
+tests/unit/test_file_validator.py::TestSanitizeFilename::test_sanitiza_nome_com_caminho PASSED                                                                               [ 75%]
+tests/unit/test_file_validator.py::TestSanitizeFilename::test_sanitiza_nome_minusculo PASSED                                                                                 [ 76%]
+tests/unit/test_file_validator.py::TestSanitizeFilename::test_sanitiza_unico_para_mesmo_nome PASSED                                                                          [ 77%]
+tests/unit/test_services.py::TestUsuarioService::test_validar_usuario_sucesso PASSED                                                                                         [ 78%]
+tests/unit/test_services.py::TestUsuarioService::test_rejeitar_usuario_com_motivo PASSED                                                                                     [ 79%]
+tests/unit/test_services.py::TestUsuarioService::test_verificar_perfil_completo PASSED                                                                                       [ 80%]
+tests/unit/test_services.py::TestPagamentoService::test_calcular_comissao_valores_exatos PASSED                                                                              [ 82%]
+tests/unit/test_services.py::TestPagamentoService::test_calcular_comissao_taxa_personalizada PASSED                                                                          [ 83%]
+tests/unit/test_services.py::TestPagamentoService::test_precisao_decimal PASSED                                                                                              [ 84%]
+tests/unit/test_utils.py::TestStatusHelper::test_status_to_value_from_enum PASSED                                                                                            [ 85%]
+tests/unit/test_utils.py::TestStatusHelper::test_status_to_value_from_string PASSED                                                                                          [ 86%]
+tests/unit/test_utils.py::TestStatusHelper::test_status_to_value_invalid_string PASSED                                                                                       [ 87%]
+tests/unit/test_utils.py::TestStatusHelper::test_status_to_value_invalid_type PASSED                                                                                         [ 88%]
+tests/unit/test_utils.py::TestStatusHelper::test_value_to_status_from_string PASSED                                                                                          [ 89%]
+tests/unit/test_utils.py::TestStatusHelper::test_value_to_status_from_enum PASSED                                                                                            [ 91%]
+tests/unit/test_utils.py::TestStatusHelper::test_value_to_status_invalid PASSED                                                                                              [ 92%]
+tests/unit/test_utils.py::TestStatusHelper::test_get_status_description PASSED                                                                                               [ 93%]
+tests/unit/test_utils.py::TestSoftDeleteMixin::test_soft_delete_marca_registro PASSED                                                                                        [ 94%]
+tests/unit/test_utils.py::TestSoftDeleteMixin::test_restore_limpa_deleted_at PASSED                                                                                          [ 95%]
+tests/unit/test_utils.py::TestSoftDeleteMixin::test_is_deleted_property PASSED                                                                                               [ 96%]
+tests/unit/test_utils.py::TestTimestampMixin::test_update_updated_at_callback PASSED                                                                                         [ 97%]
+tests/unit/test_utils.py::TestHelpersGerais::test_formatar_moeda_kz PASSED                                                                                                   [ 98%]
+tests/unit/test_utils.py::TestHelpersGerais::test_formatar_nif PASSED                                                                                                        [100%]
+
+===================================================================================== ERRORS ======================================================================================
+___________________________________________________ ERROR at setup of TestEntregaAutomatica.test_verificar_entregas_automaticas ___________________________________________________
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlite3.IntegrityError: NOT NULL constraint failed: transacoes.vendedor_id
+
+The above exception was the direct cause of the following exception:
+tests\integration\test_fluxos_adicionais.py:355: in setup_transacao_antiga
+    db.session.commit()
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\scoping.py:597: in commit
+    return self._proxied.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:2030: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:1311: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:1286: in _prepare_impl
+    self.session.flush()
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:4331: in flush
+    self._flush(objects)
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:4466: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py:121: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:4427: in _flush
+    flush_context.execute()
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py:466: in execute
+    rec.execute(self)
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py:93: in save_obj
+    _emit_insert_statements(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1419: in execute
+    return meth(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py:527: in _execute_on_connection
+    return connection._execute_clauseelement(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1846: in _execute_context
+    return self._exec_single_context(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:2363: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: transacoes.vendedor_id
+E   [SQL: INSERT INTO transacoes (fatura_ref, safra_id, comprador_id, vendedor_id, quantidade_comprada, valor_total_pago, comissao_plataforma, valor_liquido_vendedor, status, data_
+criacao, data_pagamento_escrow, data_envio, data_entrega, data_liquidacao, previsao_entrega, comprovativo_path, transferencia_concluida, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+E   [parameters: ('AK-2026-CCBFBDDD', 1, 2, None, 50.0, 15000.0, 750.0, 14250.0, 'pagamento_sob_analise', '2026-02-12 05:29:46.247124', None, None, None, None, None, None, 0, None)]
+E   (Background on this error at: https://sqlalche.me/e/20/gkpj)
+==================================================================================== FAILURES =====================================================================================
+_________________________________________________________________ TestApiSafras.test_detalhar_safra_nao_existente _________________________________________________________________
+tests\integration\test_api.py:170: in test_detalhar_safra_nao_existente
+    assert response.status_code == 404
+E   assert 500 == 404
+E    +  where 500 = <WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]>.status_code
+_____________________________________________________________ TestRecusarReservaFix.test_recusar_reserva_repoe_stock ______________________________________________________________
+tests\integration\test_correcoes.py:101: in test_recusar_reserva_repoe_stock
+    assert sucesso is True
+E   assert False is True
+_______________________________________________________________ TestFluxoEscrowCompleto.test_fluxo_completo_escrow ________________________________________________________________
+tests\integration\test_fluxo_escrow.py:138: in test_fluxo_completo_escrow
+    assert safra.quantidade_disponivel == Decimal('990.0')
+E   AssertionError: assert Decimal('1000.00') == Decimal('990.0')
+E    +  where Decimal('1000.00') = <Safra 1 - disponivel>.quantidade_disponivel
+E    +  and   Decimal('990.0') = Decimal('990.0')
+____________________________________________________________ TestFluxoEscrowCompleto.test_recusar_reserva_repoe_stock _____________________________________________________________
+tests\integration\test_fluxo_escrow.py:240: in test_recusar_reserva_repoe_stock
+    assert safra.quantidade_disponivel == stock_inicial - Decimal('50.0')
+E   AssertionError: assert Decimal('1000.00') == (Decimal('1000.00') - Decimal('50.0'))
+E    +  where Decimal('1000.00') = <Safra 1 - disponivel>.quantidade_disponivel
+E    +  and   Decimal('50.0') = Decimal('50.0')
+_______________________________________________________________ TestRecusarReserva.test_recusar_reserva_repoe_stock _______________________________________________________________
+tests\integration\test_fluxos_adicionais.py:101: in test_recusar_reserva_repoe_stock
+    assert sucesso is True
+E   assert False is True
+_____________________________________________________________ TestRecusarReserva.test_recusar_reserva_apenas_pendente _____________________________________________________________
+tests\integration\test_fluxos_adicionais.py:143: in test_recusar_reserva_apenas_pendente
+    transacao_id = transacao.id
+                   ^^^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'id'
+____________________________________________________________ TestValidacoesSegurancaCompra.test_auto_compra_bloqueada _____________________________________________________________
+tests\integration\test_fluxos_adicionais.py:240: in test_auto_compra_bloqueada
+    assert "nao pode comprar" in msg.lower() or "propria" in msg.lower()
+E   AssertionError: assert ('nao pode comprar' in 'produtores não podem comprar safras.' or 'propria' in 'produtores não podem comprar safras.')
+E    +  where 'produtores não podem comprar safras.' = <built-in method lower of str object at 0x000002ACB0B6C4B0>()
+E    +    where <built-in method lower of str object at 0x000002ACB0B6C4B0> = 'Produtores não podem comprar safras.'.lower
+E    +  and   'produtores não podem comprar safras.' = <built-in method lower of str object at 0x000002ACB0B6C4B0>()
+E    +    where <built-in method lower of str object at 0x000002ACB0B6C4B0> = 'Produtores não podem comprar safras.'.lower
+________________________________________________________ TestValidacoesSegurancaCompra.test_compra_quantidade_indisponivel ________________________________________________________
+tests\integration\test_fluxos_adicionais.py:260: in test_compra_quantidade_indisponivel
+    assert "indisponivel" in msg.lower() or "quantidade" in msg.lower()
+E   AssertionError: assert ('indisponivel' in 'complete seu perfil para realizar compras.' or 'quantidade' in 'complete seu perfil para realizar compras.')
+E    +  where 'complete seu perfil para realizar compras.' = <built-in method lower of str object at 0x000002ACB0B6C570>()
+E    +    where <built-in method lower of str object at 0x000002ACB0B6C570> = 'Complete seu perfil para realizar compras.'.lower
+E    +  and   'complete seu perfil para realizar compras.' = <built-in method lower of str object at 0x000002ACB0B6C570>()
+E    +    where <built-in method lower of str object at 0x000002ACB0B6C570> = 'Complete seu perfil para realizar compras.'.lower
+================================================================================ warnings summary =================================================================================
+tests/integration/test_api.py::TestApiSafras::test_listar_safras_com_busca
+  C:\Users\Madalena Fernandes\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_sqlalchemy\pagination.py:358: SAWarning: SELECT statement has a cartesian product between FROM element(s) "safras", "usuarios_1", "provincias_1", "produtos", "produtos_1" and FROM element "usuarios".  Apply join condition(s) between each element to resolve.
+    out = query.limit(self.per_page).offset(self._query_offset).all()
+
+tests/integration/test_api.py::TestApiSafras::test_listar_safras_com_busca
+  C:\Users\Madalena Fernandes\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_sqlalchemy\pagination.py:363: SAWarning: SELECT statement has a cartesian product between FROM element(s) "usuarios" and FROM element "produtos".  Apply join condition(s) between each element to resolve.
+    out = self._query_args["query"].order_by(None).count()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================================================================= short test summary info =============================================================================
+FAILED tests/integration/test_api.py::TestApiSafras::test_detalhar_safra_nao_existente - assert 500 == 404
+FAILED tests/integration/test_correcoes.py::TestRecusarReservaFix::test_recusar_reserva_repoe_stock - assert False is True
+FAILED tests/integration/test_fluxo_escrow.py::TestFluxoEscrowCompleto::test_fluxo_completo_escrow - AssertionError: assert Decimal('1000.00') == Decimal('990.0')
+FAILED tests/integration/test_fluxo_escrow.py::TestFluxoEscrowCompleto::test_recusar_reserva_repoe_stock - AssertionError: assert Decimal('1000.00') == (Decimal('1000.00') - Decimal('50.0'))
+FAILED tests/integration/test_fluxos_adicionais.py::TestRecusarReserva::test_recusar_reserva_repoe_stock - assert False is True
+FAILED tests/integration/test_fluxos_adicionais.py::TestRecusarReserva::test_recusar_reserva_apenas_pendente - AttributeError: 'NoneType' object has no attribute 'id'
+FAILED tests/integration/test_fluxos_adicionais.py::TestValidacoesSegurancaCompra::test_auto_compra_bloqueada - AssertionError: assert ('nao pode comprar' in 'produtores não podem comprar safras.' or 'propria' in 'produtores não podem comprar safras.')
+FAILED tests/integration/test_fluxos_adicionais.py::TestValidacoesSegurancaCompra::test_compra_quantidade_indisponivel - AssertionError: assert ('indisponivel' in 'complete seu perfil para realizar compras.' or 'quantidade' in 'complete seu perfil para realizar compras.')
+ERROR tests/integration/test_fluxos_adicionais.py::TestEntregaAutomatica::test_verificar_entregas_automaticas - sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: transacoes.vendedor_id
+=============================================================== 8 failed, 80 passed, 2 warnings, 1 error in 43.35s ================================================================
+PS C:\Users\Madalena Fernandes\Desktop\GSP\agrokongoVS>

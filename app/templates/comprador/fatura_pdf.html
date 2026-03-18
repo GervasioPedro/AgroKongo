@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* Configurações de Impressão */
+        @page { size: A4; margin: 0; }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #0f172a;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .page-content { padding: 40px 60px; position: relative; min-height: 270mm; }
+
+        /* Barra de Identidade AgroKongo */
+        .top-bar { height: 12px; background: #1B4332; width: 100%; }
+
+        /* Cabeçalho */
+        .header {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            display: block;
+            width: 100%;
+        }
+
+        .brand { display: inline-block; width: 50%; vertical-align: bottom; }
+        .brand h1 {
+            margin: 0;
+            font-size: 34px;
+            font-weight: bold;
+            color: #1B4332;
+            letter-spacing: -1.5px;
+        }
+        .brand p {
+            margin: 0;
+            font-size: 10px;
+            font-weight: bold;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .invoice-info {
+            display: inline-block;
+            width: 49%;
+            text-align: right;
+            vertical-align: bottom;
+        }
+        .invoice-label {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e2e8f0;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        .invoice-info p { margin: 2px 0; font-size: 12px; font-weight: bold; color: #1e293b; }
+
+        /* Grelha de Intervenientes */
+        .details-grid { margin: 40px 0; width: 100%; display: table; }
+        .details-col { display: table-cell; width: 50%; vertical-align: top; }
+
+        .details-col h4 {
+            margin: 0 0 12px 0;
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+            width: 90%;
+        }
+        .details-col p { margin: 3px 0; font-size: 13px; color: #334155; }
+        .details-col strong { color: #0f172a; font-size: 14px; font-weight: bold; }
+
+        /* Tabela de Itens */
+        .table-container { margin-top: 30px; width: 100%; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 14px 12px;
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td { padding: 20px 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+
+        .item-name { font-weight: bold; color: #0f172a; font-size: 15px; margin-bottom: 4px; }
+        .item-sub { font-size: 11px; color: #94a3b8; font-weight: normal; }
+
+        /* Totais */
+        .summary-wrapper { width: 100%; margin-top: 40px; }
+        .total-box {
+            margin-left: auto;
+            width: 300px;
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #f1f5f9;
+        }
+        .total-row { margin-bottom: 10px; font-size: 13px; display: block; clear: both; }
+        .total-row .label { float: left; color: #64748b; }
+        .total-row .val { float: right; font-weight: bold; color: #1e293b; }
+
+        .total-final {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e2e8f0;
+            color: #1B4332;
+            clear: both;
+        }
+        .total-final .label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        .total-final .val { font-size: 24px; font-weight: bold; float: right; line-height: 1; }
+
+        /* Rodapé de Segurança */
+        .footer-fixed {
+            position: absolute;
+            bottom: 40px;
+            left: 60px;
+            right: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .qr-code { float: left; width: 100px; }
+        .verification-text { margin-left: 120px; }
+        .hash-title { font-size: 9px; color: #1B4332; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; }
+        .hash-code {
+            font-family: 'Courier', monospace;
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .notice { font-size: 10px; color: #94a3b8; margin-top: 12px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div class="top-bar"></div>
+    <div class="page-content">
+
+        <div class="header">
+            <div class="brand">
+                <h1>AgroKongo</h1>
+                <p>Plataforma de Escoamento Agrícola</p>
+            </div>
+            <div class="invoice-info">
+                <div class="invoice-label">FATURA</div>
+                <p>Nº DOCUMENTO: {{ venda.fatura_ref }}</p>
+                <p>DATA DE EMISSÃO: {{ venda.data_criacao.strftime('%d/%m/%Y') }}</p>
+                <p>ESTADO: PAGA</p>
+            </div>
+        </div>
+
+        <div class="details-grid">
+            <div class="details-col">
+                <h4>ADQUIRENTE (COMPRADOR)</h4>
+                <p><strong>{{ venda.comprador.nome }}</strong></p>
+                <p>NIF: {{ venda.comprador.nif or '999999999' }}</p>
+                <p>Telefone: {{ venda.comprador.telefone or '--' }}</p>
+                <p>Província: {{ venda.comprador.provincia.nome if venda.comprador.provincia else 'Angola' }}</p>
+            </div>
+            <div class="details-col">
+                <h4>EMISSOR (FORNECEDOR)</h4>
+                <p><strong>{{ venda.vendedor.nome }}</strong></p>
+                <p>Exploração: {{ venda.vendedor.municipio.nome or 'Local' }}, {{ venda.vendedor.provincia.nome }}</p>
+                <p>Lote de Produção: #SK-{{ venda.safra.id }}</p>
+                <p>NIF Produtor: {{ venda.vendedor.nif or 'Consulte Perfil' }}</p>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">DESCRIÇÃO DOS ARTIGOS</th>
+                        <th style="text-align: center; width: 15%;">QUANTIDADE</th>
+                        <th style="text-align: right; width: 15%;">PREÇO UN.</th>
+                        <th style="text-align: right; width: 20%;">TOTAL LINHA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="item-name">{{ venda.safra.produto.nome }}</div>
+                            <div class="item-sub">Origem: {{ venda.safra.localizacao or 'Exploração Nacional' }}</div>
+                        </td>
+                        <td style="text-align: center; font-weight: bold;">
+                            {{ venda.quantidade_comprada | int }} {{ venda.safra.unidade or 'kg' }}
+                        </td>
+                        <td style="text-align: right;">
+                            {{ "{:,.2f}".format(venda.valor_total_pago / venda.quantidade_comprada if venda.quantidade_comprada > 0 else 0) }} Kz
+                        </td>
+                        <td style="text-align: right; font-weight: bold;">
+                            {{ "{:,.2f}".format(venda.valor_total_pago) }} Kz
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-wrapper">
+            <div class="total-box">
+                <div class="total-row">
+                    <span class="label">Mercadoria:</span>
+                    <span class="val">{{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</span>
+                </div>
+                <div class="total-row">
+                    <span class="label">IVA (0% Isento):</span>
+                    <span class="val">0.00 Kz</span>
+                </div>
+                <div class="total-final">
+                    <span class="label">Total Liquidado:</span>
+                    <span class="val">{{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-fixed">
+            <div class="qr-code">
+                <img src="data:image/png;base64,{{ qr_base64 }}" style="width: 90px; height: 90px;">
+            </div>
+            <div class="verification-text">
+                <div class="hash-title">Código de Validação Digital</div>
+                <div class="hash-code">{{ (verificacao_hash or 'AK-VERIFY-PENDING') | upper }}</div>
+                <p class="notice">
+                    Documento processado por computador. Os bens descritos nesta fatura foram transacionados via
+                    sistema de custódia AgroKongo. A validade jurídica deste documento depende da confirmação
+                    da entrega final no sistema.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

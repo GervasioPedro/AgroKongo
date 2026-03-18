@@ -1,0 +1,57 @@
+"""
+GUIA DE MIGRAÇÃO - TransactionStatus para Enum
+==============================================
+
+O que foi feito:
+----------------
+1. TransactionStatus agora é um Enum Python (não mais uma classe simples)
+2. Criado status_helper.py com funções utilitárias
+3. Service layer e testes atualizados
+
+Como usar:
+----------
+
+# Em queries SQLAlchemy (sempre usar .value):
+Transacao.query.filter_by(status=status_to_value(TransactionStatus.PENDENTE))
+
+# Para mudar status:
+transacao.mudar_status(status_to_value(TransactionStatus.FINALIZADO), "Motivo")
+
+# Em comparações:
+if transacao.status == status_to_value(TransactionStatus.ANALISE):
+    ...
+
+# Templates Jinja2 (funciona automaticamente):
+{{ TStatus.PENDENTE.value }}  ou  {{ TStatus.PENDENTE.descricao }}
+
+Arquivos que ainda precisam de atualização:
+--------------------------------------------
+- app/routes/admin_pagamentos.py
+- app/routes/admin_disputas.py  
+- app/routes/admin_usuarios.py
+- app/routes/admin_relatorios.py
+- app/routes/produtor.py
+- app/routes/comprador.py
+- app/routes/mercado.py
+
+Padrão de substituição:
+-----------------------
+Onde ler: TransactionStatus.XXXXX
+Ler como: status_to_value(TransactionStatus.XXXXX)
+
+Exemplo prático:
+----------------
+ANTES:
+    venda.status = TransactionStatus.ANALISE
+    
+DEPOIS:
+    venda.status = status_to_value(TransactionStatus.ANALISE)
+
+Benefícios:
+-----------
+✅ Type safety - O compilador verifica erros
+✅ Auto-complete - IDEs mostram opções válidas
+✅ Validação automática - Valores inválidos levantam erro
+✅ Descrições amigáveis - Enum.descricao property
+✅ Choices para formulários - Enum.choices() method
+"""

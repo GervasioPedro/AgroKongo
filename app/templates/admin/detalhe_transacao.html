@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Dossiê #{{ t.fatura_ref }} — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn font-sharp">
+
+        {# === BREADCRUMB & VOLTAR === #}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none fw-800 text-muted">Painel</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.historico_financeiro') }}" class="text-decoration-none fw-800 text-muted">Arquivo</a></li>
+                    <li class="breadcrumb-item active fw-900 text-dark-sharp">Fatura #{{ t.fatura_ref }}</li>
+                </ol>
+            </nav>
+            <a href="javascript:history.back()" class="btn btn-white rounded-pill px-4 py-2 fw-900 shadow-sm border text-dark-sharp transition-up">
+                <i class="fas fa-chevron-left me-2"></i> VOLTAR
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {# === COLUNA: COMPROVATIVO FÍSICO === #}
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-2xl rounded-5 p-3 bg-white h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+                        <h6 class="fw-900 text-muted mb-0 tiny-elite">TALÃO BANCÁRIO SUBMETIDO</h6>
+                        <a href="{{ url_for('static', filename='uploads/' + t.comprovativo_path) }}" target="_blank" class="btn btn-light-sharp btn-sm rounded-circle shadow-sm">
+                            <i class="fas fa-expand-alt text-dark-sharp"></i>
+                        </a>
+                    </div>
+
+                    <div class="overflow-hidden rounded-4 border bg-light-sharp d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                        <img src="{{ url_for('static', filename='uploads/' + t.comprovativo_path) }}"
+                             class="img-fluid rounded-4 transition-all hover-zoom"
+                             alt="Comprovativo de Pagamento"
+                             style="max-height: 600px; width: auto;">
+                    </div>
+
+                    <div class="mt-3 p-3 bg-light-sharp rounded-4 border border-dashed text-center">
+                        <p class="small text-muted fw-700 mb-0">
+                            <i class="fas fa-info-circle me-1"></i> Verifique se a referência <strong>{{ t.fatura_ref }}</strong> consta no talão.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {# === COLUNA: DISSECAÇÃO FINANCEIRA === #}
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-2xl rounded-5 p-4 p-md-5 bg-white h-100">
+                    <div class="d-flex align-items-center gap-3 mb-5">
+                        <div class="bg-primary text-white rounded-4 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                            <i class="fas fa-receipt fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-900 text-dark-sharp mb-0">Resumo da Operação</h4>
+                            <span class="tiny-elite text-muted">ID de Auditoria: {{ t.id }}</span>
+                        </div>
+                    </div>
+
+                    {# LISTA DE DADOS #}
+                    <div class="space-y-4">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-shopping-bag text-muted opacity-50"></i>
+                                <span class="text-muted fw-700">Comprador</span>
+                            </div>
+                            <span class="fw-900 text-dark-sharp fs-5">{{ t.comprador.nome }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-tractor text-muted opacity-50"></i>
+                                <span class="text-muted fw-700">Produtor</span>
+                            </div>
+                            <span class="fw-900 text-dark-sharp fs-5">{{ t.vendedor.nome }}</span>
+                        </div>
+
+                        <div class="p-4 rounded-5 bg-light-sharp border my-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted fw-700">Valor Total Pago (Escrow)</span>
+                                <span class="fw-900 text-dark-sharp fs-4">{{ "{:,.0f}".format(t.valor_total_pago) }} Kz</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center text-danger mb-3">
+                                <span class="fw-700">Taxa AgroKongo (5%)</span>
+                                <span class="fw-900">- {{ "{:,.0f}".format(t.comissao_plataforma) }} Kz</span>
+                            </div>
+                            <hr class="opacity-10">
+                            <div class="d-flex justify-content-between align-items-center pt-2">
+                                <span class="fw-900 text-success">Líquido para o Produtor</span>
+                                <span class="fw-900 text-success fs-2">{{ "{:,.0f}".format(t.valor_liquido_vendedor) }} <small class="fs-6">Kz</small></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# ESTADO DA LIQUIDAÇÃO #}
+                    <div class="mt-auto">
+                        <div class="p-4 rounded-5 {% if t.transferencia_concluida %}bg-success text-white shadow-lg{% else %}bg-dark-sharp text-white{% endif %} transition-all">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <small class="d-block opacity-75 tiny-elite mb-2">Estado da Liquidação Bancária</small>
+                                    {% if t.transferencia_concluida %}
+                                        <h5 class="mb-0 fw-900"><i class="fas fa-check-double me-2"></i> TRANSFERÊNCIA CONCLUÍDA</h5>
+                                        <small class="opacity-75 fw-700">Processado em {{ t.data_transferencia.strftime('%d/%m/%Y às %H:%M') }}</small>
+                                    {% else %}
+                                        <h5 class="mb-0 fw-900 text-warning"><i class="fas fa-university me-2"></i> AGUARDANDO REPASSE</h5>
+                                        <small class="opacity-75 fw-700">O valor aguarda envio para o IBAN do produtor.</small>
+                                    {% endif %}
+                                </div>
+                                <i class="fas {% if t.transferencia_concluida %}fa-shield-check{% else %}fa-exclamation-circle{% endif %} fa-3x opacity-25"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a; }
+    .bg-light-sharp { background-color: #f8fafc; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; }
+    .text-dark-sharp { color: #0f172a; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .tiny-elite { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12); }
+
+    .hover-zoom { transition: transform 0.5s ease; cursor: zoom-in; }
+    .hover-zoom:hover { transform: scale(1.05); }
+
+    .transition-up { transition: all 0.3s ease; }
+    .transition-up:hover { transform: translateY(-3px); }
+
+    .breadcrumb-item + .breadcrumb-item::before { content: "→"; color: #cbd5e1; }
+</style>
+{% endblock %}

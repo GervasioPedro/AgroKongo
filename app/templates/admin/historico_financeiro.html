@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Arquivo Financeiro — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn font-sharp">
+
+        {# === CABEÇALHO === #}
+        <div class="row align-items-end mb-5 g-4">
+            <div class="col-md-8">
+                <span class="badge bg-dark-sharp text-white rounded-pill px-3 py-2 fw-900 tiny-elite mb-3">HISTÓRICO DE AUDITORIA</span>
+                <h1 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -3px; font-size: 2.8rem;">Arquivo Financeiro</h1>
+                <p class="text-muted fw-700 fs-5 mb-0">Consulte o rasto digital de todas as entradas e saídas de capital.</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                {# AJUSTE: Transformado de button para link <a> vinculado à rota de exportação #}
+                <a href="{{ url_for('admin.exportar_vendas') }}" class="btn btn-white rounded-pill px-4 py-2 fw-900 shadow-sm border text-dark-sharp transition-up">
+                    <i class="fas fa-file-excel me-2 text-success"></i> EXPORTAR EXCEL
+                </a>
+            </div>
+        </div>
+
+        {# === NAVEGAÇÃO POR ABAS (PILLS) === #}
+        <div class="d-flex justify-content-center mb-5">
+            <ul class="nav nav-pills bg-white p-2 rounded-pill shadow-sm border border-white" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill fw-900 px-4 py-2 tiny-elite" id="entradas-tab" data-bs-toggle="pill" data-bs-target="#entradas" type="button">
+                        <i class="fas fa-arrow-down-long me-2"></i> ENTRADAS (TALÕES)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill fw-900 px-4 py-2 tiny-elite" id="saidas-tab" data-bs-toggle="pill" data-bs-target="#saidas" type="button">
+                        <i class="fas fa-arrow-up-long me-2"></i> SAÍDAS (IBAN)
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content" id="pills-tabContent">
+
+            {# === ABA 1: ENTRADAS (TALÕES VALIDADOS) === #}
+            <div class="tab-pane fade show active" id="entradas" role="tabpanel">
+                <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light-sharp border-0">
+                                <tr class="tiny-elite text-muted">
+                                    <th class="ps-5 py-4 border-0">DATA DE REGISTO</th>
+                                    <th class="py-4 border-0">REF / COMPRADOR</th>
+                                    <th class="py-4 border-0">VALOR BRUTO</th>
+                                    <th class="text-end pe-5 py-4 border-0">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody class="border-0">
+                                {% for t in taloes %}
+                                <tr class="transition-all border-bottom border-light">
+                                    <td class="ps-5 py-4">
+                                        <div class="fw-900 text-dark-sharp fs-6">{{ t.data_criacao.strftime('%d %b, %Y') }}</div>
+                                        <div class="text-muted fw-700 x-small">{{ t.data_criacao.strftime('%H:%M') }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-900 text-primary">#{{ t.fatura_ref }}</div>
+                                        <div class="small fw-800 text-dark-sharp">{{ t.comprador.nome }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-900 text-dark-sharp fs-6">{{ "{:,.0f}".format(t.valor_total_pago) }} <small class="fw-700 opacity-50">Kz</small></div>
+                                    </td>
+                                    <td class="text-end pe-5">
+                                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 fw-900 tiny-badge">
+                                            <i class="fas fa-check-circle me-1"></i> VALIDADO
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="text-center py-5 opacity-50 fw-800">Nenhum registo de entrada encontrado.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {# === ABA 2: SAÍDAS (TRANSFERÊNCIAS CONCLUÍDAS) === #}
+            <div class="tab-pane fade" id="saidas" role="tabpanel">
+                <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-dark-sharp text-white">
+                                <tr class="tiny-elite">
+                                    <th class="ps-5 py-4 border-0">DATA LIQUIDAÇÃO</th>
+                                    <th class="py-4 border-0">PRODUTOR / COORDENADAS</th>
+                                    <th class="py-4 border-0">VALOR REPASSADO</th>
+                                    <th class="text-end pe-5 py-4 border-0">COMPROVATIVO</th>
+                                </tr>
+                            </thead>
+                            <tbody class="border-0">
+                                {% for l in liquidacoes %}
+                                <tr class="transition-all border-bottom border-light">
+                                    <td class="ps-5 py-4">
+                                        <div class="fw-900 text-dark-sharp fs-6">
+                                            {{ l.data_liquidacao.strftime('%d %b, %Y') if l.data_liquidacao else l.data_criacao.strftime('%d %b, %Y') }}
+                                        </div>
+                                        <div class="text-muted fw-700 x-small">CONCLUÍDO</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-900 text-dark-sharp">{{ l.vendedor.nome }}</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <code class="text-primary small fw-800">{{ l.vendedor.iban or 'S/ Dados' }}</code>
+                                            {% if l.vendedor.iban %}
+                                            <button class="btn btn-sm btn-link p-0 text-muted" onclick="navigator.clipboard.writeText('{{ l.vendedor.iban }}')" title="Copiar IBAN">
+                                                <i class="far fa-copy" style="font-size: 0.7rem;"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-900 text-success fs-5">{{ "{:,.0f}".format(l.valor_liquido_vendedor) }} Kz</div>
+                                        <div class="tiny-elite text-muted">REF: {{ l.fatura_ref }}</div>
+                                    </td>
+                                    <td class="text-end pe-5">
+                                        <span class="badge bg-success text-white rounded-pill px-3 py-2 fw-900 tiny-badge">
+                                            <i class="fas fa-check-double me-1"></i> LIQUIDADO
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="text-center py-5 opacity-50 fw-800">Nenhum registo de saída encontrado.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a; }
+    .bg-light-sharp { background-color: #f8fafc; }
+    .text-dark-sharp { color: #0f172a; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .tiny-elite { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 900; }
+    .tiny-badge { font-size: 0.6rem; letter-spacing: 0.5px; }
+    .x-small { font-size: 0.7rem; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); }
+
+    .nav-pills .nav-link { color: #64748b; border: 1px solid transparent; transition: 0.3s; padding: 10px 25px; }
+    .nav-pills .nav-link.active {
+        background-color: #0f172a !important;
+        color: white !important;
+        box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
+    }
+    .nav-pills .nav-link:hover:not(.active) { background-color: #f1f5f9; color: #0f172a; }
+
+    .transition-up { transition: all 0.3s ease; text-decoration: none; }
+    .transition-up:hover { transform: translateY(-3px); }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+</style>
+{% endblock %}

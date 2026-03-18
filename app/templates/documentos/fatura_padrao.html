@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #334155; line-height: 1.6; margin: 0; padding: 20px; background: #f8fafc; }
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 40px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .header-table { width: 100%; border-bottom: 3px solid #1B4332; padding-bottom: 20px; margin-bottom: 30px; }
+        .title { color: #1B4332; font-size: 32px; font-weight: 900; letter-spacing: -1px; }
+        .ref-box { text-align: right; line-height: 1.2; }
+
+        .details-table { width: 100%; margin-bottom: 40px; }
+        .details-table td { width: 50%; vertical-align: top; padding: 10px; }
+        .label { color: #1B4332; text-transform: uppercase; font-size: 11px; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+
+        .items-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .items-table th { background: #f1f5f9; color: #475569; text-align: left; padding: 12px; font-size: 12px; text-transform: uppercase; border: 1px solid #e2e8f0; }
+        .items-table td { padding: 15px 12px; border: 1px solid #e2e8f0; font-size: 14px; }
+
+        .total-section { margin-top: 30px; text-align: right; padding-top: 20px; }
+        .total-row { font-size: 14px; margin-bottom: 5px; color: #64748b; }
+        .total-final { color: #1B4332; font-size: 24px; font-weight: 900; margin-top: 10px; }
+
+        .footer { margin-top: 60px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 20px; }
+        .status-stamp {
+            display: inline-block;
+            border: 3px solid #16a34a;
+            color: #16a34a;
+            padding: 5px 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            border-radius: 4px;
+            transform: rotate(-5deg);
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <table class="header-table">
+            <tr>
+                <td>
+                    <div class="title">AGROKONGO</div>
+                    <div style="font-size: 12px; color: #64748b;">Plataforma de Escoamento Agrícola Nacional</div>
+                </td>
+                <td class="ref-box">
+                    <div style="font-size: 20px; font-weight: 800; color: #1e293b;">FATURA COMERCIAL</div>
+                    <div style="color: #64748b;">Ref: #{{ venda.fatura_ref or venda.id }}</div>
+                    <div style="color: #64748b;">Emissão: {{ venda.data_criacao.strftime('%d/%m/%Y') }}</div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="details-table">
+            <tr>
+                <td>
+                    <span class="label">Vendedor / Produtor</span>
+                    <strong>{{ venda.vendedor.nome }}</strong><br>
+                    Província: {{ venda.vendedor.provincia.nome if venda.vendedor.provincia else 'Zaire' }}<br>
+                    Contacto: {{ venda.vendedor.telefone or 'Não disponível' }}
+                </td>
+                <td style="text-align: right;">
+                    <span class="label">Adquirente / Comprador</span>
+                    <strong>{{ venda.comprador.nome }}</strong><br>
+                    Contacto: {{ venda.comprador.telefone or 'Não disponível' }}<br>
+                    ID Cliente: #{{ venda.comprador.id }}
+                </td>
+            </tr>
+        </table>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Descrição do Artigo</th>
+                    <th style="text-align: center;">Quantidade</th>
+                    <th style="text-align: center;">Preço Unit. (Est.)</th>
+                    <th style="text-align: right;">Total Líquido</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>{{ venda.safra.produto.nome }}</strong><br>
+                        <small style="color: #94a3b8;">Origem: Safra #{{ venda.safra.id }}</small>
+                    </td>
+                    <td style="text-align: center;">{{ "{:,.1f}".format(venda.quantidade_comprada) }} {{ venda.safra.unidade or 'kg' }}</td>
+                    <td style="text-align: center;">
+                        {# CÁLCULO SEGURO: Evita o erro de preco_unitario Undefined #}
+                        {% if venda.quantidade_comprada and venda.quantidade_comprada > 0 %}
+                            {{ "{:,.2f}".format(venda.valor_total_pago / venda.quantidade_comprada) }}
+                        {% else %}
+                            0.00
+                        {% endif %} Kz
+                    </td>
+                    <td style="text-align: right; font-weight: 700;">{{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table style="width: 100%; margin-top: 20px;">
+            <tr>
+                <td style="vertical-align: bottom;">
+                    <div class="status-stamp">PAGO</div>
+                </td>
+                <td class="total-section">
+                    <div class="total-row">Subtotal Mercadoria: <strong>{{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</strong></div>
+                    <div class="total-row">Impostos (IVA 0%): <strong>0.00 Kz</strong></div>
+                    <div class="total-final">TOTAL: {{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="footer">
+            <p><strong>Verificação de Segurança:</strong> Este documento é válido apenas quando acompanhado do comprovativo de transação digital via AgroKongo.</p>
+            <p>O pagamento encontra-se em regime de custódia segura até à confirmação de receção da carga.</p>
+            <div style="margin-top: 10px; font-family: monospace; font-size: 9px; opacity: 0.5;">
+                HASH: {{ (venda.fatura_ref ~ venda.id | string) | shadow_hash if shadow_hash else 'SECURITY-ENCRYPTED-DOC' }}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Página não Encontrada — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper d-flex align-items-center justify-content-center" style="background: #f8fafc; min-height: 85vh;">
+    <div class="container py-5 text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+
+                <div class="py-5 bg-white rounded-5 shadow-2xl border-top border-5 border-success animate__animated animate__fadeInUp">
+
+                    {# Elemento Visual Central #}
+                    <div class="mb-4">
+                        <div class="bg-success-subtle rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 140px; height: 140px;">
+                            <i class="fas fa-map-signs text-success fa-4x opacity-75"></i>
+                        </div>
+                    </div>
+
+                    <h1 class="display-1 fw-900 text-dark-sharp mb-0" style="letter-spacing: -5px;">404</h1>
+                    <h2 class="fw-900 text-dark-sharp mb-2" style="letter-spacing: -1.5px;">Caminho Perdido na Lavra!</h2>
+
+                    <div class="px-5">
+                        <p class="text-muted fw-600 mb-5 fs-6">
+                            Parece que seguiu um trilho que ainda não foi desbravado. <br>
+                            A página que procura não existe ou foi colhida mais cedo.
+                        </p>
+                    </div>
+
+                    <div class="d-flex flex-column flex-md-row justify-content-center gap-3 mb-5 px-5">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-agro-gradient rounded-pill px-5 py-3 fw-900 shadow-lg transition-up border-0">
+                            <i class="fas fa-home me-2"></i> VOLTAR À BASE
+                        </a>
+                        <a href="{{ url_for('mercado.explorar') }}" class="btn btn-outline-dark rounded-pill px-5 py-3 fw-900 transition-up">
+                            VER MERCADO
+                        </a>
+                    </div>
+
+                    <hr class="mx-5 opacity-10">
+
+                    <div class="px-5">
+                        <p class="x-small text-muted fw-800 text-uppercase tracking-widest mb-0" style="font-size: 0.6rem;">
+                            <i class="fas fa-search me-1"></i> Tente verificar o endereço ou regresse ao início.
+                        </p>
+                    </div>
+                </div>
+
+                {# Rodapé Decorativo #}
+                <div class="mt-4 text-muted opacity-50 small fw-600">
+                    <p>© 2026 AgroKongo — Do Campo para a sua Logística</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-dark-sharp { color: #0f172a; }
+    .fw-900 { font-weight: 900 !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); }
+
+    .btn-agro-gradient {
+        background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+        color: white;
+    }
+    .btn-agro-gradient:hover { color: white; filter: brightness(1.1); }
+
+    .transition-up { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .transition-up:hover { transform: translateY(-3px); }
+</style>
+{% endblock %}

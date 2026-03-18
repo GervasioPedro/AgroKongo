@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Pagar Reserva — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+        <div class="row justify-content-center">
+            <div class="col-md-9 col-lg-6 col-xl-5">
+
+                {# NAVEGAÇÃO #}
+                <div class="mb-4">
+                    <a href="{{ url_for('comprador.encomendas') }}" class="btn btn-link text-muted fw-800 text-decoration-none p-0 transition-all hover-success">
+                        <i class="fas fa-chevron-left me-2"></i> VOLTAR ÀS MINHAS ENCOMENDAS
+                    </a>
+                </div>
+
+                <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white">
+                    {# HEADER ESTRATÉGICO #}
+                    <div class="bg-dark-sharp p-4 p-md-5 text-white text-center position-relative">
+                        <div class="position-relative" style="z-index: 2;">
+                            <span class="tiny-elite opacity-50 fw-900 tracking-widest d-block mb-2">SISTEMA DE CUSTÓDIA (ESCROW)</span>
+                            <h2 class="fw-900 mb-0" style="letter-spacing: -1.5px;">Finalizar Pagamento</h2>
+                        </div>
+                        <i class="fas fa-shield-alt position-absolute top-50 start-50 translate-middle opacity-10" style="font-size: 8rem;"></i>
+                    </div>
+
+                    <div class="card-body p-4 p-md-5">
+                        {# VALOR DESTACADO #}
+                        <div class="text-center mb-5 p-4 rounded-5 bg-light-sharp border border-2 border-dashed position-relative">
+                            <span class="text-muted tiny-elite d-block mb-1">TOTAL A PAGAR</span>
+                            <h1 class="fw-900 text-dark-sharp mb-1" style="font-size: 3rem; letter-spacing: -2px;">
+                                {{ "{:,.0f}".format(transacao.valor_total_pago) }}
+                                <small class="fs-4 fw-700 opacity-50">Kz</small>
+                            </h1>
+                            <div class="badge bg-primary text-white rounded-pill px-3 py-2 fw-800 small shadow-sm">
+                                REF: {{ transacao.fatura_ref }}
+                            </div>
+                        </div>
+
+                        {# COORDENADAS BANCÁRIAS #}
+                        <div class="mb-5">
+                            <div class="d-flex align-items-center mb-4">
+                                <hr class="flex-grow-1 opacity-10">
+                                <span class="mx-3 tiny-elite text-primary fw-900">CONTA PARA TRANSFERÊNCIA</span>
+                                <hr class="flex-grow-1 opacity-10">
+                            </div>
+
+                            <div class="p-4 rounded-4 border-2 border bg-white shadow-sm mb-3 transition-all">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block fw-900 tiny-elite mb-1">IBAN AGROKONGO</small>
+                                        {# IBAN Fictício para o exemplo - Substituir pelo real em produção #}
+                                        <span class="fw-900 text-dark-sharp fs-5 font-monospace" id="ibanText">AO06 0006 0000 8824 1530 1</span>
+                                    </div>
+                                    <button class="btn btn-light rounded-circle shadow-sm hover-dark transition-all"
+                                            onclick="copyIBAN('AO06 0006 0000 8824 1530 1', this)"
+                                            style="width: 45px; height: 45px;" title="Copiar IBAN">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="p-3 rounded-4 border bg-light-sharp h-100">
+                                        <small class="text-muted d-block fw-900 tiny-elite mb-1">BANCO</small>
+                                        <span class="fw-800 text-dark-sharp">Standard Bank</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 rounded-4 border bg-light-sharp h-100">
+                                        <small class="text-muted d-block fw-900 tiny-elite mb-1">TITULAR</small>
+                                        <span class="fw-800 text-dark-sharp text-truncate d-block">AgroKongo LDA</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# FORMULÁRIO DE COMPROVATIVO #}
+                        <form action="{{ url_for('comprador.submeter_comprovativo', trans_id=transacao.id) }}"
+                              method="POST" enctype="multipart/form-data" id="paymentForm">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <div class="mb-4">
+                                <label class="fw-900 text-dark-sharp tiny-elite mb-3 d-block">SUBMETER TALÃO DE DEPÓSITO/TRANSFERÊNCIA</label>
+                                <label for="comprovativo" class="upload-zone border-dashed rounded-5 p-5 text-center d-block cursor-pointer transition-all position-relative">
+                                    <div id="upload-content">
+                                        <div class="icon-circle bg-primary-subtle text-primary mx-auto mb-3" style="width: 65px; height: 65px;">
+                                            <i class="fas fa-camera fa-lg"></i>
+                                        </div>
+                                        <span class="d-block fw-900 text-dark-sharp mb-1">Fotografar Talão</span>
+                                        <span class="small text-muted fw-700">O ficheiro deve ser legível</span>
+                                    </div>
+                                    <input type="file" name="comprovativo" id="comprovativo" class="d-none" accept="image/*,.pdf" required onchange="handleFile(this)">
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-900 shadow-lg border-0 fs-5 transition-up-sm">
+                                CONFIRMAR PAGAMENTO <i class="fas fa-check-circle ms-2"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {# GARANTIA AGROKONGO #}
+                <div class="mt-4 p-4 rounded-5 bg-white shadow-sm border d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="icon-circle bg-success-subtle text-success" style="width: 45px; height: 45px;">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="small text-muted fw-700 mb-0" style="line-height: 1.4;">
+                            A AgroKongo protege o seu dinheiro. O produtor só recebe após você confirmar que a mercadoria chegou em condições.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 900; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); }
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; border-color: #cbd5e1 !important; }
+
+    .upload-zone { background: #fdfdfd; transition: all 0.3s ease; }
+    .upload-zone:hover { background-color: #f0fdf4; border-color: #16a34a !important; }
+    .cursor-pointer { cursor: pointer; }
+
+    .icon-circle { border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+    .bg-primary-subtle { background-color: #eff6ff !important; color: #3b82f6 !important; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; color: #16a34a !important; }
+
+    .hover-dark:hover { background: #0f172a !important; color: white !important; }
+    .transition-up-sm:hover { transform: translateY(-3px); filter: brightness(1.1); }
+    .font-monospace { font-family: 'Courier New', monospace !important; font-weight: 900; }
+</style>
+
+<script>
+    function handleFile(input) {
+        const content = document.getElementById('upload-content');
+        if (input.files.length > 0) {
+            const fileName = input.files[0].name;
+            content.innerHTML = `
+                <div class="icon-circle bg-success text-white mx-auto mb-3 animate__animated animate__bounceIn" style="width: 65px; height: 65px;">
+                    <i class="fas fa-check"></i>
+                </div>
+                <span class="d-block fw-900 text-success mb-1">Talão Anexado!</span>
+                <span class="small text-muted fw-800 text-truncate d-block px-3">${fileName}</span>
+                <div class="mt-2"><span class="badge bg-dark rounded-pill fw-700">Toque para alterar</span></div>
+            `;
+        }
+    }
+
+    function copyIBAN(text, btn) {
+        const rawIban = text.replace(/\s/g, '');
+        navigator.clipboard.writeText(rawIban).then(() => {
+            const icon = btn.querySelector('i');
+            const originalClass = icon.className;
+            icon.className = 'fas fa-check text-success';
+            btn.classList.add('border-success');
+
+            setTimeout(() => {
+                icon.className = originalClass;
+                btn.classList.remove('border-success');
+            }, 2000);
+        });
+    }
+
+    document.getElementById('paymentForm').onsubmit = function() {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ENVIANDO PROVA...';
+        btn.disabled = true;
+    };
+</script>
+{% endblock %}

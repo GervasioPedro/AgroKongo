@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Inventário de Safras — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+
+        {# HEADER DA PÁGINA #}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+            <div>
+                <span class="tiny-elite text-muted">CONTROLO DE STOCK</span>
+                <h2 class="fw-900 text-dark-sharp mb-0" style="letter-spacing: -2px; font-size: 2.2rem;">Meu Inventário</h2>
+                <p class="text-muted fw-600 mb-0">Gerencie a visibilidade e as quantidades das suas colheitas.</p>
+            </div>
+            <a href="{{ url_for('produtor.nova_safra') }}" class="btn btn-dark py-3 px-4 rounded-pill shadow-lg border-0 fw-900 transition-all">
+                <i class="fas fa-plus-circle me-2 text-success"></i> NOVA COLHEITA
+            </a>
+        </div>
+
+        {# TABELA DE INVENTÁRIO #}
+        <div class="card border-0 shadow-lg rounded-5 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="min-width: 900px;">
+                    <thead class="bg-light border-bottom">
+                        <tr>
+                            <th class="ps-4 tiny-elite text-muted py-4">Produto</th>
+                            <th class="tiny-elite text-muted py-4">Preço / Kg</th>
+                            <th class="tiny-elite text-muted py-4">Stock Atual</th>
+                            <th class="tiny-elite text-muted py-4">Estado</th>
+                            <th class="text-center tiny-elite text-muted py-4 pe-4">Ações de Gestão</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for safra in safras %}
+                        <tr class="venda-row transition-all">
+                            <td class="ps-4 py-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-4 me-3 overflow-hidden border shadow-sm" style="width: 60px; height: 60px;">
+                                        <img src="{{ url_for('main.servir_publico', subpasta='safras', filename=safra.imagem) if safra.imagem else url_for('static', filename='img/default_safra.jpg') }}"
+                                             class="w-100 h-100 object-fit-cover"
+                                             onerror="this.src='https://images.unsplash.com/photo-1615485290382-441e4d019cb5?q=80&w=150&auto=format&fit=crop'">
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-900 text-dark-sharp">{{ safra.produto.nome }}</h6>
+                                        <div class="d-flex align-items-center mt-1">
+                                            <span class="badge bg-light text-muted fw-800" style="font-size: 0.6rem;">{{ safra.produto.categoria }}</span>
+                                            <small class="ms-2 text-muted fw-700" style="font-size: 0.65rem;">
+                                                <i class="far fa-clock me-1"></i>{{ safra.data_criacao.strftime('%d/%m/%Y') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-900 text-dark-sharp">{{ "{:,.0f}".format(safra.preco_por_unidade) }} <small class="fw-700">Kz</small></div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="fw-800 text-dark-sharp me-2">{{ "{:,.1f}".format(safra.quantidade_disponivel) }} kg</div>
+                                    {% if safra.quantidade_disponivel < 50 and safra.quantidade_disponivel > 0 %}
+                                        <i class="fas fa-exclamation-circle text-warning" title="Stock Baixo"></i>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if safra.status == 'disponivel' and safra.quantidade_disponivel > 0 %}
+                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2 fw-900 tiny-badge">NO MERCADO</span>
+                                {% elif safra.status == 'esgotado' or safra.quantidade_disponivel <= 0 %}
+                                    <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2 fw-900 tiny-badge">ESGOTADO</span>
+                                {% else %}
+                                    <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2 fw-900 tiny-badge">OCULTO</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center pe-4">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ url_for('mercado.detalhes_safra', id=safra.id) }}" class="btn btn-white btn-icon shadow-sm border" title="Ver no Mercado">
+                                        <i class="fas fa-external-link-alt text-muted"></i>
+                                    </a>
+                                    <a href="{{ url_for('produtor.editar_safra', id=safra.id) }}" class="btn btn-white btn-icon shadow-sm border" title="Editar Stock">
+                                        <i class="fas fa-pen-nib text-primary"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-white btn-icon shadow-sm border hover-danger-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal{{ safra.id }}">
+                                        <i class="fas fa-trash text-danger"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if not safras %}
+            <div class="text-center py-5">
+                <div class="bg-light rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-box-open fa-2x text-muted opacity-25"></i>
+                </div>
+                <h5 class="fw-900 text-dark-sharp">O seu celeiro está vazio</h5>
+                <p class="text-muted fw-600 px-4">Comece a vender agora publicando a sua primeira colheita.</p>
+                <a href="{{ url_for('produtor.nova_safra') }}" class="btn btn-success rounded-pill px-5 py-3 mt-2 fw-900 shadow">
+                    PUBLICAR AGORA
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# MODAIS DE ELIMINAÇÃO (Renderizados fora da tabela por segurança) #}
+{% for safra in safras %}
+<div class="modal fade" id="deleteModal{{ safra.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-5">
+            <div class="modal-body p-5 text-center">
+                <div class="bg-danger-subtle rounded-circle mx-auto d-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                    <i class="fas fa-trash-alt text-danger fa-2xl"></i>
+                </div>
+                <h3 class="fw-900 text-dark-sharp mb-2">Eliminar Anúncio?</h3>
+                <p class="text-muted fw-600 mb-4">Deseja remover o anúncio de **{{ safra.produto.nome }}**? Isto irá retirá-lo imediatamente do mercado público.</p>
+
+                <div class="d-grid gap-2">
+                    <form action="{{ url_for('produtor.eliminar_safra', id=safra.id) }}" method="POST" class="m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger w-100 py-3 rounded-pill fw-900 shadow-sm mb-2">
+                            SIM, ELIMINAR AGORA
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-light w-100 py-3 rounded-pill fw-800" data-bs-dismiss="modal">MANTER ANÚNCIO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<style>
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 900; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .venda-row:hover { background-color: #f8fafc; }
+
+    .btn-icon {
+        width: 42px; height: 42px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+    .btn-icon:hover { transform: translateY(-3px); background: #0f172a; color: white !important; }
+    .btn-icon:hover i { color: white !important; }
+    .hover-danger-btn:hover { background: #ef4444 !important; border-color: #ef4444 !important; }
+
+    .bg-success-subtle { background-color: #f0fdf4 !important; color: #16a34a !important; }
+    .bg-danger-subtle { background-color: #fef2f2 !important; color: #ef4444 !important; }
+    .bg-warning-subtle { background-color: #fffbeb !important; color: #d97706 !important; }
+
+    .transition-all { transition: all 0.3s ease; }
+</style>
+{% endblock %}

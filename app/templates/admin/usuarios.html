@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Utilizadores — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn font-sharp">
+
+        {# === CABEÇALHO === #}
+        <div class="row align-items-center mb-5 g-4">
+            <div class="col-md-6">
+                <h1 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -3px; font-size: 2.8rem;">Utilizadores</h1>
+                <p class="text-muted fw-700 fs-5">Controlo de acesso e validação de identidades.</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="bg-white p-2 d-inline-flex rounded-pill shadow-sm border">
+                    <span class="px-4 tiny-elite fw-900 text-muted">{{ usuarios|length }} REGISTADOS</span>
+                </div>
+            </div>
+        </div>
+
+        {# === TABELA DE GESTÃO === #}
+        <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light-sharp">
+                        <tr class="tiny-elite text-muted">
+                            <th class="ps-5 py-4 border-0">UTILIZADOR</th>
+                            <th class="py-4 border-0 text-center">ESTADO</th>
+                            <th class="py-4 border-0">TIPO</th>
+                            <th class="text-end pe-5 py-4 border-0">ACÇÕES GESTÃO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td class="ps-5 py-4">
+                                <div class="d-flex align-items-center">
+                                    {# LINK DA FOTO CORRIGIDO COM SUBPASTA #}
+                                    <img src="{{ url_for('main.servir_publico', subpasta='perfil', filename=u.foto_perfil) if u.foto_perfil else url_for('static', filename='img/default_user.jpg') }}"
+                                         class="rounded-4 border border-2 border-white shadow-sm"
+                                         style="width: 48px; height: 48px; object-fit: cover;"
+                                         onerror="this.src='https://ui-avatars.com/api/?name={{ u.nome }}&background=random'">
+                                    <div class="ms-3">
+                                        <div class="fw-900 text-dark-sharp mb-0">{{ u.nome }}</div>
+                                        <div class="text-muted small fw-700">{{ u.telemovel }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {% if u.conta_validada %}
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 fw-900 tiny-badge">
+                                        <i class="fas fa-check-circle me-1"></i> VALIDADO
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2 fw-900 tiny-badge">
+                                        <i class="fas fa-clock me-1"></i> PENDENTE
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-900 text-dark-sharp small">{{ u.tipo|upper }}</span>
+                            </td>
+                            <td class="pe-5 text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    {# BOTÃO DOSSIÊ #}
+                                    <a href="{{ url_for('admin.detalhes_usuario', user_id=u.id) }}" class="btn btn-sm btn-light border rounded-pill px-3 fw-900 transition-up" title="Ver Detalhes">
+                                        <i class="fas fa-eye text-primary"></i>
+                                    </a>
+
+                                    {# AÇÕES DE VALIDAÇÃO (Só aparecem se não estiver validado) #}
+                                    {% if not u.conta_validada %}
+                                        <form action="{{ url_for('admin.validar_usuario', user_id=u.id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-success-subtle border-success border-opacity-25 rounded-pill px-3 fw-900 transition-up" title="Validar Conta">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+
+                                        <button class="btn btn-sm btn-warning-subtle border-warning border-opacity-25 rounded-pill px-3 fw-900 transition-up"
+                                                data-bs-toggle="modal" data-bs-target="#modalRejeitar{{ u.id }}" title="Rejeitar">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    {% endif %}
+
+                                    {# BOTÃO ELIMINAR #}
+                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-900 transition-up"
+                                            data-bs-toggle="modal" data-bs-target="#modalEliminar{{ u.id }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+
+                                {# MODAL ELIMINAR (Único para cada utilizador) #}
+                                <div class="modal fade text-start" id="modalEliminar{{ u.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-0 rounded-5 shadow">
+                                            <div class="modal-body p-5 text-center">
+                                                <i class="fas fa-exclamation-triangle text-danger fa-3x mb-4"></i>
+                                                <h4 class="fw-900">Eliminar {{ u.nome }}?</h4>
+                                                <p class="text-muted fw-700">Esta acção é irreversível e apagará todos os dados associados.</p>
+                                                <div class="d-grid gap-2 mt-4">
+                                                    <form action="{{ url_for('admin.eliminar_usuario', user_id=u.id) }}" method="POST">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <button type="submit" class="btn btn-danger w-100 py-3 rounded-pill fw-900">SIM, ELIMINAR</button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-link text-muted fw-800 text-decoration-none" data-bs-dismiss="modal">CANCELAR</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {# (Podes adicionar aqui também o modal de Rejeição se quiseres fazer na mesma página) #}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-success-subtle { background-color: #f0fdf4; color: #16a34a; }
+    .btn-warning-subtle { background-color: #fffbeb; color: #d97706; }
+    .transition-up { transition: transform 0.2s; }
+    .transition-up:hover { transform: translateY(-2px); }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); }
+</style>
+{% endblock %}

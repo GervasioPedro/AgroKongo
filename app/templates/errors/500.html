@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Erro de Sistema — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper d-flex align-items-center justify-content-center" style="background: #f1f5f9; min-height: 85vh;">
+    <div class="container py-5 text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-9">
+
+                <div class="py-5 bg-white rounded-5 shadow-2xl border-top border-5 border-secondary animate__animated animate__pulse">
+
+                    {# Ícone de Engenharia #}
+                    <div class="mb-4">
+                        <div class="bg-slate-100 rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-inner" style="width: 130px; height: 130px; background: #f8fafc;">
+                            <i class="fas fa-microchip text-secondary fa-4x opacity-50"></i>
+                        </div>
+                    </div>
+
+                    <h1 class="display-1 fw-900 text-dark-sharp mb-0" style="letter-spacing: -5px; color: #334155;">500</h1>
+                    <h2 class="fw-900 text-dark-sharp mb-2" style="letter-spacing: -1.5px;">Instabilidade no Servidor</h2>
+
+                    <div class="px-5">
+                        <p class="text-muted fw-600 mb-5 fs-6">
+                            Detetámos uma anomalia interna no processamento. <br>
+                            A nossa equipa técnica já recebeu o alerta automático e está a atuar.
+                        </p>
+                    </div>
+
+                    <div class="bg-light-sharp border rounded-4 p-4 mb-5 mx-4 mx-md-5 border-dashed">
+                        <div class="d-flex align-items-center justify-content-center gap-3 text-muted">
+                            <div class="spinner-grow spinner-grow-sm text-secondary" role="status"></div>
+                            <span class="small fw-800 text-uppercase tracking-widest" style="font-size: 0.65rem;">Diagnóstico em curso...</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column flex-md-row justify-content-center gap-3 mb-4 px-5">
+                        <button onclick="location.reload()" class="btn btn-dark-sharp rounded-pill px-5 py-3 fw-900 shadow-lg transition-up border-0">
+                            <i class="fas fa-sync-alt me-2"></i> REFRESCAR PÁGINA
+                        </button>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary rounded-pill px-5 py-3 fw-900 transition-up">
+                            IR PARA O INÍCIO
+                        </a>
+                    </div>
+
+                    <p class="x-small text-muted fw-700 mt-4">
+                        Código de Erro: <span class="text-secondary">ERR_INTERNAL_SRV_500</span>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-light-sharp { background-color: #f8fafc; }
+    .text-dark-sharp { color: #0f172a; }
+    .btn-dark-sharp { background: #1e293b; color: white; }
+    .btn-dark-sharp:hover { background: #0f172a; color: white; }
+    .fw-900 { font-weight: 900 !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+    .border-dashed { border-style: dashed !important; }
+
+    .transition-up { transition: all 0.3s ease; }
+    .transition-up:hover { transform: translateY(-3px); }
+</style>
+{% endblock %}

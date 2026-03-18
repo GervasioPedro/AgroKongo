@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Liquidações Bancárias — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn font-sharp">
+
+        {# === HEADER ESTRATÉGICO === #}
+        <div class="row align-items-center mb-5 g-4">
+            <div class="col-md-7">
+                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 fw-900 tiny-elite mb-3">TESOURARIA & LIQUIDAÇÃO</span>
+                <h1 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -2.5px; font-size: 2.8rem;">Pagamentos a Produtores</h1>
+                <p class="text-muted fw-700 fs-5">Ordens de transferência para escoamento de produção validado.</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <div class="bg-white p-3 rounded-5 shadow-sm border border-white d-inline-flex align-items-center gap-3">
+                    <div class="text-start">
+                        <small class="tiny-elite d-block text-muted fw-900">PENDENTE BANCÁRIO</small>
+                        <span class="fw-900 text-success fs-4">{{ "{:,.0f}".format(vendas|sum(attribute='valor_liquido_vendedor')) }} Kz</span>
+                    </div>
+                    <i class="fas fa-university text-muted fa-2x ms-2 opacity-25"></i>
+                </div>
+            </div>
+        </div>
+
+        {# === TABELA DE TRANSFERÊNCIAS === #}
+        <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-dark-sharp text-white">
+                        <tr class="tiny-elite">
+                            <th class="ps-5 py-4 border-0">PRODUTOR & COORDENADAS BANCÁRIAS</th>
+                            <th class="py-4 border-0">REF. VENDA</th>
+                            <th class="py-4 border-0">VALOR LÍQUIDO (95%)</th>
+                            <th class="text-end pe-5 py-4 border-0">ACÇÃO BANCÁRIA</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-0">
+                        {% for v in vendas %}
+                        <tr class="transition-all border-bottom border-light">
+                            <td class="ps-5 py-4">
+                                <div class="fw-900 text-dark-sharp fs-6 mb-1">{{ v.safra.produtor.nome }}</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if v.safra.produtor.iban %}
+                                        <code class="bg-primary-subtle text-primary px-2 py-1 rounded fw-800 small">{{ v.safra.produtor.iban }}</code>
+                                        <button class="btn btn-sm btn-link p-0 text-muted" onclick="navigator.clipboard.writeText('{{ v.safra.produtor.iban }}')" title="Copiar IBAN">
+                                            <i class="far fa-copy"></i>
+                                        </button>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger fw-900 tiny-elite">
+                                            <i class="fas fa-exclamation-triangle me-1"></i> IBAN NÃO REGISTADO
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-muted border px-3 py-2 rounded-pill fw-900">#{{ v.fatura_ref }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-900 text-dark-sharp fs-5">{{ "{:,.2f}".format(v.valor_liquido_vendedor) }} <small class="fw-700 opacity-50">Kz</small></div>
+                                <div class="tiny-elite text-muted" style="font-size: 0.55rem;">LÍQUIDO APÓS TAXA AGROKONGO</div>
+                            </td>
+                            <td class="text-end pe-5">
+                                <form action="{{ url_for('admin.confirmar_transferencia', id=v.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-dark-sharp rounded-pill px-4 py-2 fw-900 shadow-sm transition-up"
+                                            {% if not v.safra.produtor.iban %}disabled{% endif %}
+                                            onclick="return confirm('Confirma que realizou a transferência de {{ v.valor_liquido_vendedor }} Kz no Homebanking?')">
+                                        CONFIRMAR ENVIO <i class="fas fa-paper-plane ms-2"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="py-5 text-center">
+                                <div class="py-5 opacity-25">
+                                    <i class="fas fa-check-double display-4 mb-3"></i>
+                                    <h5 class="fw-900 text-dark-sharp">Fluxo de Caixa Limpo</h5>
+                                    <p class="fw-700">Todos os produtores foram liquidados.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# === AVISO DE CONCILIAÇÃO === #}
+        <div class="mt-4 p-4 bg-white rounded-5 border border-warning border-opacity-50 d-flex align-items-start gap-3 shadow-sm">
+            <div class="text-warning mt-1"><i class="fas fa-shield-alt fa-lg"></i></div>
+            <div>
+                <h6 class="fw-900 text-dark-sharp mb-1">Nota de Conciliação Bancária</h6>
+                <p class="small text-muted fw-700 mb-0">Certifique-se de que o nome do beneficiário no Homebanking corresponde ao nome registado na AgroKongo para evitar devoluções de transferências (STCP).</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a; }
+    .bg-primary-subtle { background-color: #eff6ff !important; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; }
+    .bg-danger-subtle { background-color: #fef2f2 !important; }
+    .text-dark-sharp { color: #0f172a; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); }
+
+    .btn-dark-sharp { background: #0f172a; color: white; border: none; transition: 0.3s; }
+    .btn-dark-sharp:hover:not(:disabled) { background: #1e293b; color: white; transform: translateY(-2px); }
+    .btn-dark-sharp:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .transition-up { transition: all 0.3s ease; }
+    tr:hover { background-color: #fcfcfc !important; }
+    code { font-family: 'JetBrains Mono', monospace; }
+</style>
+{% endblock %}

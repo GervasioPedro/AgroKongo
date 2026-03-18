@@ -1,0 +1,1 @@
+Esta pasta guarda as imagens estáticas do site. Coloque aqui a imagem de login.

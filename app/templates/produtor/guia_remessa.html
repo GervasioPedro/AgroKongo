@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia_Transporte_{{ venda.fatura_ref }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        body { background: #f1f5f9; font-family: 'Inter', sans-serif; padding: 40px 0; }
+
+        .document-page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            margin: auto;
+            padding: 40px 60px;
+            border-top: 15px solid #16a34a;
+            position: relative;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .fw-900 { font-weight: 900 !important; }
+        .fw-800 { font-weight: 800 !important; }
+
+        .info-label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 800; letter-spacing: 0.5px; }
+        .info-value { font-size: 13px; font-weight: 700; color: #0f172a; display: block; line-height: 1.4; margin-bottom: 8px; }
+
+        .section-title {
+            background: #f8fafc;
+            padding: 10px 15px;
+            font-size: 11px;
+            font-weight: 900;
+            color: #16a34a;
+            border-left: 5px solid #16a34a;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .table-logistica thead th {
+            background: #0f172a !important;
+            color: white !important;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 15px;
+            border: none;
+        }
+
+        .signature-box { border-top: 2px solid #e2e8f0; margin-top: 30px; padding-top: 15px; text-align: center; }
+
+        .qr-placeholder {
+            width: 90px;
+            height: 90px;
+            border: 2px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            font-size: 8px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .manual-input-line {
+            border-bottom: 2px solid #cbd5e1;
+            height: 24px;
+            margin-top: 5px;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; background: white; }
+            .document-page { box-shadow: none; margin: 0; width: 100%; border-top: 15px solid #16a34a !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="document-page" id="guia-conteudo">
+        {# CABEÇALHO #}
+        <div class="row align-items-start mb-5">
+            <div class="col-7">
+                <h1 class="fw-900 text-success mb-0" style="letter-spacing: -3px; font-size: 2.5rem;">AGRO<span class="text-dark">KONGO</span></h1>
+                <p class="text-muted small fw-800 mb-3">CONECTANDO A PRODUÇÃO AO MERCADO</p>
+                <div class="d-inline-block bg-dark text-white px-3 py-2 rounded-2 fw-900" style="font-size: 13px; letter-spacing: 1px;">
+                    GUIA DE REMESSA E TRANSPORTE
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="d-flex justify-content-end align-items-center gap-4">
+                    <div class="text-end">
+                        <span class="info-label">Nº Documento</span>
+                        <h4 class="fw-900 text-dark mb-1">{{ venda.fatura_ref }}</h4>
+                        <span class="info-label">Data de Emissão</span>
+                        <span class="info-value">{{ data_emissao.strftime('%d/%m/%Y | %H:%M') }}</span>
+                    </div>
+                    <div class="qr-placeholder rounded-3 shadow-sm">
+                        <i class="fas fa-qrcode fa-3x mb-1 text-dark"></i>
+                        <span>VALIDAR</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-5 mb-5">
+            {# EXPEDIDOR #}
+            <div class="col-6 border-end">
+                <div class="section-title">1. Expedidor / Local de Carga</div>
+                <div class="ps-2">
+                    <span class="info-label">Nome do Produtor</span>
+                    <span class="info-value">{{ venda.vendedor.nome }}</span>
+
+                    <span class="info-label">NIF / BI</span>
+                    <span class="info-value">{{ venda.vendedor.nif or 'P-XXXXXXXX' }}</span>
+
+                    <span class="info-label">Origem da Carga</span>
+                    <span class="info-value">
+                        {{ venda.safra.localizacao or (venda.vendedor.municipio.nome + ', ' + venda.vendedor.provincia.nome) }}
+                    </span>
+
+                    <span class="info-label">Contacto</span>
+                    <span class="info-value">+244 {{ venda.vendedor.telemovel }}</span>
+                </div>
+            </div>
+            {# DESTINATÁRIO #}
+            <div class="col-6">
+                <div class="section-title">2. Destinatário / Descarga</div>
+                <div class="ps-2">
+                    <span class="info-label">Nome do Cliente</span>
+                    <span class="info-value">{{ venda.comprador.nome }}</span>
+
+                    <span class="info-label">Contacto de Entrega</span>
+                    <span class="info-value">+244 {{ venda.comprador.telemovel }}</span>
+
+                    <span class="info-label">Destino Final</span>
+                    <span class="info-value">Conforme Ordem de Compra #{{ venda.fatura_ref }}</span>
+
+                    <span class="info-label">Tipo de Cliente</span>
+                    <span class="info-value">Revendedor Autorizado</span>
+                </div>
+            </div>
+        </div>
+
+        {# MERCADORIA #}
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="section-title">3. Descrição da Mercadoria</div>
+                <table class="table table-bordered align-middle table-logistica overflow-hidden rounded-3">
+                    <thead>
+                        <tr class="text-center">
+                            <th class="text-start ps-4">Descrição do Produto</th>
+                            <th>Unidade</th>
+                            <th>Qtd. Líquida</th>
+                            <th>Peso Bruto (Est.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="text-center">
+                            <td class="py-4 ps-4 text-start">
+                                <span class="fw-900 text-dark" style="font-size: 1.2rem;">{{ venda.safra.produto.nome }}</span><br>
+                                <small class="text-muted fw-800">CATEGORIA: {{ venda.safra.produto.categoria }} | LOTE: #SK{{ venda.safra.id }}</small>
+                            </td>
+                            <td class="fw-800">KG</td>
+                            <td class="fw-900 text-dark" style="font-size: 1.3rem;">
+                                {{ "{:,.1f}".format(venda.quantidade_comprada) }}
+                            </td>
+                            <td class="fw-800 text-secondary">
+                                {{ "{:,.1f}".format(venda.quantidade_comprada * 1.02) }} KG
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="bg-light p-3 rounded-3 mt-2">
+                    <p class="mb-0 small fw-700 text-muted">
+                        <i class="fas fa-info-circle me-2"></i>Observações: Mercadoria perecível. Deve ser transportada em local seco e arejado.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {# LOGÍSTICA #}
+        <div class="row mb-5 g-4">
+            <div class="col-7">
+                <div class="section-title">4. Identificação do Transportador</div>
+                <div class="p-4 border rounded-4 bg-light-subtle">
+                    <div class="row">
+                        <div class="col-6 mb-4">
+                            <span class="info-label">Matrícula do Veículo</span>
+                            <div class="manual-input-line"></div>
+                        </div>
+                        <div class="col-6 mb-4">
+                            <span class="info-label">Nº Carta de Condução</span>
+                            <div class="manual-input-line"></div>
+                        </div>
+                        <div class="col-12">
+                            <span class="info-label">Nome Completo do Motorista</span>
+                            <div class="manual-input-line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-5 text-center d-flex flex-column justify-content-end pb-2">
+                <div class="signature-box mx-4">
+                    <span class="info-label">Assinatura / Carimbo do Expedidor</span>
+                    <div style="height: 60px;"></div>
+                    <div class="fw-800 border-top pt-2" style="font-size: 10px;">{{ venda.vendedor.nome }}</div>
+                </div>
+            </div>
+        </div>
+
+        {# RODAPÉ #}
+        <div class="mt-auto pt-4 border-top">
+            <div class="row align-items-center">
+                <div class="col-8">
+                    <p class="small text-muted mb-0 fw-700">
+                        <i class="fas fa-shield-alt text-success me-1"></i>
+                        Documento oficial gerado via <strong>AgroKongo Platform</strong>. Válido como comprovativo de transporte.
+                    </p>
+                </div>
+                <div class="col-4 text-end">
+                    <span class="tiny-elite text-muted fw-900">AGROKONGO DIGITAL v2.6</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# BOTÕES DE AÇÃO #}
+    <div class="container text-center mt-4 mb-5 no-print">
+        <div class="d-flex justify-content-center gap-3">
+            <button onclick="window.close()" class="btn btn-light rounded-pill px-4 fw-900">
+                <i class="fas fa-times me-2"></i> FECHAR
+            </button>
+            <button onclick="window.print()" class="btn btn-dark rounded-pill px-4 fw-900">
+                <i class="fas fa-print me-2"></i> IMPRIMIR GUIA
+            </button>
+            <button onclick="gerarPDF()" class="btn btn-success btn-lg px-5 rounded-pill fw-900 shadow-lg">
+                <i class="fas fa-file-pdf me-2"></i> DESCARREGAR PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function gerarPDF() {
+            const element = document.getElementById('guia-conteudo');
+            const opt = {
+                margin:       [0, 0],
+                filename:     'Guia_Remessa_{{ venda.fatura_ref }}.pdf',
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 3, useCORS: true, letterRendering: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+</html>

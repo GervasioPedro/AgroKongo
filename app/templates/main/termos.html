@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Termos & Condições — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                {# HEADER #}
+                <div class="text-center mb-5 animate__animated animate__fadeIn">
+                    <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-900 tiny-elite mb-2">JURÍDICO</span>
+                    <h1 class="fw-900 text-dark-sharp" style="letter-spacing: -2px; font-size: 2.5rem;">Termos & Condições de Uso</h1>
+                    <p class="text-muted">Última atualização: 05 de Fevereiro de 2026</p>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-5 bg-white p-4 p-md-5 animate__animated animate__fadeInUp">
+
+                    <div class="termos-content text-dark-sharp" style="line-height: 1.8;">
+
+                        <section class="mb-5">
+                            <h4 class="fw-800 border-bottom pb-2 mb-3 text-success">1. Introdução</h4>
+                            <p>Bem-vindo ao <strong>AgroKongo</strong>. Ao aceder à nossa plataforma, o utilizador concorda em cumprir e vincular-se aos seguintes termos. Esta plataforma serve como um intermediário tecnológico entre produtores agrícolas e compradores em Angola.</p>
+                        </section>
+
+                        <section class="mb-5">
+                            <h4 class="fw-800 border-bottom pb-2 mb-3 text-success">2. Elegibilidade e Registo</h4>
+                            <p>Para operar no AgroKongo, o utilizador deve:</p>
+                            <ul>
+                                <li>Ter capacidade legal para contratar (maior de 18 anos).</li>
+                                <li>Fornecer dados verídicos (NIF, Telemóvel, IBAN).</li>
+                                <li>Manter a confidencialidade das suas credenciais de acesso.</li>
+                            </ul>
+                        </section>
+
+                        <section class="mb-5">
+                            <h4 class="fw-800 border-bottom pb-2 mb-3 text-success">3. Responsabilidades do Produtor</h4>
+                            <p>O produtor é o único responsável pela qualidade, origem e prazos de colheita das safras anunciadas. A AgroKongo não detém a posse física dos produtos, atuando apenas na facilitação da reserva e pagamento.</p>
+                        </section>
+
+                        <section class="mb-5">
+                            <h4 class="fw-800 border-bottom pb-2 mb-3 text-success">4. Pagamentos e Comissões</h4>
+                            <p>Os pagamentos são processados mediante a validação do talão de depósito/transferência pela nossa administração. A AgroKongo reserva-se o direito de cobrar uma taxa de serviço por cada transação concluída com sucesso.</p>
+                        </section>
+
+                        <section class="mb-5">
+                            <h4 class="fw-800 border-bottom pb-2 mb-3 text-success">5. Política de Cancelamento e Disputas</h4>
+                            <p>Em caso de não conformidade do produto, o comprador deve abrir uma <strong>Disputa</strong> no prazo de 24 horas após a receção. O administrador da AgroKongo atuará como mediador para resolver o conflito de forma justa.</p>
+                        </section>
+
+                        <section class="mb-5">
+                            <h4 class="fw-800 border-bottom pb-2 mb-3 text-success">6. Privacidade de Dados</h4>
+                            <p>Os seus dados são protegidos nos termos da Lei de Proteção de Dados de Angola. Não partilhamos informações pessoais com terceiros para fins publicitários sem consentimento.</p>
+                        </section>
+
+                    </div>
+
+                    {# === BOTÃO DE AÇÃO PARA VOLTAR AO REGISTO === #}
+                    <div class="mt-5 p-4 bg-agro-light rounded-4 text-center border-2 border-dashed border-success">
+                        <h5 class="fw-900 text-dark-sharp mb-3">Concorda com os termos acima?</h5>
+                        <p class="text-muted small mb-4 px-md-5">Ao clicar no botão abaixo, será redirecionado para o formulário de registo com a opção de aceitação já preenchida.</p>
+                        <button onclick="aceitarEVoltar()" class="btn btn-agro-solid btn-lg rounded-pill px-5 fw-900 shadow-lg py-3">
+                            CONCORDO E QUERO ME REGISTAR <i class="fas fa-check-circle ms-2"></i>
+                        </button>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <p class="small fw-600 mb-0">Dúvidas? <a href="mailto:suporte@agrokongo.com" class="text-success text-decoration-none fw-800">Contacte o suporte</a>.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-dark-sharp { color: #0f172a !important; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .rounded-5 { border-radius: 2rem !important; }
+    .tiny-elite { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; }
+
+    .bg-agro-light { background-color: #f0fdf4; }
+    .btn-agro-solid { background-color: #16a34a; color: white; border: none; transition: 0.3s; }
+    .btn-agro-solid:hover { background-color: #14532d; transform: translateY(-3px); color: white; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2); }
+
+    .border-dashed { border-style: dashed !important; }
+
+    ul { padding-left: 1.2rem; }
+    ul li { margin-bottom: 0.5rem; }
+</style>
+
+<script>
+function aceitarEVoltar() {
+    // Redireciona para o registo passando o parâmetro de aceitação
+    window.location.href = "{{ url_for('auth.registo') }}?aceitou=true";
+}
+</script>
+{% endblock %}

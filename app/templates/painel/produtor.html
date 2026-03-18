@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Painel do Produtor - AgroKongo{% endblock %}
+
+{% macro render_vendas_table(vendas_lista, mensagem_vazia) %}
+    {% if vendas_lista %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr class="small text-uppercase text-muted">
+                        <th class="py-3">Produto</th>
+                        <th class="py-3">Comprador</th>
+                        <th class="py-3 text-center">Valor Líquido</th>
+                        <th class="py-3 text-center">Status</th>
+                        <th class="py-3 text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venda in vendas_lista %}
+                    {% set status_key = venda.status.name|lower if venda.status.name is defined else venda.status|string|lower %}
+                    <tr>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('serve_safra_image', filename=venda.safra.imagem) if venda.safra.imagem else 'https://dummyimage.com/100x100/e2e8f0/6c757d.png&text=Sem+Foto' }}"
+                                     class="rounded-2 me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                <div>
+                                    <a href="{{ url_for('mercado.detalhes_safra', id=venda.safra.id) }}" class="fw-bold text-dark text-decoration-none">{{ venda.safra.produto.nome }}</a>
+                                    <p class="small text-muted mb-0">Ref: {{ venda.fatura_ref }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="small">{{ venda.comprador.nome }}</td>
+                        <td class="text-center fw-bold text-success">+ {{ "{:,.2f}".format(venda.valor_liquido_vendedor|default(0)|float).replace(',', 'X').replace('.', ',').replace('X', '.') }} Kz</td>
+                        <td class="text-center">
+                            {% set status_map = {
+                                'pendente': ['secondary', 'Nova Reserva'],
+                                'aguardando_pagamento': ['warning', 'Aguardando Pagamento'],
+                                'analise': ['info', 'Pagamento em Análise'],
+                                'escrow': ['primary', 'Pago, Pronto para Envio'],
+                                'enviado': ['primary', 'Em Trânsito'],
+                                'entregue': ['success', 'Entregue'],
+                                'finalizado': ['dark', 'Concluída'],
+                                'cancelada': ['danger', 'Cancelada'],
+                                'disputa': ['danger', 'Em Disputa']
+                            } %}
+                            {% set color, text = status_map.get(status_key, ['light', status_key|upper]) %}
+                            <span class="badge bg-{{ color }} bg-opacity-25 text-{{ color }}-emphasis rounded-pill px-2 py-1 small fw-bold">{{ text }}</span>
+                        </td>
+                        <td class="text-end">
+                            {% if status_key == 'pendente' %}
+                                <form action="{{ url_for('produtor.aceitar_reserva', trans_id=venda.id) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">Aceitar</button>
+                                </form>
+                                <form action="{{ url_for('produtor.recusar_reserva', trans_id=venda.id) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">Recusar</button>
+                                </form>
+                            {% elif status_key == 'escrow' %}
+                                <form action="{{ url_for('produtor.confirmar_envio', trans_id=venda.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">
+                                        <i class="fas fa-truck me-1"></i> Confirmar Envio
+                                    </button>
+                                </form>
+                            {% else %}
+                                <a href="{{ url_for('admin.detalhe_transacao', id=venda.id) }}" class="btn btn-light btn-sm border-0" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5 border-top">
+            <p class="text-muted">{{ mensagem_vazia }}</p>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Cabeçalho -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold">Painel do Produtor</h2>
+            <p class="text-muted mb-0">Gestão completa das suas vendas e safras.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('produtor.safras') }}" class="btn btn-light border shadow-sm fw-bold">
+                <i class="fas fa-seedling me-2"></i>Minhas Safras
+            </a>
+            <a href="{{ url_for('produtor.nova_safra') }}" class="btn btn-agro fw-bold shadow-sm">
+                <i class="fas fa-plus me-2"></i>Publicar Nova Safra
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-5">
+        {{ render_kpi('fa-wallet', 'Saldo Disponível', current_user.saldo_disponivel, 'Kz', 'success', is_money=True) }}
+        {{ render_kpi('fa-hourglass-half', 'Valor em Custódia', receita_pendente, 'Kz', 'primary', is_money=True) }}
+        {{ render_kpi('fa-hand-holding-usd', 'A Liquidar', receita_a_liquidar, 'Kz', 'info', is_money=True) }}
+        {{ render_kpi('fa-chart-line', 'Receita Total', receita_total, 'Kz', 'dark', is_money=True) }}
+    </div>
+
+    <!-- Abas de Vendas -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 p-4">
+            <ul class="nav nav-pills" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold position-relative" id="pills-reservas-tab" data-bs-toggle="pill" data-bs-target="#pills-reservas" type="button">
+                        Novas Reservas
+                        {% if reservas %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ reservas|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="pills-ativas-tab" data-bs-toggle="pill" data-bs-target="#pills-ativas" type="button">Vendas Ativas</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="pills-historico-tab" data-bs-toggle="pill" data-bs-target="#pills-historico" type="button">Histórico</button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body p-0">
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-reservas" role="tabpanel">
+                    {{ render_vendas_table(reservas, "Não há novas reservas a aguardar a sua aprovação.") }}
+                </div>
+                <div class="tab-pane fade" id="pills-ativas" role="tabpanel">
+                    {{ render_vendas_table(vendas, "Nenhuma venda em processamento no momento.") }}
+                </div>
+                <div class="tab-pane fade" id="pills-historico" role="tabpanel">
+                    {{ render_vendas_table(historico, "O seu histórico de vendas aparecerá aqui.") }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

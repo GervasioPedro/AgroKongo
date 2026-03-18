@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Minhas Encomendas — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f1f5f9; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+
+        {# === CABEÇALHO === #}
+        <div class="row align-items-center mb-5 g-4">
+            <div class="col-md-7">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{{ url_for('comprador.dashboard') }}" class="text-success fw-700 text-decoration-none small">Painel</a></li>
+                        <li class="breadcrumb-item active small fw-700 opacity-50">Encomendas Ativas</li>
+                    </ol>
+                </nav>
+                <h1 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -2px; font-size: 2.8rem;">Minhas Encomendas</h1>
+                <p class="text-muted fw-600">Acompanhe o estado das suas reservas e valide os seus pagamentos.</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <div class="bg-white p-2 rounded-pill shadow-sm d-inline-flex border border-white">
+                    <span class="px-3 small fw-900 text-dark-sharp border-end">{{ transacoes|length }} PEDIDOS</span>
+                    <a href="{{ url_for('mercado.explorar') }}" class="btn btn-success rounded-pill px-4 btn-sm fw-900 ms-2">
+                        <i class="fas fa-plus me-1"></i> COMPRAR MAIS
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {# === LISTAGEM DE CARDS === #}
+        <div class="row g-4">
+            {% for t in transacoes %}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm rounded-5 overflow-hidden bg-white h-100 transition-all hover-up-card">
+                    <div class="card-body p-4 p-md-5">
+
+                        {# 1. HEADER DO CARD: STATUS & REF #}
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div>
+                                {# MAPEAMENTO DE STATUS ATUALIZADO #}
+                                {% set status_badges = {
+                                    'pendente': ['bg-light text-muted', 'Aguardando Stock'],
+                                    'pendente_pagamento': ['bg-warning-subtle text-warning border-warning', 'Enviar Comprovativo'],
+                                    'pagamento_sob_analise': ['bg-info-subtle text-info border-info', 'Em Verificação'],
+                                    'pago_escrow': ['bg-primary-subtle text-primary border-primary', 'Pagamento Protegido'],
+                                    'enviado': ['bg-success text-white shadow-sm pulse-anim', 'Carga em Trânsito'],
+                                    'finalizada': ['bg-success-subtle text-success border-success', 'Concluída']
+                                } %}
+
+                                {# Resolve se o status é Enum ou String #}
+                                {% set st_key = t.status.value if t.status.value is defined else t.status %}
+                                {% set current_st = status_badges.get(st_key, ['bg-light text-muted', st_key|upper]) %}
+
+                                <span class="badge-status {{ current_st[0] }}">
+                                    <i class="fas fa-circle me-2" style="font-size: 6px;"></i>{{ current_st[1] }}
+                                </span>
+                            </div>
+                            <div class="text-end">
+                                <div class="tiny-elite text-muted opacity-50">ID DO PEDIDO</div>
+                                <div class="fw-900 text-dark-sharp">#{{ t.fatura_ref or t.id }}</div>
+                            </div>
+                        </div>
+
+                        {# 2. INFO DO PRODUTO #}
+                        <div class="d-flex align-items-center mb-4 bg-light-sharp p-3 rounded-4 border">
+                            <div class="img-container me-3 shadow-sm border border-2 border-white">
+                                {# CORREÇÃO: Usando a rota de serviço de imagem para data_storage #}
+                                <img src="{{ url_for('serve_safra_image', filename=t.safra.imagem or 'default.webp') }}"
+                                     class="w-100 h-100 object-fit-cover"
+                                     onerror="this.src='https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=150&auto=format&fit=crop'">
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-900 text-dark-sharp mb-0">{{ t.safra.produto.nome }}</h5>
+                                <div class="small fw-700 text-muted">Produtor: <span class="text-success">{{ t.vendedor.nome }}</span></div>
+                                <div class="fw-900 text-dark-sharp mt-1 fs-5">{{ "{:,.2f}".format(t.valor_total_pago|default(0)) }} <small class="fw-700 opacity-50">Kz</small></div>
+                            </div>
+                        </div>
+
+                        {# 3. ÁREA DE ACÇÃO DINÂMICA #}
+                        <div class="action-zone p-3 rounded-4 border-dashed bg-white">
+
+                            {# CASO 1: ENVIAR TALÃO (Status após o produtor confirmar stock) #}
+                            {% if st_key == 'pendente_pagamento' %}
+                                <div class="py-2">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="icon-circle bg-warning-subtle text-warning me-3"><i class="fas fa-file-upload"></i></div>
+                                        <h6 class="fw-900 text-dark-sharp mb-0">Submeter Talão de Depósito</h6>
+                                    </div>
+                                    <form action="{{ url_for('comprador.submeter_comprovativo', trans_id=t.id) }}" method="POST" enctype="multipart/form-data">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="mb-3">
+                                            <input type="file" name="comprovativo" class="form-control rounded-4 border-2 p-2 fw-700 small" accept="image/*,application/pdf" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-warning w-100 rounded-pill py-3 fw-900 shadow-sm border-0 transition-up">
+                                            NOTIFICAR PAGAMENTO <i class="fas fa-paper-plane ms-2"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                            {# CASO 2: CONFIRMAR RECEÇÃO #}
+                            {% elif st_key == 'enviado' %}
+                                <div class="text-center py-2">
+                                    <div class="alert bg-success-subtle border-0 rounded-4 mb-3 p-2">
+                                        <p class="small fw-800 text-success mb-0"><i class="fas fa-info-circle me-1"></i> A mercadoria já foi despachada!</p>
+                                    </div>
+                                    <form action="{{ url_for('comprador.confirmar_recebimento', trans_id=t.id) }}" method="POST">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-success w-100 rounded-pill py-3 fw-900 shadow-lg border-0 transition-up"
+                                                onclick="return confirm('Confirma que recebeu o produto? O dinheiro será libertado para o produtor.')">
+                                            ESTÁ ENTREGUE, LIBERTAR PAGO
+                                        </button>
+                                    </form>
+                                </div>
+
+                            {# CASO 3: ANÁLISE DO ADMIN #}
+                            {% elif st_key == 'pagamento_sob_analise' %}
+                                <div class="d-flex align-items-center justify-content-center py-4 bg-info-subtle rounded-4 text-center px-2">
+                                    <div class="spinner-grow spinner-grow-sm text-info me-3" role="status"></div>
+                                    <span class="fw-900 tiny-elite text-info">AGROKONGO A VALIDAR DEPÓSITO...</span>
+                                </div>
+
+                            {# CASO 4: AGUARDANDO ENVIO #}
+                            {% elif st_key == 'pago_escrow' %}
+                                <div class="text-center py-3 bg-primary-subtle rounded-4">
+                                    <i class="fas fa-lock text-primary mb-2 d-block fs-4"></i>
+                                    <span class="fw-900 tiny-elite text-primary">DINHEIRO PROTEGIDO. PRODUTOR A PREPARAR CARGA.</span>
+                                </div>
+
+                            {# CASO 5: CONCLUÍDO #}
+                            {% elif st_key == 'finalizada' %}
+                                <div class="d-flex align-items-center justify-content-between py-2 px-3 bg-light rounded-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-check-circle text-success me-2 fs-5"></i>
+                                        <span class="fw-900 tiny-elite text-success">CONCLUÍDO</span>
+                                    </div>
+                                    <a href="{{ url_for('comprador.baixar_fatura', trans_id=t.id) }}" class="btn btn-sm btn-white border rounded-pill fw-800 px-3">
+                                        <i class="fas fa-download me-1"></i> FATURA
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-3">
+                                    <span class="fw-900 tiny-elite text-muted">AGUARDANDO CONFIRMAÇÃO DO PRODUTOR</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="bg-white rounded-circle d-inline-flex p-5 shadow-sm border mb-4">
+                    <i class="fas fa-box-open fa-4x text-muted opacity-25"></i>
+                </div>
+                <h3 class="fw-900 text-dark-sharp">Nenhuma encomenda ativa</h3>
+                <p class="text-muted fw-700">Explore o mercado para começar a transacionar.</p>
+                <a href="{{ url_for('mercado.explorar') }}" class="btn btn-success rounded-pill px-5 py-3 fw-900 shadow">EXPLORAR MERCADO</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos preservados e otimizados */
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .bg-light-sharp { background-color: #f8fafc !important; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .tiny-elite { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+    .fw-900 { font-weight: 900 !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .badge-status { font-size: 0.65rem; font-weight: 900; padding: 10px 18px; border-radius: 50px; text-transform: uppercase; display: inline-flex; align-items: center; border: 1px solid transparent; }
+    .img-container { width: 75px; height: 75px; border-radius: 18px; overflow: hidden; flex-shrink: 0; }
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; border-color: #e2e8f0 !important; }
+    .hover-up-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.06) !important; }
+    .transition-up:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    .pulse-anim { animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+</style>
+{% endblock %}

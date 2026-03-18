@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ safra.produto.nome }} — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-xl-6">
+
+                {# NAVEGAÇÃO SUPERIOR #}
+                <div class="mb-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="{{ url_for('produtor.dashboard') }}" class="btn btn-white rounded-circle shadow-sm p-3 border-0 btn-back-hover">
+                            <i class="fas fa-arrow-left text-success"></i>
+                        </a>
+                        <div>
+                            <span class="tiny-elite text-muted fw-800">GESTÃO DE STOCK</span>
+                            <h2 class="fw-900 text-dark-sharp mb-0 h4" style="letter-spacing: -1px;">Atualizar Safra</h2>
+                        </div>
+                    </div>
+                    <span class="badge {% if safra.status == 'disponivel' %}bg-success-subtle text-success{% elif safra.status == 'esgotado' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %} rounded-pill px-3 py-2 fw-800 tiny-badge shadow-sm">
+                        {{ safra.status | upper }}
+                    </span>
+                </div>
+
+                <div class="card border-0 shadow-lg rounded-5 bg-white overflow-hidden">
+                    <form action="{{ url_for('produtor.editar_safra', id=safra.id) }}" method="POST" enctype="multipart/form-data" class="p-4 p-md-5" id="editSafraForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        {# GESTÃO DE IMAGEM: CIRCULAR & MODERNA #}
+                        <div class="mb-5 text-center position-relative">
+                            <div class="mx-auto position-relative" style="width: 150px; height: 150px;">
+                                <img id="imagePreview"
+                                     src="{{ url_for('main.servir_publico', subpasta='safras', filename=safra.imagem) if safra.imagem else url_for('static', filename='img/default_safra.jpg') }}"
+                                     class="rounded-5 shadow-md border border-4 border-white w-100 h-100"
+                                     style="object-fit: cover;"
+                                     onerror="this.src='https://images.unsplash.com/photo-1595246140625-573b715d11dc?q=80&w=300&auto=format&fit=crop'">
+                                <label for="fotoInput" class="btn btn-success btn-sm rounded-circle position-absolute bottom-0 end-0 shadow-lg d-flex align-items-center justify-content-center transition-all"
+                                       style="width: 42px; height: 42px; border: 3px solid white;" title="Alterar Fotografia">
+                                    <i class="fas fa-camera"></i>
+                                </label>
+                                <input type="file" name="imagem" id="fotoInput" class="d-none" accept="image/*" capture="environment" onchange="handleImageChange(this)">
+                            </div>
+                            <h5 class="fw-900 text-dark-sharp mt-3 mb-0">{{ safra.produto.nome }}</h5>
+                            <p class="tiny-elite text-muted fw-700">ID: {{ safra.id }}</p>
+                        </div>
+
+                        <div class="row g-4">
+                            {# PREÇO POR KG #}
+                            <div class="col-md-6">
+                                <label class="tiny-elite mb-2 d-block fw-800 text-muted">Preço Atual (Kg)</label>
+                                <div class="input-group">
+                                    <input type="number" step="1" name="preco" class="form-control input-elite"
+                                           value="{{ safra.preco_por_unidade }}" required>
+                                    <span class="input-group-text bg-light border-2 border-start-0 fw-900 text-muted px-3" style="border-radius: 0 15px 15px 0;">Kz</span>
+                                </div>
+                            </div>
+
+                            {# QUANTIDADE EM STOCK #}
+                            <div class="col-md-6">
+                                <label class="tiny-elite mb-2 d-block fw-800 text-muted">Stock Disponível</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.1" name="quantidade" class="form-control input-elite"
+                                           value="{{ safra.quantidade_disponivel }}" required>
+                                    <span class="input-group-text bg-light border-2 border-start-0 fw-900 text-muted px-3" style="border-radius: 0 15px 15px 0;">kg</span>
+                                </div>
+                            </div>
+
+                            {# STATUS DO PRODUTO NO MERCADO #}
+                            <div class="col-12">
+                                <label class="tiny-elite mb-2 d-block fw-800 text-muted">Estado da Publicação</label>
+                                <select name="status" class="form-select input-elite">
+                                    <option value="disponivel" {% if safra.status == 'disponivel' %}selected{% endif %}>✅ Ativo no Mercado</option>
+                                    <option value="esgotado" {% if safra.status == 'esgotado' %}selected{% endif %}>❌ Esgotado (Ocultar)</option>
+                                    <option value="aguardando" {% if safra.status == 'aguardando' %}selected{% endif %}>⏳ Em Preparação</option>
+                                </select>
+                            </div>
+
+                            {# DESCRIÇÃO / NOTAS #}
+                            <div class="col-12">
+                                <label class="tiny-elite mb-2 d-block fw-800 text-muted">Informações Adicionais</label>
+                                <textarea name="descricao" class="form-control input-elite" rows="3"
+                                          placeholder="Ex: Produto de primeira qualidade, pronto para entrega imediata em Luanda e Benguela.">{{ safra.descricao }}</textarea>
+                            </div>
+                        </div>
+
+                        {# ACÇÕES #}
+                        <div class="mt-5">
+                            <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill fw-900 shadow-lg text-uppercase transition-all" id="saveBtn">
+                                <i class="fas fa-check-circle me-2"></i> Confirmar Alterações
+                            </button>
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('produtor.dashboard') }}" class="text-muted fw-800 small text-decoration-none hover-danger transition-all">
+                                    Cancelar e Voltar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase; }
+    .text-dark-sharp { color: #0f172a !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+
+    .input-elite {
+        padding: 0.85rem 1.2rem;
+        border-radius: 15px;
+        border: 2px solid #f1f5f9;
+        font-weight: 800;
+        color: #0f172a;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .input-elite:focus {
+        border-color: #10b981;
+        background-color: #fff;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .btn-white { background: white; color: #0f172a; }
+    .btn-back-hover:hover { transform: scale(1.1); background: #f1f5f9; }
+    .transition-all { transition: all 0.3s ease; }
+    .hover-danger:hover { color: #ef4444 !important; }
+
+    .bg-success-subtle { background-color: #f0fdf4 !important; color: #16a34a !important; }
+    .bg-danger-subtle { background-color: #fef2f2 !important; color: #ef4444 !important; }
+    .bg-warning-subtle { background-color: #fffbeb !important; color: #d97706 !important; }
+
+    @media (max-width: 768px) {
+        .card { border-radius: 2rem !important; padding: 1.5rem !important; }
+    }
+</style>
+
+<script>
+    // Preview em tempo real da imagem antes do upload
+    function handleImageChange(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.style.opacity = '0';
+                setTimeout(() => {
+                    preview.style.transition = 'opacity 0.5s ease';
+                    preview.style.opacity = '1';
+                }, 10);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Feedback de carregamento
+    document.getElementById('editSafraForm').onsubmit = function() {
+        const btn = document.getElementById('saveBtn');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ATUALIZANDO...';
+        btn.classList.add('opacity-75');
+        btn.disabled = true;
+    };
+</script>
+{% endblock %}

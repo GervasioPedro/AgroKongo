@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}{{ safra.produto.nome }} - AgroKongo{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Breadcrumb de Navegação -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('mercado.explorar') }}" class="text-decoration-none">Mercado</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('mercado.explorar', categoria=safra.produto.categoria.id) if safra.produto.categoria else '#' }}" class="text-decoration-none">{{ safra.produto.categoria.nome if safra.produto.categoria else 'Geral' }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ safra.produto.nome }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4 g-lg-5">
+        <!-- Coluna da Esquerda: Imagem e Detalhes -->
+        <div class="col-lg-7">
+            <!-- Imagem Principal -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <img src="{{ url_for('main.serve_safra_image', filename=safra.imagem) if safra.imagem else 'https://dummyimage.com/800x600/e2e8f0/16a34a&text=Sem+Imagem' }}"
+                     class="img-fluid w-100"
+                     style="max-height: 500px; object-fit: cover;"
+                     alt="{{ safra.produto.nome }}"
+                     onerror="this.src='https://dummyimage.com/800x600/e2e8f0/16a34a&text=Sem+Imagem'">
+            </div>
+
+            <!-- Título e Localização -->
+            <div class="mb-4">
+                <h1 class="fw-bold display-5 mb-2">{{ safra.produto.nome }}</h1>
+                <div class="d-flex align-items-center text-muted">
+                    <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                    <span>{{ safra.produtor.municipio.nome }}, {{ safra.produtor.provincia.nome }}</span>
+                    <span class="mx-2">|</span>
+                    <div class="text-warning small">
+                        {% set stars = safra.produtor.rating|default(0)|int %}
+                        {% for i in range(stars) %}<i class="fas fa-star"></i>{% endfor %}
+                        {% for i in range(5 - stars) %}<i class="far fa-star"></i>{% endfor %}
+                        <span class="text-muted ms-1">({{ safra.produtor.rating|default(0)|float }})</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descrição da Safra -->
+            <div class="mb-5">
+                <h5 class="fw-bold">Sobre esta Safra</h5>
+                <p class="text-secondary" style="white-space: pre-wrap;">
+                    {{ safra.observacoes if safra.observacoes else 'O produtor não adicionou uma descrição detalhada para esta safra.' }}
+                </p>
+            </div>
+
+            <!-- Card do Produtor -->
+            <div class="card border-0 bg-light rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('main.serve_perfil', filename=safra.produtor.foto_perfil) if safra.produtor.foto_perfil and safra.produtor.foto_perfil != 'default_user.jpg' else 'https://ui-avatars.com/api/?name=' + safra.produtor.nome }}"
+                                 class="rounded-circle shadow-sm" style="width: 50px; height: 50px; object-fit: cover;">
+                            <div class="ms-3">
+                                <h6 class="fw-bold mb-0">{{ safra.produtor.nome }}</h6>
+                                <small class="text-muted">
+                                    {% if safra.produtor.conta_validada %}
+                                        <i class="fas fa-check-circle text-success me-1"></i>Produtor Verificado
+                                    {% else %}
+                                        <i class="fas fa-clock text-warning me-1"></i>Aguardando Verificação
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('mercado.perfil_produtor', user_id=safra.produtor.id) }}" class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold">
+                            Ver Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna da Direita: Caixa de Compra -->
+        <div class="col-lg-5">
+            <div class="sticky-top" style="top: 100px;">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <span class="text-muted small text-uppercase fw-bold">Preço</span>
+                            <h2 class="fw-bold text-agro mb-0">
+                                {{ "{:,.0f}".format(safra.preco_por_unidade).replace(',', '.') }} Kz <span class="fw-normal small text-muted">/ kg</span>
+                            </h2>
+                        </div>
+
+                        <hr>
+
+                        {% if current_user.is_authenticated and current_user.id == safra.produtor_id %}
+                            <div class="alert alert-info text-center">
+                                <h6 class="fw-bold">Esta é a sua Safra</h6>
+                                <p class="small mb-2">Pode gerir o stock e o preço no seu painel.</p>
+                                <a href="{{ url_for('produtor.safras') }}" class="btn btn-primary btn-sm rounded-pill px-3">Gerir Safras</a>
+                            </div>
+                        {% else %}
+                            <form action="{{ url_for('mercado.iniciar_encomenda', id=safra.id) }}" method="POST" id="orderForm">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <div class="mb-3">
+                                    <label for="quantidade" class="form-label small fw-bold">Quantidade (em Kg)</label>
+                                    <input type="number" name="quantidade" id="quantidade" class="form-control form-control-lg text-center"
+                                           min="1" max="{{ safra.quantidade_disponivel|int }}" value="1" required>
+                                    <div class="text-center mt-2">
+                                        <small class="text-muted">Disponível: {{ safra.quantidade_disponivel|int }} kg</small>
+                                        {% if safra.quantidade_disponivel < 100 %}
+                                            <span class="badge bg-danger ms-2">Stock Baixo</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="bg-light rounded-3 p-3 my-4">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span class="text-muted">Subtotal</span>
+                                        <span class="fw-bold" id="subtotal">0 Kz</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between small">
+                                        <span class="text-muted">Taxa de Serviço ({{ (config.AGROKONGO_TAXA * 100)|int }}%)</span>
+                                        <span class="fw-bold" id="taxa">0 Kz</span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">Total a Pagar</span>
+                                        <span class="fw-bold fs-5 text-agro" id="total">0 Kz</span>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" id="submitBtn" class="btn btn-agro btn-lg fw-bold">
+                                        <i class="fas fa-shopping-basket me-2"></i>Reservar Agora
+                                    </button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-center p-3">
+                        <small class="text-muted"><i class="fas fa-shield-alt me-1 text-success"></i>Pagamento 100% seguro. O valor fica retido até confirmar a entrega.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const unitPrice = parseFloat("{{ safra.preco_por_unidade }}");
+    const taxRate = parseFloat("{{ config.AGROKONGO_TAXA|default(0.05) }}");
+
+    const qtyInput = document.getElementById('quantidade');
+    const subtotalDisp = document.getElementById('subtotal');
+    const taxaDisp = document.getElementById('taxa');
+    const totalDisp = document.getElementById('total');
+    const orderForm = document.getElementById('orderForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA', minimumFractionDigits: 2 }).format(value);
+    }
+
+    function updateTotals() {
+        if (!qtyInput) return;
+
+        let qty = parseInt(qtyInput.value) || 0;
+        const subtotal = qty * unitPrice;
+        const taxa = subtotal * taxRate;
+        const total = subtotal + taxa;
+
+        subtotalDisp.textContent = formatCurrency(subtotal);
+        taxaDisp.textContent = formatCurrency(taxa);
+        totalDisp.textContent = formatCurrency(total);
+    }
+
+    if (qtyInput) {
+        qtyInput.addEventListener('input', updateTotals);
+        updateTotals(); // Initial calculation
+    }
+
+    if (orderForm) {
+        orderForm.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> A processar...';
+        });
+    }
+});
+</script>
+{% endblock %}

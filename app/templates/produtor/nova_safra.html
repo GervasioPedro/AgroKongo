@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Publicar Colheita — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+
+                <div class="card border-0 shadow-lg p-4 p-md-5 rounded-5 bg-white">
+
+                    {# CABEÇALHO #}
+                    <div class="text-center mb-5">
+                        <div class="bg-success-subtle rounded-4 mb-3 mx-auto d-flex align-items-center justify-content-center shadow-sm" style="width: 70px; height: 70px;">
+                            <i class="fas fa-seedling text-success fa-2xl"></i>
+                        </div>
+                        <h2 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -2px;">Nova Safra</h2>
+                        <p class="text-muted small fw-700 uppercase tracking-wider">Lançar stock para o mercado nacional</p>
+                    </div>
+
+                    <form action="{{ url_for('produtor.nova_safra') }}" method="POST" enctype="multipart/form-data" id="safraForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        {# SELEÇÃO DE PRODUTO #}
+                        <div class="mb-4">
+                            <label class="form-label tiny-elite text-muted">Que produto deseja vender?</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-2 border-end-0 rounded-start-4"><i class="fas fa-leaf text-success"></i></span>
+                                <select name="produto_id" class="form-select form-select-lg border-2 rounded-end-4 fw-800 shadow-none text-dark-sharp" required>
+                                    <option value="" disabled selected>Escolha o produto...</option>
+                                    {% for p in produtos %}
+                                    {# Nota: p.categoria.nome se for relação, ou p.categoria se for string #}
+                                    <option value="{{ p.id }}">{{ p.nome }} — {{ p.categoria.nome if p.categoria.nome else p.categoria }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        {# QUANTIDADE E PREÇO #}
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label class="form-label tiny-elite text-muted">Stock Total (Kg)</label>
+                                <div class="input-group">
+                                    <input type="number" step="1" name="quantidade_kg" class="form-control form-control-lg border-2 border-end-0 rounded-start-4 fw-900 shadow-none text-success"
+                                           placeholder="Ex: 500" min="1" required>
+                                    <span class="input-group-text bg-light border-2 border-start-0 rounded-end-4 fw-800 text-muted">Kg</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label tiny-elite text-muted">Preço (Kz/Kg)</label>
+                                <div class="input-group">
+                                    <input type="number" step="1" name="preco_kg" class="form-control form-control-lg border-2 border-end-0 rounded-start-4 fw-900 shadow-none text-dark"
+                                           placeholder="Ex: 450" min="1" required>
+                                    <span class="input-group-text bg-light border-2 border-start-0 rounded-end-4 fw-800 text-muted">Kz</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# DESCRIÇÃO #}
+                        <div class="mb-4">
+                            <label class="form-label tiny-elite text-muted">Observações da Qualidade</label>
+                            <textarea name="descricao" class="form-control border-2 rounded-4 shadow-none fw-600" rows="3"
+                                      placeholder="Ex: Colhida manualmente no Uíge, fresca e pronta para transporte."></textarea>
+                        </div>
+
+                        {# FOTOGRAFIA COM PREVIEW #}
+                        <div class="mb-5">
+                            <label class="form-label tiny-elite text-dark-sharp fw-900 mb-3 d-flex align-items-center">
+                                <i class="fas fa-camera-retro me-2 text-primary"></i> FOTO DA CARGA
+                            </label>
+
+                            <div id="previewBox" class="mb-3 d-none animate__animated animate__zoomIn">
+                                <div class="position-relative">
+                                    <img id="imgPreview" src="#" class="img-fluid rounded-4 shadow-md border" style="max-height: 250px; width: 100%; object-fit: cover;">
+                                    <button type="button" onclick="resetImage()" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 shadow-lg" style="width: 35px; height: 35px;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="upload-area border-2 border-dashed rounded-4 p-4 text-center transition-all bg-light-subtle" id="dropZone">
+                                <input type="file" name="imagem_safra" id="fileInput" class="d-none"
+                                       accept="image/*" capture="environment" onchange="handleImagePreview(this)">
+                                <label for="fileInput" class="mb-0 cursor-pointer w-100">
+                                    <div class="bg-white rounded-circle p-3 mx-auto mb-2 shadow-sm" style="width: 60px; height: 60px;">
+                                        <i class="fas fa-cloud-upload-alt text-success fa-xl"></i>
+                                    </div>
+                                    <span class="d-block fw-800 text-dark-sharp small">Tirar Foto ou Carregar</span>
+                                    <span class="text-muted" style="font-size: 0.65rem;">Resolução recomendada: 800x600px</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {# BOTÃO SUBMIT #}
+                        <button type="submit" class="btn btn-dark btn-lg w-100 py-3 fw-900 rounded-pill shadow-lg border-0 transition-up" id="submitBtn">
+                            <span id="btnText">PUBLICAR NO MERCADO</span> <i class="fas fa-paper-plane ms-2"></i>
+                        </button>
+                    </form>
+
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('produtor.dashboard') }}" class="text-muted fw-800 text-decoration-none small transition-all hover-success">
+                        <i class="fas fa-arrow-left me-1"></i> VOLTAR AO PAINEL
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 900; margin-bottom: 8px; display: block; }
+    .text-dark-sharp { color: #0f172a; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .border-2 { border-width: 2px !important; border-color: #e2e8f0; }
+    .border-dashed { border-style: dashed !important; }
+    .cursor-pointer { cursor: pointer; }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .upload-area:hover {
+        background-color: #f0fdf4;
+        border-color: #10b981 !important;
+    }
+
+    .transition-up:hover { transform: translateY(-3px); filter: brightness(1.2); }
+    .hover-success:hover { color: #10b981 !important; }
+</style>
+
+<script>
+function handleImagePreview(input) {
+    const preview = document.getElementById('imgPreview');
+    const box = document.getElementById('previewBox');
+    const uploadArea = document.getElementById('dropZone');
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            box.classList.remove('d-none');
+            uploadArea.classList.add('d-none');
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function resetImage() {
+    const input = document.getElementById('fileInput');
+    const box = document.getElementById('previewBox');
+    const uploadArea = document.getElementById('dropZone');
+    input.value = '';
+    box.classList.add('d-none');
+    uploadArea.classList.remove('d-none');
+}
+
+document.getElementById('safraForm').onsubmit = function() {
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> LANÇANDO...';
+    btn.disabled = true;
+};
+</script>
+{% endblock %}

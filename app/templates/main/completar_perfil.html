@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Finalizar Registo — AgroKongo{% endblock %}
+
+{% block content %}
+{# Define a cor do tema baseada no tipo para manter a coerência visual #}
+{% set theme_color = 'success' if current_user.tipo == 'produtor' else 'primary' %}
+
+<div class="auth-wrapper py-5" style="background: linear-gradient(135deg, #081c15 0%, #1b4332 100%); min-height: 100vh;">
+    <div class="container py-md-5 animate__animated animate__fadeIn">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-xl-6">
+
+                {# INDICADOR DE PROGRESSO #}
+                <div class="progress-container mb-5 px-2">
+                    <div class="d-flex justify-content-between align-items-end mb-3">
+                        <div>
+                            <span class="d-block text-uppercase fw-900 text-success-light mb-1 small tracking-widest" style="font-size: 0.65rem;">PASSO 02</span>
+                            <h5 class="fw-900 text-white mb-0">Validação de Identidade</h5>
+                        </div>
+                        <span class="text-white-50 fw-900 small">100%</span>
+                    </div>
+                    <div class="progress-track" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                        <div class="progress-fill" style="width: 100%; height: 100%; background: #95d5b2; border-radius: 10px; box-shadow: 0 0 15px #95d5b2;"></div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-2xl rounded-5 overflow-hidden">
+                    <div class="card-header bg-white border-0 pt-5 pb-4 text-center">
+                        {# --- UPLOAD DE FOTO DE PERFIL --- #}
+                        <div class="position-relative d-inline-block mb-4">
+                            <img id="preview_foto" src="{{ url_for('static', filename='uploads/perfil/' + (current_user.foto_perfil or 'default_user.jpg')) }}"
+                                 class="rounded-circle shadow-sm border border-4 border-white"
+                                 style="width: 130px; height: 130px; object-fit: cover; background: #f8fafc;">
+                            <label for="foto_input" class="btn btn-dark position-absolute bottom-0 end-0 rounded-circle shadow-sm p-2" style="cursor: pointer;">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                        </div>
+
+                        <h2 class="fw-900 text-dark-sharp tracking-tighter mb-1">Quase lá, {{ current_user.nome.split()[0] }}!</h2>
+                        <p class="text-muted fw-700 px-4 small">Precisamos de alguns dados legais para ativar a sua conta.</p>
+                    </div>
+
+                    <div class="card-body p-4 p-md-5 bg-white">
+                        <form action="{{ url_for('main.completar_perfil') }}" method="POST" id="perfilForm" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="file" name="foto" id="foto_input" class="d-none" accept="image/*">
+
+                            {# SEÇÃO FISCAL #}
+                            <div class="mb-5">
+                                <h6 class="tiny-elite fw-900 text-{{ theme_color }} mb-4 border-bottom pb-2">
+                                    <i class="fas fa-file-invoice me-2"></i>Informação Fiscal (Angola)
+                                </h6>
+                                <div class="mb-4">
+                                    <label class="label-elite mb-2">NIF / BI (Número de Identificação)</label>
+                                    <input type="text" name="nif" id="nif_input" class="form-control input-elite"
+                                           placeholder="Ex: 5401234567" required maxlength="14"
+                                           value="{{ current_user.nif or '' }}">
+                                </div>
+
+                                {% if current_user.tipo == 'produtor' %}
+                                <div class="p-4 rounded-4 bg-light-sharp border-2 border border-dashed border-{{ theme_color }}-subtle mb-4">
+                                    <label class="label-elite text-{{ theme_color }} mb-2">IBAN PARA RECEBIMENTOS</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 fw-900 text-{{ theme_color }} font-monospace">AO06</span>
+                                        <input type="text" id="iban_raw" class="form-control input-elite border-start-0 ps-1 font-monospace"
+                                               placeholder="0000 0000 0000 0000 0000 0" required>
+                                        <input type="hidden" name="iban" id="iban_final">
+                                    </div>
+                                    <small class="text-muted mt-2 d-block" style="font-size: 0.65rem;">Obrigatório para o escoamento de pagamentos.</small>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {# SEÇÃO LOCALIZAÇÃO #}
+                            <div class="mb-5">
+                                <h6 class="tiny-elite fw-900 text-{{ theme_color }} mb-4 border-bottom pb-2">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Área de Atuação
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="label-elite mb-2">Província</label>
+                                        <select name="provincia_id" id="provincia" class="form-select input-elite" required>
+                                            <option value="">Seleccione...</option>
+                                            {% for p in provincias %}
+                                                <option value="{{ p.id }}" {% if current_user.provincia_id == p.id %}selected{% endif %}>{{ p.nome }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-elite mb-2">Município</label>
+                                        <select name="municipio_id" id="municipio" class="form-select input-elite" required {% if not current_user.municipio_id %}disabled{% endif %}>
+                                            <option value="">Aguardando...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# SEÇÃO DOCUMENTAÇÃO #}
+                            <div class="mb-5">
+                                <h6 class="tiny-elite fw-900 text-{{ theme_color }} mb-4 border-bottom pb-2">
+                                    <i class="fas fa-shield-alt me-2"></i>Verificação de Identidade
+                                </h6>
+                                <div class="upload-box p-5 border-2 border-dashed rounded-4 text-center bg-light-sharp transition-all" id="dropzone">
+                                    <input type="file" name="documento" id="documento_file" class="d-none" accept=".pdf,.jpg,.jpeg,.png" {% if current_user.tipo == 'produtor' %}required{% endif %}">
+                                    <label for="documento_file" class="cursor-pointer mb-0 w-100">
+                                        <div class="icon-circle bg-white shadow-sm mx-auto mb-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                            <i class="fas fa-cloud-upload-alt fa-lg text-{{ theme_color }}"></i>
+                                        </div>
+                                        <p class="small fw-900 mb-1 text-dark-sharp" id="file_name">BI, Passaporte ou Alvará Comercial {% if current_user.tipo != 'produtor' %}(Opcional){% endif %}</p>
+                                        <p class="text-muted fw-600 mb-0" style="font-size: 0.7rem;">Formatos aceites: PDF ou Imagem (Máx 5MB)</p>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-3">
+                                <button type="submit" class="btn btn-agro-gradient py-3 rounded-pill fw-900 shadow-lg border-0 fs-5 transition-up">
+                                    ATIVAR MINHA CONTA <i class="fas fa-check-circle ms-2"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-success-light { color: #95d5b2; }
+    .tiny-elite { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; }
+    .label-elite { font-size: 0.7rem; text-transform: uppercase; font-weight: 900; color: #64748b; letter-spacing: 0.5px; }
+    .text-dark-sharp { color: #0f172a; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .bg-light-sharp { background-color: #f8fafc; }
+
+    .input-elite {
+        padding: 0.9rem 1.2rem;
+        border: 2px solid #f1f5f9;
+        border-radius: 1.1rem;
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 0.95rem;
+    }
+    .input-elite:focus { border-color: #1b4332; box-shadow: none; background: #fff; }
+
+    .btn-agro-gradient { background: #1b4332; color: white; }
+    .btn-agro-gradient:hover { background: #081c15; color: white; }
+
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; }
+    .cursor-pointer { cursor: pointer; }
+    .transition-up { transition: all 0.3s ease; }
+    .transition-up:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+    .font-monospace { font-family: 'JetBrains Mono', 'Courier New', monospace !important; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('perfilForm');
+    const provSelect = document.getElementById('provincia');
+    const munSelect = document.getElementById('municipio');
+    const ibanRaw = document.getElementById('iban_raw');
+    const ibanFinal = document.getElementById('iban_final');
+    const nifInput = document.getElementById('nif_input');
+    const fotoInput = document.getElementById('foto_input');
+    const docInput = document.getElementById('documento_file');
+    const dropzone = document.getElementById('dropzone');
+
+    // 1. Preview da Foto
+    fotoInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => document.getElementById('preview_foto').src = e.target.result;
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // 2. Feedback de Upload de Documento
+    docInput.addEventListener('change', function() {
+        if (this.files[0]) {
+            const fileName = this.files[0].name;
+            document.getElementById('file_name').innerHTML = `<span class="text-success fw-900"><i class="fas fa-check-circle"></i> Ficheiro Selecionado</span>`;
+            document.getElementById('file_name').nextElementSibling.innerText = fileName;
+            dropzone.classList.replace('bg-light-sharp', 'bg-success-subtle');
+            dropzone.style.borderColor = '#1b4332';
+        }
+    });
+
+    // 3. Máscara de IBAN (Angola: 21 dígitos numéricos após AO06)
+    if (ibanRaw) {
+        ibanRaw.addEventListener('input', e => {
+            let val = e.target.value.replace(/\D/g, '').substring(0, 21);
+            e.target.value = val.match(/.{1,4}/g)?.join(' ') || val;
+        });
+    }
+
+    // 4. Sanitização de NIF (Apenas letras e números)
+    nifInput.addEventListener('input', e => {
+        e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    });
+
+    // 5. Validação no Submit
+    form.addEventListener('submit', function(e) {
+        if (ibanRaw && ibanFinal) {
+            const cleanIban = ibanRaw.value.replace(/\s/g, '');
+            if (cleanIban.length !== 21) {
+                e.preventDefault();
+                alert("O IBAN deve conter exatamente 21 dígitos.");
+                return;
+            }
+            ibanFinal.value = "AO06" + cleanIban;
+        }
+    });
+
+    // 6. Carregamento Dinâmico de Municípios
+    provSelect.addEventListener('change', function() {
+        const provId = this.value;
+        munSelect.innerHTML = '<option value="">Seleccione o Município...</option>';
+        if (!provId) { munSelect.disabled = true; return; }
+
+        munSelect.disabled = false;
+        fetch('/api/municipios/' + provId)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(m => {
+                    let opt = new Option(m.nome, m.id);
+                    munSelect.add(opt);
+                });
+            })
+            .catch(err => console.error('Erro ao carregar municípios:', err));
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Mediação de Incidentes — AgroKongo{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-4 py-md-5 animate__animated animate__fadeIn font-sharp">
+
+        {# === HEADER ESTRATÉGICO === #}
+        <div class="row align-items-center mb-5 g-4">
+            <div class="col-md-7">
+                <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 fw-900 tiny-elite mb-3">DEPARTAMENTO DE SEGURANÇA & ESCROW</span>
+                <h1 class="fw-900 text-dark-sharp mb-1" style="letter-spacing: -2.5px; font-size: 2.8rem;">Mediação de Incidentes</h1>
+                <p class="text-muted fw-700 fs-5 mb-0">Atualmente, existem <strong>{{ disputas|length }}</strong> casos aguardando análise jurídica.</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <div class="bg-white p-4 rounded-5 shadow-2xl border border-white d-inline-block text-start">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-danger text-white rounded-4 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="fas fa-vault fa-lg"></i>
+                        </div>
+                        <div>
+                            <small class="tiny-elite d-block text-muted fw-900">VALOR TOTAL RETIDO</small>
+                            <span class="fw-900 text-dark-sharp fs-4">
+                                {{ "{:,.0f}".format(disputas|sum(attribute='valor_total_pago')) }} <small class="fs-6 opacity-50">Kz</small>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# === LISTA DE DISPUTAS === #}
+        <div class="card border-0 shadow-2xl rounded-5 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-dark-sharp text-white">
+                        <tr class="tiny-elite">
+                            <th class="ps-5 py-4 border-0">REFERÊNCIA / DATA</th>
+                            <th class="py-4 border-0">COMPRADOR</th>
+                            <th class="py-4 border-0">MOTIVO DA QUEIXA</th>
+                            <th class="py-4 border-0">VALOR EM CUSTÓDIA</th>
+                            <th class="text-end pe-5 py-4 border-0">ACÇÃO FINAL</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-0">
+                        {% for d in disputas %}
+                        <tr class="transition-all">
+                            <td class="ps-5 py-4">
+                                <div class="fw-900 text-dark-sharp fs-6">#{{ d.fatura_ref }}</div>
+                                <div class="small text-muted fw-800">{{ d.data_criacao.strftime('%d %b, %Y') }}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="icon-avatar bg-light-sharp text-dark-sharp rounded-circle d-flex align-items-center justify-content-center fw-900 border" style="width: 35px; height: 35px; font-size: 0.7rem;">
+                                        {{ d.comprador.nome[:2]|upper }}
+                                    </div>
+                                    <div class="ms-2 fw-800 text-dark-sharp small">{{ d.comprador.nome }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 fw-900" style="font-size: 0.65rem; border: 1px solid rgba(239, 68, 68, 0.1);">
+                                    <i class="fas fa-exclamation-circle me-1"></i> {{ d.motivo_disputa | replace('_', ' ') | upper }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-900 text-dark-sharp fs-6">{{ "{:,.0f}".format(d.valor_total_pago) }} Kz</div>
+                                <div class="tiny-elite text-muted" style="font-size: 0.55rem;">PAGAMENTO VALIDADO</div>
+                            </td>
+                            <td class="text-end pe-5">
+                                <a href="{{ url_for('admin.resolver_disputa', trans_id=d.id) }}"
+                                   class="btn btn-dark-sharp rounded-pill px-4 py-2 fw-900 shadow-sm transition-up">
+                                    ANALISAR CASO <i class="fas fa-gavel ms-2"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="py-5 text-center">
+                                <div class="py-5 opacity-50">
+                                    <div class="mb-3">
+                                        <i class="fas fa-shield-check text-success display-4"></i>
+                                    </div>
+                                    <h5 class="fw-900 text-dark-sharp">Tudo em conformidade!</h5>
+                                    <p class="text-muted fw-700">Não existem disputas pendentes no sistema.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# === NOTA DE RODAPÉ === #}
+        <div class="mt-4 d-flex align-items-center gap-2 px-3">
+            <div class="pulse-dot-green"></div>
+            <span class="tiny-elite text-muted fw-900">SISTEMA ESCROW MONITORIZADO EM TEMPO REAL</span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a; }
+    .text-dark-sharp { color: #0f172a; }
+    .bg-danger-subtle { background-color: #fef2f2 !important; }
+    .bg-light-sharp { background-color: #f8fafc; }
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .tiny-elite { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); }
+
+    .btn-dark-sharp { background: #0f172a; color: white; border: none; transition: 0.3s; }
+    .btn-dark-sharp:hover { background: #1e293b; color: white; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15) !important; }
+
+    .transition-up { transition: all 0.3s ease; }
+    .transition-all { transition: all 0.3s ease; }
+    tr:hover { background-color: #fcfcfc !important; }
+
+    .pulse-dot-green {
+        width: 8px; height: 8px; background: #22c55e; border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+</style>
+{% endblock %}

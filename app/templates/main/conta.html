@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Minha Conta — AgroKongo{% endblock %}
+
+{% block content %}
+{# Define a cor do tema baseada no tipo para coerência visual #}
+{% set theme_color = 'success' if current_user.tipo == 'produtor' else 'primary' %}
+
+<div class="dashboard-wrapper" style="background: #f8fafc; min-height: 100vh;">
+    <div class="container py-5 animate__animated animate__fadeIn font-sharp">
+
+        <div class="row justify-content-center g-4">
+            {# === COLUNA ESQUERDA: NAVEGAÇÃO E STATUS === #}
+            <div class="col-lg-4 col-md-5">
+                <div class="card border-0 shadow-sm rounded-5 p-4 text-center bg-white">
+
+                    {# Foto de Perfil com Upload #}
+                    <div class="position-relative d-inline-block mx-auto mb-4">
+                        <div class="avatar-container shadow-lg">
+                            <img id="previewFoto"
+                                 src="{{ url_for('static', filename='uploads/perfis/' + current_user.foto_perfil) if current_user.foto_perfil else 'https://ui-avatars.com/api/?name=' + current_user.nome + '&background=' + ('2d6a4f' if current_user.tipo == 'produtor' else '0d6efd') + '&color=fff&size=150' }}"
+                                 class="rounded-circle"
+                                 style="width: 130px; height: 130px; object-fit: cover; border: 5px solid white;">
+                            <label for="inputFoto" class="btn-camera-float shadow" title="Mudar foto">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-900 text-dark-sharp mb-1">{{ current_user.nome }}</h4>
+                    <div class="mb-4">
+                        <span class="badge {% if current_user.tipo == 'produtor' %}bg-success-subtle text-success{% else %}bg-primary-subtle text-primary{% endif %} px-3 py-2 rounded-pill fw-800 tiny-elite">
+                            {{ current_user.tipo | upper }}
+                        </span>
+                    </div>
+
+                    {# Menu Lateral #}
+                    <div class="nav flex-column nav-pills elite-settings-nav gap-2" id="v-pills-tab" role="tablist">
+                        <button class="nav-link active elite-tab-button" data-bs-toggle="pill" data-bs-target="#dados-pessoais" type="button">
+                            <i class="fas fa-user-circle"></i> Dados do Perfil
+                        </button>
+
+                        {# Produtores precisam de gerir IBAN, Compradores apenas opcionalmente #}
+                        <button class="nav-link elite-tab-button" data-bs-toggle="pill" data-bs-target="#bancario" type="button">
+                            <i class="fas fa-university"></i> Dados Bancários
+                        </button>
+
+                        <button class="nav-link elite-tab-button" data-bs-toggle="pill" data-bs-target="#seguranca" type="button">
+                            <i class="fas fa-shield-alt"></i> Segurança
+                        </button>
+                    </div>
+
+                    <hr class="my-4 opacity-10">
+
+                    <a href="{{ url_for('auth.logout') }}" class="text-danger fw-800 text-decoration-none small">
+                        <i class="fas fa-sign-out-alt me-2"></i> Terminar Sessão
+                    </a>
+                </div>
+            </div>
+
+            {# === COLUNA DIREITA: CONTEÚDO DINÂMICO === #}
+            <div class="col-lg-7 col-md-7">
+                <div class="card border-0 shadow-sm rounded-5 bg-white min-h-500">
+                    <div class="tab-content p-4 p-md-5" id="v-pills-tabContent">
+
+                        {# TAB 1: DADOS PESSOAIS #}
+                        <div class="tab-pane fade show active" id="dados-pessoais">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-{{ theme_color }}-subtle p-3 rounded-4 me-3 text-{{ theme_color }}">
+                                    <i class="fas fa-id-card fa-lg"></i>
+                                </div>
+                                <h4 class="fw-900 text-dark-sharp mb-0" style="letter-spacing: -1px;">Definições de Perfil</h4>
+                            </div>
+
+                            <form action="{{ url_for('auth.editar_perfil') }}" method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="file" id="inputFoto" name="foto" class="d-none" onchange="previewImage(this)">
+
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <label class="label-caps-elite opacity-50 mb-2">Nome Completo</label>
+                                        <input type="text" name="nome" class="form-control elite-input" value="{{ current_user.nome }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-caps-elite opacity-50 mb-2">Telemóvel (WhatsApp)</label>
+                                        <input type="text" name="telemovel" class="form-control elite-input" value="{{ current_user.telemovel }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-caps-elite opacity-50 mb-2">NIF / BI</label>
+                                        <input type="text" name="nif" class="form-control elite-input" value="{{ current_user.nif or '' }}">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="label-caps-elite opacity-50 mb-2">Província</label>
+                                        <select name="provincia_id" class="form-select elite-input">
+                                            {% for p in provincias %}
+                                                <option value="{{ p.id }}" {% if p.id == current_user.provincia_id %}selected{% endif %}>{{ p.nome }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-5">
+                                    <button type="submit" class="btn btn-{{ theme_color }} w-100 py-3 rounded-pill fw-900 shadow-lg transition-up">
+                                        ATUALIZAR DADOS <i class="fas fa-save ms-2"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {# TAB 2: DADOS BANCÁRIOS #}
+                        <div class="tab-pane fade" id="bancario">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-primary-subtle p-3 rounded-4 me-3 text-primary">
+                                    <i class="fas fa-university fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-900 text-dark-sharp mb-0" style="letter-spacing: -1px;">Finanças</h4>
+                                    <p class="text-muted small mb-0 fw-600">Dados para liquidação de pagamentos</p>
+                                </div>
+                            </div>
+
+                            {% if current_user.tipo == 'comprador' %}
+                            <div class="alert bg-light border-0 rounded-4 p-4 mb-4">
+                                <p class="small fw-700 text-muted mb-0">Como comprador, estes dados são opcionais e usados apenas para eventuais reembolsos.</p>
+                            </div>
+                            {% endif %}
+
+                            <form action="{{ url_for('auth.editar_perfil') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <label class="label-caps-elite opacity-50 mb-2">IBAN Angolano (AO06...)</label>
+                                        <input type="text" name="iban" class="form-control elite-input fw-bold"
+                                               placeholder="AO06 0000 0000 0000 0000 0"
+                                               value="{{ current_user.iban or '' }}">
+                                    </div>
+                                </div>
+                                <div class="mt-5">
+                                    <button type="submit" class="btn btn-dark-sharp w-100 py-3 rounded-pill fw-900 shadow-lg transition-up">
+                                        GUARDAR CONTA BANCÁRIA
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {# TAB 3: SEGURANÇA #}
+                        <div class="tab-pane fade" id="seguranca">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-danger-subtle p-3 rounded-4 me-3 text-danger">
+                                    <i class="fas fa-shield-alt fa-lg"></i>
+                                </div>
+                                <h4 class="fw-900 text-dark-sharp mb-0" style="letter-spacing: -1px;">Segurança</h4>
+                            </div>
+
+                            <form action="{{ url_for('auth.editar_perfil') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-4">
+                                    <label class="label-caps-elite opacity-50 mb-2">Nova Palavra-passe</label>
+                                    <input type="password" name="nova_senha" class="form-control elite-input" placeholder="Mínimo 6 caracteres">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="label-caps-elite opacity-50 mb-2">Confirmar Nova Palavra-passe</label>
+                                    <input type="password" name="confirma_senha" class="form-control elite-input">
+                                </div>
+                                <button type="submit" class="btn btn-outline-dark w-100 py-3 rounded-pill fw-800 border-2 transition-up">
+                                    ATUALIZAR CREDENCIAIS
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-container { position: relative; display: inline-block; border-radius: 50%; }
+    .btn-camera-float {
+        position: absolute; bottom: 5px; right: 5px;
+        background: #2d6a4f; color: white;
+        width: 38px; height: 38px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; border: 3px solid white; transition: 0.3s;
+    }
+    .btn-camera-float:hover { transform: scale(1.1); background: #1b4332; }
+
+    .elite-input {
+        background-color: #f1f5f9; border: 2px solid transparent;
+        border-radius: 12px; padding: 12px 18px; font-weight: 700; transition: 0.3s;
+    }
+    .elite-input:focus { background-color: white; border-color: #2d6a4f; box-shadow: none; }
+
+    .elite-tab-button {
+        text-align: left; padding: 15px 20px !important;
+        border-radius: 15px !important; font-weight: 800;
+        color: #64748b !important; transition: 0.3s;
+        border: none !important; margin-bottom: 5px;
+    }
+    .elite-tab-button i { margin-right: 12px; width: 20px; opacity: 0.6; }
+    .elite-tab-button.active {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+    .elite-tab-button.active i { opacity: 1; color: #2d6a4f; }
+
+    .label-caps-elite { font-size: 0.65rem; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+    .tiny-elite { font-size: 0.6rem; letter-spacing: 1px; }
+    .bg-success-subtle { background-color: #f0fdf4 !important; }
+    .bg-primary-subtle { background-color: #eff6ff !important; }
+    .bg-danger-subtle { background-color: #fef2f2 !important; }
+
+    .transition-up:hover { transform: translateY(-3px); }
+    .min-h-500 { min-height: 500px; }
+</style>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewFoto').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

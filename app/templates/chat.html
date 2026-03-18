@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden" style="height: 80vh; display: flex; flex-direction: column;">
+
+                {# CABEÇALHO REFORÇADO #}
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 p-2 rounded-3 me-3">
+                            <i class="fas fa-shopping-basket text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">{{ venda.safra.produto.nome }}</h6>
+                            <small class="text-muted x-small">Fatura: <span class="fw-bold">{{ venda.fatura_ref }}</span></small>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('painel.produtor') if current_user.is_produtor else url_for('mercado.painel_comprador') }}"
+                       class="btn btn-sm btn-light rounded-pill px-3 border">
+                       <i class="fas fa-times me-1"></i> Sair
+                    </a>
+                </div>
+
+                {# JANELA DE CHAT #}
+                <div class="card-body overflow-auto p-4 bg-light" id="chatWindow" style="flex-grow: 1; scroll-behavior: smooth;">
+                    {% for msg in mensagens %}
+                    <div class="d-flex {% if msg.remetente_id == current_user.id %}justify-content-end{% else %}justify-content-start{% endif %} mb-3">
+                        <div class="p-3 rounded-4 shadow-sm position-relative"
+                             style="max-width: 75%;
+                                    {% if msg.remetente_id == current_user.id %}
+                                        background: var(--field-green); color: white; border-bottom-right-radius: 4px;
+                                    {% else %}
+                                        background: white; color: #333; border-bottom-left-radius: 4px;
+                                    {% endif %}">
+
+                            <p class="mb-1 small">{{ msg.conteudo }}</p>
+
+                            <div class="d-flex justify-content-end align-items-center">
+                                <small class="{% if msg.remetente_id == current_user.id %}text-white-50{% else %}text-muted{% endif %}" style="font-size: 0.65rem;">
+                                    {{ msg.data_envio.strftime('%H:%M') }}
+                                </small>
+                                {% if msg.remetente_id == current_user.id %}
+                                    <i class="fas fa-check-double ms-1 text-white-50" style="font-size: 0.6rem;"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {# RODAPÉ COM INPUT ESTILIZADO #}
+                <div class="card-footer bg-white border-top p-3">
+                    <form action="" method="POST" class="d-flex gap-2 align-items-center">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="flex-grow-1 position-relative">
+                            <input type="text" name="conteudo"
+                                   class="form-control rounded-pill border-0 bg-light px-4 py-2"
+                                   placeholder="Escreva a sua mensagem..."
+                                   required autocomplete="off">
+                        </div>
+
+                        <button type="submit" class="btn btn-agro rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 45px; height: 45px;">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Esconde a scrollbar para um look mais limpo, mas mantém funcionalidade */
+    #chatWindow::-webkit-scrollbar { width: 4px; }
+    #chatWindow::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 10px; }
+    .x-small { font-size: 0.75rem; }
+</style>
+
+<script>
+    function scrollToBottom() {
+        const objDiv = document.getElementById("chatWindow");
+        objDiv.scrollTop = objDiv.scrollHeight;
+    }
+    // Executa ao carregar
+    window.onload = scrollToBottom;
+</script>
+{% endblock %}

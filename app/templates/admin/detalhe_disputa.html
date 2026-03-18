@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Mediação de Disputa #{{ venda.fatura_ref }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        {# COLUNA DA ESQUERDA: EVIDÊNCIAS E DADOS #}
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5 mb-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-danger-subtle text-danger p-3 rounded-4 me-3">
+                            <i class="fas fa-gavel fa-2x"></i>
+                        </div>
+                        <div>
+                            <h2 class="fw-900 mb-0">Disputa: Ref #{{ venda.fatura_ref }}</h2>
+                            <p class="text-muted fw-600 mb-0 text-uppercase tiny-elite">Aberto em: {{ venda.data_criacao.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="alert bg-light border-0 rounded-4 p-4 mb-4">
+                        <h6 class="fw-900 text-dark-sharp mb-2"><i class="fas fa-exclamation-circle me-2 text-danger"></i>Relato do Comprador:</h6>
+                        <p class="mb-0 text-muted fs-5 italic">"{{ venda.motivo_disputa or 'Sem descrição detalhada fornecida.' }}"</p>
+                    </div>
+
+                    <h5 class="fw-900 mb-4 mt-5">Evidência de Pagamento</h5>
+                    <div class="bg-dark rounded-4 overflow-hidden shadow-sm mb-4">
+                        {% if venda.comprovativo_path.lower().endswith('.pdf') %}
+                            <embed src="{{ url_for('main.servir_privado', subpasta='comprovativos', filename=venda.comprovativo_path) }}"
+                                   type="application/pdf" width="100%" height="500px" />
+                        {% else %}
+                            <img src="{{ url_for('main.servir_privado', subpasta='comprovativos', filename=venda.comprovativo_path) }}"
+                                 class="img-fluid w-100">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# COLUNA DA DIREITA: VEREDICTO #}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-lg rounded-5 bg-white p-4 sticky-top" style="top: 20px; z-index: 10;">
+                <h5 class="fw-900 mb-4 text-center">Decisão do Mediador</h5>
+
+                <div class="mb-4 p-3 bg-light rounded-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small fw-700 text-muted">Valor em Custódia:</span>
+                        <span class="fw-900 text-dark">{{ "{:,.2f}".format(venda.valor_total_pago) }} Kz</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="small fw-700 text-muted">Vendedor:</span>
+                        <span class="fw-900 text-primary">{{ venda.vendedor.nome }}</span>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('admin.resolver_disputa', trans_id=venda.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-4">
+                        <label class="tiny-elite mb-2 d-block">Veredicto Final</label>
+                        <select name="decisao" class="form-select rounded-pill fw-700 p-3" required>
+                            <option value="" disabled selected>Selecione uma ação...</option>
+                            <option value="libertar">Dar Razão ao Produtor (Pagar)</option>
+                            <option value="reembolsar">Dar Razão ao Comprador (Reembolsar)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="tiny-elite mb-2 d-block">Justificativa Jurídica</label>
+                        <textarea name="justificativa" class="form-control rounded-4 bg-light border-0 p-3"
+                                  rows="4" required placeholder="Explique os motivos da sua decisão para ambas as partes..."></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-dark-sharp btn-lg rounded-pill fw-900 py-3 shadow">
+                            SELAR VEREDICTO <i class="fas fa-lock ms-2"></i>
+                        </button>
+                        <a href="{{ url_for('admin.painel_disputas') }}" class="btn btn-link text-muted fw-700 text-decoration-none mt-2">
+                            CANCELAR E VOLTAR
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-dark-sharp { background-color: #0f172a !important; }
+    .btn-dark-sharp { background-color: #0f172a; color: white; transition: 0.3s; }
+    .btn-dark-sharp:hover { background-color: #1e293b; color: white; transform: translateY(-3px); }
+    .tiny-elite { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 900; }
+    .fw-900 { font-weight: 900 !important; }
+    .rounded-5 { border-radius: 2.5rem !important; }
+    .italic { font-style: italic; }
+</style>
+{% endblock %}
