@@ -1,0 +1,7 @@
+source venv/bin/activate // Executarantes de executar python run.py. ele activar o  ambiente
+
+
+sudo systemctl start redis-server // Iniciar o redis
+
+python run.py   // Executa oprojecto
+
