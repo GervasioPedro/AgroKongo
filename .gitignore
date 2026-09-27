@@ -1,9 +1,11 @@
-.env
-.venv/
+# Python bytecode and cache
 __pycache__/
-instance/
-*.db
-.pytest_cache/
-.idea/
-node_modules/
 *.pyc
+*.pyo
+
+# Django database
+backend/data_storage/*.sqlite3
+
+# Environment files
+.env.local
+.env
