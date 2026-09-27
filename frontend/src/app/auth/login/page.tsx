@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,26 +26,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
-      const res = await fetch(`${apiUrl}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.errors ? json.errors[0] : json.error || "Erro ao entrar");
-      }
-
-      if (json.success) {
-        localStorage.setItem("token", json.data.access_token);
-        localStorage.setItem("user", JSON.stringify(json.data.user));
-        router.push("/dashboard");
-      }
+      // Django/DRF: POST /api/v1/auth {acao:"login", telemovel, senha}
+      await api.login(formData.email, formData.senha);
+      router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Erro ao entrar");
     } finally {
       setLoading(false);
     }
